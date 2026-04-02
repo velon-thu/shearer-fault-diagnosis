@@ -1,5 +1,11 @@
 import {
   type BootstrapResponse,
+  type CheckinCalendarRecord,
+  type CheckinHistoryEntry,
+  type CheckinItem,
+  type CheckinsResponse,
+  type CheckinsSubmitRequest,
+  type CheckinStatus,
   type CuttingAnalysisLogEntry,
   type CuttingAnalysisRange,
   type CuttingAnalysisResponse,
@@ -421,6 +427,168 @@ export const sensorFaultRankings: RankingItem[] = monthlySensorFailures.map((ite
   lastOccurredAt: item.last,
 }));
 
+const checkinTodayDate = "2026-03-16";
+
+const initialCheckinItems: CheckinItem[] = [
+  { id: "checkin-1", label: "检查主电缆损耗情况，确保无明显破损。", checked: true },
+  { id: "checkin-2", label: "检查压力接点引出电缆，确保无明显破损。", checked: true },
+  { id: "checkin-3", label: "检查压力接点上刻度，并作记录，确保没有松动变化。", checked: true },
+  {
+    id: "checkin-4",
+    label: "检查控制箱盖板上按钮，确保可靠通断；检查紧固螺钉是否松动，并及时紧固。",
+    checked: false,
+  },
+];
+
+const initialCheckinHistoryData: CheckinHistoryEntry[] = [
+  { date: "2026-03-15", shift: "早班", person: "张工", result: "已完成", note: "4/4 项已确认" },
+  {
+    date: "2026-03-14",
+    shift: "中班",
+    person: "张工",
+    result: "已完成",
+    note: "发现 1 处螺钉松动并紧固",
+  },
+  { date: "2026-03-13", shift: "夜班", person: "李工", result: "已完成", note: "压力接点刻度正常" },
+];
+
+const initialCheckinCalendarRecords: Record<string, CheckinCalendarRecord> = {
+  "2026-03-01": {
+    status: "done",
+    shift: "早班",
+    person: "张工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "主电缆、压力接点、按钮和紧固件检查正常。",
+  },
+  "2026-03-02": {
+    status: "done",
+    shift: "中班",
+    person: "张工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "控制箱盖板按钮可靠通断。",
+  },
+  "2026-03-03": {
+    status: "partial",
+    shift: "夜班",
+    person: "王工",
+    result: "补检完成",
+    note: "3/4 项完成",
+    detail: "压力接点引出电缆外护套有磨损，已登记观察。",
+  },
+  "2026-03-04": {
+    status: "done",
+    shift: "早班",
+    person: "李工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "主电缆无明显破损。",
+  },
+  "2026-03-05": {
+    status: "done",
+    shift: "中班",
+    person: "李工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "压力接点刻度记录正常。",
+  },
+  "2026-03-06": {
+    status: "missed",
+    shift: "夜班",
+    person: "-",
+    result: "未打卡",
+    note: "无记录",
+    detail: "当日未提交点检表。",
+  },
+  "2026-03-07": {
+    status: "done",
+    shift: "早班",
+    person: "张工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "盖板紧固螺钉无松动。",
+  },
+  "2026-03-08": {
+    status: "partial",
+    shift: "中班",
+    person: "王工",
+    result: "部分完成",
+    note: "3/4 项完成",
+    detail: "发现 1 处螺钉松动并及时紧固。",
+  },
+  "2026-03-09": {
+    status: "done",
+    shift: "夜班",
+    person: "李工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "压力接点引出电缆检查正常。",
+  },
+  "2026-03-10": {
+    status: "done",
+    shift: "早班",
+    person: "张工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "控制箱按钮、刻度记录均正常。",
+  },
+  "2026-03-11": {
+    status: "partial",
+    shift: "中班",
+    person: "张工",
+    result: "部分完成",
+    note: "2/4 项完成",
+    detail: "设备处理中途停机，后续补检。",
+  },
+  "2026-03-12": {
+    status: "done",
+    shift: "夜班",
+    person: "李工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "控制箱盖板与紧固螺钉状态正常。",
+  },
+  "2026-03-13": {
+    status: "done",
+    shift: "早班",
+    person: "李工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "主电缆及压力接点无异常。",
+  },
+  "2026-03-14": {
+    status: "done",
+    shift: "中班",
+    person: "张工",
+    result: "已完成",
+    note: "发现 1 处螺钉松动并紧固",
+    detail: "复查后确认已恢复正常。",
+  },
+  "2026-03-15": {
+    status: "done",
+    shift: "早班",
+    person: "张工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "压力接点刻度正常，按钮可靠通断。",
+  },
+  "2026-03-16": {
+    status: "done",
+    shift: "早班",
+    person: "张工",
+    result: "已完成",
+    note: "4/4 项已确认",
+    detail: "今日打卡完成并已上传。",
+  },
+};
+
+let todayCheckinItemsStore: CheckinItem[] = initialCheckinItems.map((item) => ({ ...item }));
+let checkinHistoryStore: CheckinHistoryEntry[] = initialCheckinHistoryData.map((item) => ({ ...item }));
+let checkinCalendarStore: Record<string, CheckinCalendarRecord> = Object.fromEntries(
+  Object.entries(initialCheckinCalendarRecords).map(([date, record]) => [date, { ...record }]),
+);
+
 const pumpStats: KeyValueField[] = toFields([
   ["平均带载功率", "298 kW"],
   ["平均带载温度", "69.8℃"],
@@ -530,6 +698,15 @@ const tractionAlerts: TractionAnalysisLogEntry[] = parseLogEntries([
   "2026-03-10 14:10:42 输出转矩波动偏大，检查机械阻滞与负载差异！",
 ]);
 
+const cloneCheckinItems = () => todayCheckinItemsStore.map((item) => ({ ...item }));
+
+const cloneCheckinHistory = () => checkinHistoryStore.map((item) => ({ ...item }));
+
+const cloneCheckinCalendarRecords = (): Record<string, CheckinCalendarRecord> =>
+  Object.fromEntries(
+    Object.entries(checkinCalendarStore).map(([date, record]) => [date, { ...record }]),
+  );
+
 export const networkInfoData: KeyValueField[] = toFields([
   ["工控机主机名", "cm-ipc-3106"],
   ["工控机 IP", "192.168.10.36"],
@@ -591,6 +768,57 @@ export const createRankings = ({
   inverterFaultRankings,
   sensorFaultRankings,
 });
+
+export const createCheckinsSnapshot = (): CheckinsResponse => ({
+  todayDate: checkinTodayDate,
+  todayItems: cloneCheckinItems(),
+  historyData: cloneCheckinHistory(),
+  calendarRecords: cloneCheckinCalendarRecords(),
+});
+
+export const submitCheckins = ({
+  checkedItemIds,
+}: CheckinsSubmitRequest): CheckinsResponse => {
+  todayCheckinItemsStore = initialCheckinItems.map((item) => ({
+    ...item,
+    checked: checkedItemIds.includes(item.id),
+  }));
+
+  const checkedCount = todayCheckinItemsStore.filter((item) => item.checked).length;
+  const total = todayCheckinItemsStore.length;
+  const status: CheckinStatus =
+    checkedCount === total ? "done" : checkedCount > 0 ? "partial" : "missed";
+  const result =
+    status === "done" ? "已完成" : status === "partial" ? "部分完成" : "未打卡";
+  const note = `${checkedCount}/${total} 项已确认`;
+
+  checkinCalendarStore = {
+    ...checkinCalendarStore,
+    [checkinTodayDate]: {
+      status,
+      shift: "当前班次",
+      person: "当前点检员",
+      result,
+      note,
+      detail: "由平板端提交的当日点检记录（原型示意）。",
+    },
+  };
+
+  const nextHistoryEntry: CheckinHistoryEntry = {
+    date: checkinTodayDate,
+    shift: "当前班次",
+    person: "当前点检员",
+    result,
+    note,
+  };
+
+  checkinHistoryStore = [
+    nextHistoryEntry,
+    ...checkinHistoryStore.filter((item) => item.date !== checkinTodayDate),
+  ];
+
+  return createCheckinsSnapshot();
+};
 
 export const getSensorSummaries = (): SensorSummary[] =>
   sensors.map(

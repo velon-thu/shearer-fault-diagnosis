@@ -4,6 +4,9 @@ import websocket from "@fastify/websocket";
 import {
   ApiErrorResponseSchema,
   BootstrapResponseSchema,
+  CheckinsQuerySchema,
+  CheckinsResponseSchema,
+  CheckinsSubmitRequestSchema,
   CuttingAnalysisQuerySchema,
   CuttingAnalysisResponseSchema,
   FaultCodeResultSchema,
@@ -28,6 +31,7 @@ import {
 } from "@shearer/contracts";
 import {
   buildSensorTrend,
+  createCheckinsSnapshot,
   createCuttingAnalysis,
   createPumpAnalysis,
   createRankings,
@@ -39,6 +43,7 @@ import {
   findFaultCode,
   findSensorById,
   getSensorSummaries,
+  submitCheckins,
   weeklyEvents,
 } from "./mock";
 
@@ -50,6 +55,7 @@ const SensorDetailApiResponseSchema = createApiSuccessResponseSchema(SensorDetai
 const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendPointSchema.array());
 const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
 const RankingsApiResponseSchema = createApiSuccessResponseSchema(RankingsResponseSchema);
+const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
 const CuttingAnalysisApiResponseSchema = createApiSuccessResponseSchema(CuttingAnalysisResponseSchema);
 const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysisResponseSchema);
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
@@ -167,6 +173,22 @@ export const buildApp = () => {
       data: createRankings({ start, end, system }),
     });
   });
+
+  app.get("/api/checkins", async (request) => {
+    CheckinsQuerySchema.parse(request.query);
+
+    return CheckinsApiResponseSchema.parse({
+      success: true,
+      data: createCheckinsSnapshot(),
+    });
+  });
+
+  app.post("/api/checkins", async (request) =>
+    CheckinsApiResponseSchema.parse({
+      success: true,
+      data: submitCheckins(CheckinsSubmitRequestSchema.parse(request.body)),
+    }),
+  );
 
   app.get("/api/analysis/pump", async (request) => {
     const { range } = PumpAnalysisQuerySchema.parse(request.query);

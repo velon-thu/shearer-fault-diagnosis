@@ -180,6 +180,42 @@ export const RankingsResponseSchema = z.object({
   sensorFaultRankings: z.array(RankingItemSchema),
 });
 
+export const CheckinStatusSchema = z.enum(["done", "partial", "missed"]);
+
+export const CheckinItemSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  checked: z.boolean(),
+});
+
+export const CheckinHistoryEntrySchema = z.object({
+  date: z.string(),
+  shift: z.string(),
+  person: z.string(),
+  result: z.string(),
+  note: z.string(),
+});
+
+export const CheckinCalendarRecordSchema = z.object({
+  status: CheckinStatusSchema,
+  shift: z.string(),
+  person: z.string(),
+  result: z.string(),
+  note: z.string(),
+  detail: z.string(),
+});
+
+export const CheckinsResponseSchema = z.object({
+  todayDate: z.string(),
+  todayItems: z.array(CheckinItemSchema),
+  historyData: z.array(CheckinHistoryEntrySchema),
+  calendarRecords: z.record(z.string(), CheckinCalendarRecordSchema),
+});
+
+export const CheckinsSubmitRequestSchema = z.object({
+  checkedItemIds: z.array(z.string()),
+});
+
 export const SettingsVersionHistoryItemSchema = z.object({
   date: z.string(),
   desc: z.string(),
@@ -241,6 +277,8 @@ export const RankingsQuerySchema = z.object({
   system: RankingSystemFilterSchema.default("all"),
 });
 
+export const CheckinsQuerySchema = z.object({});
+
 export const PumpAnalysisQuerySchema = z.object({
   range: PumpAnalysisRangeSchema.default("24h"),
 });
@@ -274,6 +312,12 @@ export type TractionAnalysisResponse = z.infer<typeof TractionAnalysisResponseSc
 export type FaultCodeResult = z.infer<typeof FaultCodeResultSchema>;
 export type RankingItem = z.infer<typeof RankingItemSchema>;
 export type RankingsResponse = z.infer<typeof RankingsResponseSchema>;
+export type CheckinStatus = z.infer<typeof CheckinStatusSchema>;
+export type CheckinItem = z.infer<typeof CheckinItemSchema>;
+export type CheckinHistoryEntry = z.infer<typeof CheckinHistoryEntrySchema>;
+export type CheckinCalendarRecord = z.infer<typeof CheckinCalendarRecordSchema>;
+export type CheckinsResponse = z.infer<typeof CheckinsResponseSchema>;
+export type CheckinsSubmitRequest = z.infer<typeof CheckinsSubmitRequestSchema>;
 export type SettingsVersionHistoryItem = z.infer<typeof SettingsVersionHistoryItemSchema>;
 export type SettingsSnapshot = z.infer<typeof SettingsSnapshotSchema>;
 export type KeyValueField = z.infer<typeof KeyValueFieldSchema>;
