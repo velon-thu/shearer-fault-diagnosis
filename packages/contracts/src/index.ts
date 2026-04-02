@@ -91,6 +91,38 @@ export const PumpAnalysisResponseSchema = z.object({
   alerts: z.array(PumpAnalysisLogEntrySchema),
 });
 
+export const TractionAnalysisRangeSchema = z.enum(["24h"]);
+
+export const TractionAnalysisSeriesSchema = z.object({
+  name: z.string(),
+  color: z.string(),
+  values: z.array(z.number()),
+});
+
+export const TractionAnalysisStatsRowSchema = z.object({
+  part: z.string(),
+  averageLoadPower: z.string(),
+  averageLoadTemperature: z.string(),
+  todayLoadedRuntime: z.string(),
+  todayOverloadTime: z.string(),
+  todayOverTemperatureTime: z.string(),
+});
+
+export const TractionAnalysisLogEntrySchema = z.object({
+  time: z.string(),
+  text: z.string(),
+});
+
+export const TractionAnalysisResponseSchema = z.object({
+  range: TractionAnalysisRangeSchema,
+  labels: z.array(z.string()),
+  motorSeries: z.array(TractionAnalysisSeriesSchema),
+  inverterSeries: z.array(TractionAnalysisSeriesSchema),
+  stats: z.array(TractionAnalysisStatsRowSchema),
+  logs: z.array(TractionAnalysisLogEntrySchema),
+  alerts: z.array(TractionAnalysisLogEntrySchema),
+});
+
 export const FaultCodeResultSchema = z.object({
   category: FaultCategorySchema,
   code: z.string(),
@@ -158,6 +190,10 @@ export const PumpAnalysisQuerySchema = z.object({
   range: PumpAnalysisRangeSchema.default("24h"),
 });
 
+export const TractionAnalysisQuerySchema = z.object({
+  range: TractionAnalysisRangeSchema.default("24h"),
+});
+
 export type ConnectionStatus = z.infer<typeof ConnectionStatusSchema>;
 export type BootstrapResponse = z.infer<typeof BootstrapResponseSchema>;
 export type WeeklyEvent = z.infer<typeof WeeklyEventSchema>;
@@ -168,12 +204,17 @@ export type SensorTrendPoint = z.infer<typeof SensorTrendPointSchema>;
 export type PumpAnalysisSeries = z.infer<typeof PumpAnalysisSeriesSchema>;
 export type PumpAnalysisLogEntry = z.infer<typeof PumpAnalysisLogEntrySchema>;
 export type PumpAnalysisResponse = z.infer<typeof PumpAnalysisResponseSchema>;
+export type TractionAnalysisSeries = z.infer<typeof TractionAnalysisSeriesSchema>;
+export type TractionAnalysisStatsRow = z.infer<typeof TractionAnalysisStatsRowSchema>;
+export type TractionAnalysisLogEntry = z.infer<typeof TractionAnalysisLogEntrySchema>;
+export type TractionAnalysisResponse = z.infer<typeof TractionAnalysisResponseSchema>;
 export type FaultCodeResult = z.infer<typeof FaultCodeResultSchema>;
 export type SettingsVersionHistoryItem = z.infer<typeof SettingsVersionHistoryItemSchema>;
 export type SettingsSnapshot = z.infer<typeof SettingsSnapshotSchema>;
 export type KeyValueField = z.infer<typeof KeyValueFieldSchema>;
 export type FaultCategory = z.infer<typeof FaultCategorySchema>;
 export type PumpAnalysisRange = z.infer<typeof PumpAnalysisRangeSchema>;
+export type TractionAnalysisRange = z.infer<typeof TractionAnalysisRangeSchema>;
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
 export type LiveMessage = z.infer<typeof LiveMessageSchema>;
 export type ApiSuccessResponse<T> = {

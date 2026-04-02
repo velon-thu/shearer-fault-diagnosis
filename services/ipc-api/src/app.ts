@@ -17,12 +17,15 @@ import {
   SensorTrendPointSchema,
   SensorTrendQuerySchema,
   SettingsSnapshotSchema,
+  TractionAnalysisQuerySchema,
+  TractionAnalysisResponseSchema,
   WeeklyEventSchema,
   createApiSuccessResponseSchema,
 } from "@shearer/contracts";
 import {
   buildSensorTrend,
   createPumpAnalysis,
+  createTractionAnalysis,
   createBootstrapPayload,
   createConnectionStatus,
   createHomeSummary,
@@ -42,6 +45,7 @@ const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendP
 const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
 const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysisResponseSchema);
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
+const TractionAnalysisApiResponseSchema = createApiSuccessResponseSchema(TractionAnalysisResponseSchema);
 const HealthApiResponseSchema = createApiSuccessResponseSchema(HealthResponseSchema);
 
 export const buildApp = () => {
@@ -153,6 +157,15 @@ export const buildApp = () => {
     return PumpAnalysisApiResponseSchema.parse({
       success: true,
       data: createPumpAnalysis(range),
+    });
+  });
+
+  app.get("/api/analysis/traction", async (request) => {
+    const { range } = TractionAnalysisQuerySchema.parse(request.query);
+
+    return TractionAnalysisApiResponseSchema.parse({
+      success: true,
+      data: createTractionAnalysis(range),
     });
   });
 

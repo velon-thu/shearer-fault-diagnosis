@@ -14,6 +14,11 @@ import {
   type SensorTrendPoint,
   type SettingsSnapshot,
   type SettingsVersionHistoryItem,
+  type TractionAnalysisLogEntry,
+  type TractionAnalysisRange,
+  type TractionAnalysisResponse,
+  type TractionAnalysisSeries,
+  type TractionAnalysisStatsRow,
   type WeeklyEvent,
 } from "@shearer/contracts";
 
@@ -398,6 +403,25 @@ const pumpStats: KeyValueField[] = toFields([
   ["今日过温时间", "36m"],
 ]);
 
+const tractionStats: TractionAnalysisStatsRow[] = [
+  {
+    part: "左牵引电机",
+    averageLoadPower: "264 kW",
+    averageLoadTemperature: "72.4℃",
+    todayLoadedRuntime: "7h 12m",
+    todayOverloadTime: "16m",
+    todayOverTemperatureTime: "42m",
+  },
+  {
+    part: "右牵引电机",
+    averageLoadPower: "257 kW",
+    averageLoadTemperature: "70.8℃",
+    todayLoadedRuntime: "7h 06m",
+    todayOverloadTime: "14m",
+    todayOverTemperatureTime: "38m",
+  },
+];
+
 const logs: PumpAnalysisLogEntry[] = parseLogEntries([
   "2026-03-10 14:10:23 记忆截割1右升",
   "2026-03-10 14:10:23 系统执行1右升",
@@ -412,6 +436,21 @@ const alerts: PumpAnalysisLogEntry[] = parseLogEntries([
   "2026-03-10 14:10:42 RDCR流量通道1保护！",
   "2026-03-10 14:10:42 EDCR流量监测通道2保护！",
   "2026-03-10 14:11:23 EDCR流量监测通道2报警！",
+]);
+
+const tractionLogs: TractionAnalysisLogEntry[] = parseLogEntries([
+  "2026-03-10 14:10:23 左牵引系统收到启动指令",
+  "2026-03-10 14:10:23 左牵引电机进入带载运行",
+  "2026-03-10 14:10:42 右牵引系统执行扭矩补偿",
+  "2026-03-10 14:10:42 变频器输出转矩上升至 76%",
+  "2026-03-10 14:11:23 牵引速度反馈恢复稳定",
+]);
+
+const tractionAlerts: TractionAnalysisLogEntry[] = parseLogEntries([
+  "2026-03-10 14:10:23 4210 冷却水流量不足，变频器降额运行！",
+  "2026-03-10 14:10:23 左牵引电机温度接近上限，建议降低带载速度！",
+  "2026-03-10 14:10:42 3130 中间直流电压振荡，牵引控制进入观察状态！",
+  "2026-03-10 14:10:42 输出转矩波动偏大，检查机械阻滞与负载差异！",
 ]);
 
 export const networkInfoData: KeyValueField[] = toFields([
@@ -557,5 +596,69 @@ export const createPumpAnalysis = (range: PumpAnalysisRange = "24h"): PumpAnalys
     stats: pumpStats,
     logs,
     alerts,
+  };
+};
+
+export const createTractionAnalysis = (
+  range: TractionAnalysisRange = "24h",
+): TractionAnalysisResponse => {
+  const labels = Array.from({ length: range === "24h" ? 24 : 24 }, (_, index) =>
+    `${String(index).padStart(2, "0")}:00`,
+  );
+
+  const motorSeries: TractionAnalysisSeries[] = [
+    {
+      name: "左牵引电机温度",
+      color: "#ffb14a",
+      values: generateSeries(24, 73, 7.5, 1, 0.1),
+    },
+    {
+      name: "右牵引电机温度",
+      color: "#f7d65c",
+      values: generateSeries(24, 70.5, 6.8, 2, 0.1),
+    },
+    {
+      name: "左牵引电机电流",
+      color: "#4f8cff",
+      values: generateSeries(24, 168, 28, 1, 0.1),
+    },
+    {
+      name: "右牵引电机电流",
+      color: "#48c7ff",
+      values: generateSeries(24, 162, 26, 0, 0.09),
+    },
+  ];
+
+  const inverterSeries: TractionAnalysisSeries[] = [
+    {
+      name: "输入电压",
+      color: "#38d889",
+      values: generateSeries(24, 1140, 32, 0, 0.06),
+    },
+    {
+      name: "直流电压",
+      color: "#4f8cff",
+      values: generateSeries(24, 1550, 55, 1, 0.06),
+    },
+    {
+      name: "输出转矩",
+      color: "#ffb14a",
+      values: generateSeries(24, 72, 16, 2, 0.1),
+    },
+    {
+      name: "IGBT温度",
+      color: "#ff5f57",
+      values: generateSeries(24, 68, 11, 1, 0.1),
+    },
+  ];
+
+  return {
+    range,
+    labels,
+    motorSeries,
+    inverterSeries,
+    stats: tractionStats,
+    logs: tractionLogs,
+    alerts: tractionAlerts,
   };
 };

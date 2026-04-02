@@ -1,18 +1,25 @@
 "use client";
 
-import type { PumpAnalysisSeries } from "@shearer/contracts";
 import { useEffect, useRef } from "react";
+
+type ChartSeriesLike = {
+  name: string;
+  color: string;
+  values: number[];
+};
 
 type AnalysisTrendChartProps = {
   labels: string[];
   loading?: boolean;
-  series: PumpAnalysisSeries[];
+  series: ChartSeriesLike[];
+  tall?: boolean;
 };
 
 export function AnalysisTrendChart({
   labels,
   series,
   loading = false,
+  tall = true,
 }: AnalysisTrendChartProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -151,7 +158,7 @@ export function AnalysisTrendChart({
   }, [labels, loading, series]);
 
   return (
-    <div className="chart-wrap tall">
+    <div className={`chart-wrap ${tall ? "tall" : ""}`.trim()}>
       <div className="chart-canvas" ref={containerRef} />
       {loading ? <div className="chart-overlay">正在加载 24h 趋势数据...</div> : null}
       {!loading && (labels.length === 0 || series.length === 0) ? (
