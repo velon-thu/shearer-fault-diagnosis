@@ -1,4 +1,10 @@
+import { randomUUID } from "node:crypto";
 import {
+  type AuthLoginRequest,
+  type AuthLoginResponse,
+  type AuthLogoutResponse,
+  type AuthMeResponse,
+  type AuthUser,
   type BootstrapResponse,
   type CheckinCalendarRecord,
   type CheckinHistoryEntry,
@@ -48,6 +54,83 @@ type FaultDictionaryEntry = {
 };
 
 type FaultDictionary = Record<FaultCategory, Record<string, FaultDictionaryEntry>>;
+
+const mockAuthUser: AuthUser = {
+  employeeNo: "CM10001",
+  displayName: "张工",
+  role: "operator",
+};
+
+const mockAuthCredentials: AuthLoginRequest = {
+  employeeNo: "CM10001",
+  password: "Coal2026!",
+};
+
+const authSessions = new Map<
+  string,
+  {
+    expiresAt: string;
+    user: AuthUser;
+  }
+>();
+
+const createAuthExpiry = () => new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+
+export const getMockAuthCredentials = () => ({
+  ...mockAuthCredentials,
+});
+
+export const loginWithMockAuth = ({
+  employeeNo,
+  password,
+}: AuthLoginRequest): AuthLoginResponse | null => {
+  if (
+    employeeNo !== mockAuthCredentials.employeeNo ||
+    password !== mockAuthCredentials.password
+  ) {
+    return null;
+  }
+
+  const accessToken = randomUUID();
+  const expiresAt = createAuthExpiry();
+
+  authSessions.set(accessToken, {
+    expiresAt,
+    user: mockAuthUser,
+  });
+
+  return {
+    accessToken,
+    expiresAt,
+    user: mockAuthUser,
+  };
+};
+
+export const getMockAuthSession = (accessToken: string): AuthMeResponse | null => {
+  const session = authSessions.get(accessToken);
+
+  if (!session) {
+    return null;
+  }
+
+  if (Date.parse(session.expiresAt) <= Date.now()) {
+    authSessions.delete(accessToken);
+    return null;
+  }
+
+  return {
+    expiresAt: session.expiresAt,
+    user: session.user,
+  };
+};
+
+export const logoutMockAuth = (accessToken: string): AuthLogoutResponse => {
+  authSessions.delete(accessToken);
+
+  return {
+    loggedOut: true,
+  };
+};
 
 export const createConnectionStatus = (): ConnectionStatus => ({
   tabletToIpc: "connected",

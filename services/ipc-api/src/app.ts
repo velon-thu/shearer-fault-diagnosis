@@ -3,6 +3,10 @@ import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import {
   ApiErrorResponseSchema,
+  AuthLoginRequestSchema,
+  AuthLoginResponseSchema,
+  AuthLogoutResponseSchema,
+  AuthMeResponseSchema,
   BootstrapResponseSchema,
   CheckinsQuerySchema,
   CheckinsResponseSchema,
@@ -42,11 +46,17 @@ import {
   createSettingsSnapshot,
   findFaultCode,
   findSensorById,
+  getMockAuthSession,
   getSensorSummaries,
+  loginWithMockAuth,
+  logoutMockAuth,
   submitCheckins,
   weeklyEvents,
 } from "./mock";
 
+const AuthLoginApiResponseSchema = createApiSuccessResponseSchema(AuthLoginResponseSchema);
+const AuthMeApiResponseSchema = createApiSuccessResponseSchema(AuthMeResponseSchema);
+const AuthLogoutApiResponseSchema = createApiSuccessResponseSchema(AuthLogoutResponseSchema);
 const BootstrapApiResponseSchema = createApiSuccessResponseSchema(BootstrapResponseSchema);
 const HomeSummaryApiResponseSchema = createApiSuccessResponseSchema(HomeSummarySchema);
 const WeeklyEventsApiResponseSchema = createApiSuccessResponseSchema(WeeklyEventSchema.array());
@@ -61,6 +71,20 @@ const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysi
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
 const TractionAnalysisApiResponseSchema = createApiSuccessResponseSchema(TractionAnalysisResponseSchema);
 const HealthApiResponseSchema = createApiSuccessResponseSchema(HealthResponseSchema);
+
+const getBearerToken = (authorizationHeader?: string) => {
+  if (!authorizationHeader) {
+    return null;
+  }
+
+  const [scheme, token] = authorizationHeader.split(" ");
+
+  if (scheme !== "Bearer" || !token) {
+    return null;
+  }
+
+  return token;
+};
 
 export const buildApp = () => {
   const app = Fastify({
@@ -89,6 +113,72 @@ export const buildApp = () => {
       data: createBootstrapPayload(),
     }),
   );
+
+  app.post("/api/auth/login", async (request, reply) => {
+    const payload = AuthLoginRequestSchema.parse(request.body);
+    const session = loginWithMockAuth(payload);
+
+    if (!session) {
+      return reply.code(401).send(
+        ApiErrorResponseSchema.parse({
+          success: false,
+          error: {
+            code: "AUTH_INVALID_CREDENTIALS",
+            message: "工号或密码错误。",
+          },
+        }),
+      );
+    }
+
+    return AuthLoginApiResponseSchema.parse({
+      success: true,
+      data: session,
+    });
+  });
+
+  app.get("/api/auth/me", async (request, reply) => {
+    const token = getBearerToken(request.headers.authorization);
+    const session = token ? getMockAuthSession(token) : null;
+
+    if (!session) {
+      return reply.code(401).send(
+        ApiErrorResponseSchema.parse({
+          success: false,
+          error: {
+            code: "AUTH_UNAUTHORIZED",
+            message: "当前登录状态无效，请重新登录。",
+          },
+        }),
+      );
+    }
+
+    return AuthMeApiResponseSchema.parse({
+      success: true,
+      data: session,
+    });
+  });
+
+  app.post("/api/auth/logout", async (request, reply) => {
+    const token = getBearerToken(request.headers.authorization);
+    const session = token ? getMockAuthSession(token) : null;
+
+    if (!session || !token) {
+      return reply.code(401).send(
+        ApiErrorResponseSchema.parse({
+          success: false,
+          error: {
+            code: "AUTH_UNAUTHORIZED",
+            message: "当前登录状态无效，请重新登录。",
+          },
+        }),
+      );
+    }
+
+    return AuthLogoutApiResponseSchema.parse({
+      success: true,
+      data: logoutMockAuth(token),
+    });
+  });
 
   app.get("/api/home/summary", async () =>
     HomeSummaryApiResponseSchema.parse({

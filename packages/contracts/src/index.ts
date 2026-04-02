@@ -216,6 +216,32 @@ export const CheckinsSubmitRequestSchema = z.object({
   checkedItemIds: z.array(z.string()),
 });
 
+export const AuthUserSchema = z.object({
+  employeeNo: z.string(),
+  displayName: z.string(),
+  role: z.string(),
+});
+
+export const AuthLoginRequestSchema = z.object({
+  employeeNo: z.string().min(1),
+  password: z.string().min(1),
+});
+
+export const AuthLoginResponseSchema = z.object({
+  accessToken: z.string(),
+  expiresAt: z.string().datetime(),
+  user: AuthUserSchema,
+});
+
+export const AuthMeResponseSchema = z.object({
+  expiresAt: z.string().datetime(),
+  user: AuthUserSchema,
+});
+
+export const AuthLogoutResponseSchema = z.object({
+  loggedOut: z.literal(true),
+});
+
 export const SettingsVersionHistoryItemSchema = z.object({
   date: z.string(),
   desc: z.string(),
@@ -318,6 +344,11 @@ export type CheckinHistoryEntry = z.infer<typeof CheckinHistoryEntrySchema>;
 export type CheckinCalendarRecord = z.infer<typeof CheckinCalendarRecordSchema>;
 export type CheckinsResponse = z.infer<typeof CheckinsResponseSchema>;
 export type CheckinsSubmitRequest = z.infer<typeof CheckinsSubmitRequestSchema>;
+export type AuthUser = z.infer<typeof AuthUserSchema>;
+export type AuthLoginRequest = z.infer<typeof AuthLoginRequestSchema>;
+export type AuthLoginResponse = z.infer<typeof AuthLoginResponseSchema>;
+export type AuthMeResponse = z.infer<typeof AuthMeResponseSchema>;
+export type AuthLogoutResponse = z.infer<typeof AuthLogoutResponseSchema>;
 export type SettingsVersionHistoryItem = z.infer<typeof SettingsVersionHistoryItemSchema>;
 export type SettingsSnapshot = z.infer<typeof SettingsSnapshotSchema>;
 export type KeyValueField = z.infer<typeof KeyValueFieldSchema>;

@@ -3,12 +3,21 @@
 import {
   BootstrapResponseSchema,
   LiveMessageSchema,
+  type AuthUser,
   createApiSuccessResponseSchema,
   type BootstrapResponse,
   type ConnectionStatus,
 } from "@shearer/contracts";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  clearStoredAuthSession,
+  fetchAuthMe,
+  getSafeNextPath,
+  getStoredAccessToken,
+  logoutCurrentSession,
+} from "@/lib/auth";
 
 const BootstrapApiResponseSchema = createApiSuccessResponseSchema(BootstrapResponseSchema);
 
@@ -214,6 +223,13 @@ export function AppShell({
   tagTone = "blue",
 }: AppShellProps) {
   const { connection, now } = shellState;
+  const pathname = usePathname();
+  const router = useRouter();
+  const [authStatus, setAuthStatus] = useState<"checking" | "authenticated" | "redirecting">(
+    "checking",
+  );
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const statusChips = useMemo(
     () => [
@@ -241,6 +257,73 @@ export function AppShell({
     [connection],
   );
 
+  useEffect(() => {
+    let cancelled = false;
+    const nextPath = getSafeNextPath(pathname);
+    const accessToken = getStoredAccessToken();
+
+    if (!accessToken) {
+      clearStoredAuthSession();
+      setAuthStatus("redirecting");
+      router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const verifySession = async () => {
+      try {
+        const session = await fetchAuthMe(accessToken);
+
+        if (cancelled) {
+          return;
+        }
+
+        setCurrentUser(session.user);
+        setAuthStatus("authenticated");
+      } catch {
+        if (cancelled) {
+          return;
+        }
+
+        clearStoredAuthSession();
+        setCurrentUser(null);
+        setAuthStatus("redirecting");
+        router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
+      }
+    };
+
+    void verifySession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, router]);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await logoutCurrentSession(getStoredAccessToken());
+    setCurrentUser(null);
+    setAuthStatus("redirecting");
+    router.replace("/login");
+  };
+
+  if (authStatus !== "authenticated") {
+    return (
+      <main className="app-shell">
+        <section className="workspace auth-check-shell">
+          <div className="content">
+            <div className="content-inner">
+              <div className="empty">
+                {loggingOut ? "正在退出登录..." : "正在验证登录状态并跳转..."}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="app-shell">
       <section className="workspace">
@@ -265,6 +348,22 @@ export function AppShell({
               </div>
             </div>
             <div className="toolbar-right">
+              <div className="toolbar-session">
+                {currentUser ? (
+                  <div className="status-chip user">
+                    <span className="status-dot" />
+                    <span>{currentUser.employeeNo} · {currentUser.displayName}</span>
+                  </div>
+                ) : null}
+                <button
+                  className="toolbar-ghost"
+                  disabled={loggingOut}
+                  onClick={() => void handleLogout()}
+                  type="button"
+                >
+                  {loggingOut ? "退出中..." : "退出登录"}
+                </button>
+              </div>
               <div className="status-cluster">
                 {statusChips.map((chip) => (
                   <div className={`status-chip ${chip.tone}`} key={chip.label}>
