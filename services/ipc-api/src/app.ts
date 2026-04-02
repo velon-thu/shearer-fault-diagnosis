@@ -13,6 +13,8 @@ import {
   LiveMessageSchema,
   PumpAnalysisQuerySchema,
   PumpAnalysisResponseSchema,
+  RankingsQuerySchema,
+  RankingsResponseSchema,
   SensorDetailSchema,
   SensorIdParamsSchema,
   SensorSummarySchema,
@@ -28,6 +30,7 @@ import {
   buildSensorTrend,
   createCuttingAnalysis,
   createPumpAnalysis,
+  createRankings,
   createTractionAnalysis,
   createBootstrapPayload,
   createConnectionStatus,
@@ -46,6 +49,7 @@ const SensorSummariesApiResponseSchema = createApiSuccessResponseSchema(SensorSu
 const SensorDetailApiResponseSchema = createApiSuccessResponseSchema(SensorDetailSchema);
 const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendPointSchema.array());
 const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
+const RankingsApiResponseSchema = createApiSuccessResponseSchema(RankingsResponseSchema);
 const CuttingAnalysisApiResponseSchema = createApiSuccessResponseSchema(CuttingAnalysisResponseSchema);
 const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysisResponseSchema);
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
@@ -152,6 +156,15 @@ export const buildApp = () => {
     return FaultCodeResultApiResponseSchema.parse({
       success: true,
       data: findFaultCode(category, code),
+    });
+  });
+
+  app.get("/api/rankings", async (request) => {
+    const { start, end, system } = RankingsQuerySchema.parse(request.query);
+
+    return RankingsApiResponseSchema.parse({
+      success: true,
+      data: createRankings({ start, end, system }),
     });
   });
 

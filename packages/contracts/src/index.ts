@@ -163,6 +163,23 @@ export const FaultCodeResultSchema = z.object({
   tip: z.string().nullable(),
 });
 
+export const RankingSystemFilterSchema = z.enum(["all", "hydraulic", "cutting", "traction"]);
+
+export const RankingItemSchema = z.object({
+  name: z.string(),
+  count: z.number().int().nonnegative(),
+  lastOccurredAt: z.string(),
+});
+
+export const RankingsResponseSchema = z.object({
+  start: z.string(),
+  end: z.string(),
+  system: RankingSystemFilterSchema,
+  systemFaultRankings: z.array(RankingItemSchema),
+  inverterFaultRankings: z.array(RankingItemSchema),
+  sensorFaultRankings: z.array(RankingItemSchema),
+});
+
 export const SettingsVersionHistoryItemSchema = z.object({
   date: z.string(),
   desc: z.string(),
@@ -218,6 +235,12 @@ export const FaultCodeSearchQuerySchema = z.object({
   code: z.string().min(1).default("0x0094"),
 });
 
+export const RankingsQuerySchema = z.object({
+  start: z.string().default("2026-03-01"),
+  end: z.string().default("2026-03-31"),
+  system: RankingSystemFilterSchema.default("all"),
+});
+
 export const PumpAnalysisQuerySchema = z.object({
   range: PumpAnalysisRangeSchema.default("24h"),
 });
@@ -249,10 +272,13 @@ export type TractionAnalysisStatsRow = z.infer<typeof TractionAnalysisStatsRowSc
 export type TractionAnalysisLogEntry = z.infer<typeof TractionAnalysisLogEntrySchema>;
 export type TractionAnalysisResponse = z.infer<typeof TractionAnalysisResponseSchema>;
 export type FaultCodeResult = z.infer<typeof FaultCodeResultSchema>;
+export type RankingItem = z.infer<typeof RankingItemSchema>;
+export type RankingsResponse = z.infer<typeof RankingsResponseSchema>;
 export type SettingsVersionHistoryItem = z.infer<typeof SettingsVersionHistoryItemSchema>;
 export type SettingsSnapshot = z.infer<typeof SettingsSnapshotSchema>;
 export type KeyValueField = z.infer<typeof KeyValueFieldSchema>;
 export type FaultCategory = z.infer<typeof FaultCategorySchema>;
+export type RankingSystemFilter = z.infer<typeof RankingSystemFilterSchema>;
 export type PumpAnalysisRange = z.infer<typeof PumpAnalysisRangeSchema>;
 export type CuttingAnalysisRange = z.infer<typeof CuttingAnalysisRangeSchema>;
 export type TractionAnalysisRange = z.infer<typeof TractionAnalysisRangeSchema>;

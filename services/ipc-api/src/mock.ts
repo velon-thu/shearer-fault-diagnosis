@@ -14,6 +14,9 @@ import {
   type PumpAnalysisRange,
   type PumpAnalysisResponse,
   type PumpAnalysisSeries,
+  type RankingItem,
+  type RankingsResponse,
+  type RankingSystemFilter,
   type SensorDetail,
   type SensorSummary,
   type SensorTrendPoint,
@@ -400,6 +403,24 @@ export const versionHistoryData: SettingsVersionHistoryItem[] = [
   { date: "v2.6.1", desc: "补充知识库分类与日常检修打卡历史记录。" },
 ];
 
+export const systemFaultRankings: RankingItem[] = [
+  { name: "0x0094 右无线遥控总停", count: 11, lastOccurredAt: "2026-03-12 10:20:11" },
+  { name: "0x00C7 泵站启动失败", count: 7, lastOccurredAt: "2026-03-14 08:42:18" },
+  { name: "0x0147 控制箱按钮反馈异常", count: 5, lastOccurredAt: "2026-03-15 12:08:51" },
+];
+
+export const inverterFaultRankings: RankingItem[] = [
+  { name: "4210 冷却水流量不足", count: 9, lastOccurredAt: "2026-03-16 09:33:02" },
+  { name: "3130 中间直流电压振荡", count: 6, lastOccurredAt: "2026-03-11 13:55:26" },
+  { name: "4110 IGBT 温度超限", count: 4, lastOccurredAt: "2026-03-13 18:20:41" },
+];
+
+export const sensorFaultRankings: RankingItem[] = monthlySensorFailures.map((item) => ({
+  name: item.name,
+  count: item.count,
+  lastOccurredAt: item.last,
+}));
+
 const pumpStats: KeyValueField[] = toFields([
   ["平均带载功率", "298 kW"],
   ["平均带载温度", "69.8℃"],
@@ -553,6 +574,23 @@ export const createSettingsSnapshot = (): SettingsSnapshot => {
     networkInfoData,
   };
 };
+
+export const createRankings = ({
+  end = "2026-03-31",
+  start = "2026-03-01",
+  system = "all",
+}: {
+  start?: string;
+  end?: string;
+  system?: RankingSystemFilter;
+} = {}): RankingsResponse => ({
+  start,
+  end,
+  system,
+  systemFaultRankings,
+  inverterFaultRankings,
+  sensorFaultRankings,
+});
 
 export const getSensorSummaries = (): SensorSummary[] =>
   sensors.map(

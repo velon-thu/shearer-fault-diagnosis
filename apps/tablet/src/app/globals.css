@@ -437,6 +437,12 @@ input {
   gap: var(--page-gap);
 }
 
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: var(--page-gap);
+}
+
 .summary-card {
   position: relative;
   overflow: hidden;
@@ -1007,6 +1013,39 @@ input {
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.date-input {
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+  color-scheme: dark;
+}
+
+.date-input:focus {
+  border-color: rgba(79, 140, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.14);
+}
+
+.filter-bar .date-input,
+.filter-bar .control {
+  flex: 1 1 180px;
+}
+
+.filter-bar .button {
+  flex: 0 0 auto;
 }
 
 .search-row .search-input {
