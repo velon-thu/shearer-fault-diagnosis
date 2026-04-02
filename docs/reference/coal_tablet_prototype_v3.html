@@ -1,0 +1,3599 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>采煤机故障诊断点检仪 · 10.1英寸平板原型</title>
+  <style>
+    :root{
+      --bg:#0a0d12;
+      --panel:#121821;
+      --panel-2:#171f2b;
+      --panel-3:#1d2734;
+      --glass:rgba(24,31,43,.78);
+      --line:rgba(255,255,255,.08);
+      --line-strong:rgba(255,255,255,.15);
+      --text:#f5f7fb;
+      --text-2:rgba(245,247,251,.72);
+      --text-3:rgba(245,247,251,.45);
+      --blue:#4f8cff;
+      --cyan:#48c7ff;
+      --green:#38d889;
+      --orange:#ffb14a;
+      --red:#ff5f57;
+      --yellow:#f7d65c;
+      --purple:#9f86ff;
+      --radius-xl:24px;
+      --radius-lg:18px;
+      --radius-md:14px;
+      --radius-sm:10px;
+      --shadow:0 16px 40px rgba(0,0,0,.28);
+      --toolbar-h:84px;
+      --sidebar-w:272px;
+      --page-gap:18px;
+      --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Segoe UI",sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(79,140,255,.18), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(72,199,255,.12), transparent 28%),
+        linear-gradient(180deg,#0a0d12 0%, #0c1117 45%, #090c11 100%);
+      overflow:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size:24px 24px;
+      mask-image:linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.02));
+      opacity:.24;
+    }
+    .app{
+      display:grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      height:100vh;
+      max-width:1600px;
+      margin:0 auto;
+      padding:18px;
+      gap:18px;
+    }
+    .sidebar{
+      background:linear-gradient(180deg, rgba(17,23,31,.92), rgba(12,17,24,.92));
+      border:1px solid var(--line);
+      border-radius:30px;
+      box-shadow:var(--shadow);
+      padding:22px 18px 18px;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      backdrop-filter: blur(20px);
+    }
+    .brand{
+      padding:8px 8px 20px;
+      border-bottom:1px solid var(--line);
+      margin-bottom:18px;
+    }
+    .brand-top{
+      display:flex; align-items:center; gap:14px;
+      margin-bottom:10px;
+    }
+    .brand-logo{
+      width:48px; height:48px; border-radius:14px;
+      background:linear-gradient(145deg, rgba(79,140,255,.95), rgba(72,199,255,.65));
+      display:grid; place-items:center;
+      box-shadow:0 10px 30px rgba(79,140,255,.26);
+      font-weight:800;
+      letter-spacing:.08em;
+    }
+    .brand h1{
+      margin:0; font-size:22px; line-height:1.15; letter-spacing:.02em;
+    }
+    .brand p{
+      margin:6px 0 0; color:var(--text-2); font-size:13px;
+    }
+    .machine-note{
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .chip,.status-chip,.small-chip{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:999px;
+      font-size:12px;
+      color:var(--text-2);
+      padding:8px 12px;
+      white-space:nowrap;
+    }
+    .chip-dot,.status-dot{
+      width:8px; height:8px; border-radius:999px; background:var(--green);
+      box-shadow:0 0 0 4px rgba(56,216,137,.12);
+    }
+    .nav-group{margin-bottom:18px}
+    .nav-group-title{
+      color:var(--text-3); font-size:11px; letter-spacing:.16em;
+      text-transform:uppercase;
+      padding:0 10px 10px;
+    }
+    .nav-list{
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .nav-item{
+      width:100%;
+      background:none;
+      color:var(--text-2);
+      border:1px solid transparent;
+      display:flex; align-items:center; gap:12px;
+      min-height:48px;
+      border-radius:16px;
+      padding:10px 12px;
+      cursor:pointer;
+      transition:all .18s ease;
+      text-align:left;
+      font:inherit;
+    }
+    .nav-item:hover{
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-color:var(--line);
+      transform:translateX(2px);
+    }
+    .nav-item.active{
+      background:linear-gradient(180deg, rgba(79,140,255,.16), rgba(79,140,255,.09));
+      border-color:rgba(79,140,255,.28);
+      color:var(--text);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .nav-icon{
+      width:30px; height:30px; flex:0 0 30px;
+      display:grid; place-items:center;
+      border-radius:10px;
+      background:rgba(255,255,255,.05);
+      color:var(--blue);
+      font-size:12px; font-weight:700;
+      letter-spacing:.08em;
+    }
+    .sidebar-foot{
+      margin-top:auto;
+      border-top:1px solid var(--line);
+      padding:16px 8px 4px;
+      display:grid; gap:10px;
+    }
+    .workspace{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      background:linear-gradient(180deg, rgba(15,21,29,.86), rgba(11,16,22,.92));
+      border:1px solid var(--line);
+      border-radius:30px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(24px);
+      overflow:hidden;
+    }
+    .toolbar{
+      height:var(--toolbar-h);
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 22px 0 24px;
+      gap:18px;
+      background:linear-gradient(180deg, rgba(19,26,35,.84), rgba(16,22,31,.74));
+      backdrop-filter: blur(18px);
+    }
+    .toolbar-left{
+      display:flex; align-items:center; gap:14px; min-width:0;
+    }
+    .home-btn{
+      min-width:110px;
+      height:44px;
+      border:none;
+      border-radius:14px;
+      background:linear-gradient(180deg, rgba(79,140,255,.24), rgba(79,140,255,.14));
+      color:var(--text);
+      font:inherit;
+      font-weight:700;
+      cursor:pointer;
+      border:1px solid rgba(79,140,255,.24);
+    }
+    .page-heading{min-width:0}
+    .page-title{
+      font-size:24px;
+      font-weight:760;
+      letter-spacing:.02em;
+      margin:0;
+    }
+    .page-subtitle{
+      margin-top:4px;
+      color:var(--text-2);
+      font-size:13px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .toolbar-right{
+      display:flex; align-items:center; gap:16px; min-width:0;
+    }
+    .status-cluster{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+      min-width:0;
+    }
+    .status-chip{
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-color:var(--line-strong);
+      padding:9px 12px;
+    }
+    .status-chip.success .status-dot{background:var(--green); box-shadow:0 0 0 4px rgba(56,216,137,.12)}
+    .status-chip.warn .status-dot{background:var(--orange); box-shadow:0 0 0 4px rgba(255,177,74,.14)}
+    .status-chip.error .status-dot{background:var(--red); box-shadow:0 0 0 4px rgba(255,95,87,.12)}
+    .status-chip.offline .status-dot{background:#7b8798; box-shadow:none}
+    .clock-box{
+      min-width:160px;
+      padding:10px 14px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      text-align:right;
+      line-height:1.2;
+    }
+    .clock-time{font-size:22px; font-weight:760}
+    .clock-date{font-size:12px; color:var(--text-2); margin-top:4px}
+    .content{
+      flex:1;
+      overflow:auto;
+      padding:18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.018), rgba(255,255,255,0));
+    }
+    .content::-webkit-scrollbar{width:10px;height:10px}
+    .content::-webkit-scrollbar-thumb{
+      background:rgba(255,255,255,.10); border-radius:999px;
+      border:2px solid transparent; background-clip:padding-box;
+    }
+    .page{display:none; animation:fadeIn .18s ease}
+    .page.active{display:block}
+    @keyframes fadeIn{
+      from{opacity:0; transform:translateY(6px)}
+      to{opacity:1; transform:translateY(0)}
+    }
+
+    .grid-12{display:grid; grid-template-columns:repeat(12,1fr); gap:var(--page-gap)}
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:var(--page-gap)}
+    .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:var(--page-gap)}
+    .grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:var(--page-gap)}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-7{grid-column:span 7}
+    .span-6{grid-column:span 6}
+    .span-5{grid-column:span 5}
+    .span-4{grid-column:span 4}
+    .span-3{grid-column:span 3}
+    .span-2{grid-column:span 2}
+
+    .panel{
+      background:
+        linear-gradient(180deg, rgba(30,39,52,.84), rgba(18,24,33,.84));
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      min-width:0;
+    }
+    .panel-head{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+      padding:18px 20px 0;
+    }
+    .panel-title{
+      margin:0; font-size:17px; font-weight:720;
+      display:flex; align-items:center; gap:10px;
+    }
+    .panel-title .accent-bar{
+      width:5px; height:16px; border-radius:999px; background:var(--blue);
+      box-shadow:0 0 18px rgba(79,140,255,.45);
+    }
+    .panel-subtitle{
+      color:var(--text-2); font-size:13px; margin-top:8px; margin-bottom:0;
+    }
+    .panel-body{padding:18px 20px 20px}
+    .hero-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:14px;
+    }
+    .hero-card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:16px 16px 14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      position:relative;
+      overflow:hidden;
+    }
+    .hero-card::after{
+      content:"";
+      position:absolute; inset:auto -16px -16px auto;
+      width:90px; height:90px; border-radius:999px;
+      background:radial-gradient(circle, rgba(255,255,255,.14), transparent 70%);
+      opacity:.55;
+    }
+    .hero-label{
+      font-size:12px; color:var(--text-2); letter-spacing:.06em; text-transform:uppercase;
+      margin-bottom:10px;
+    }
+    .hero-value{
+      font-size:28px; font-weight:760; line-height:1.15; margin:0;
+    }
+    .hero-meta{
+      margin-top:8px; font-size:13px; color:var(--text-2);
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text-2);
+    }
+    .pill.blue{color:#cfe1ff; background:rgba(79,140,255,.12); border-color:rgba(79,140,255,.20)}
+    .pill.orange{color:#ffe0b5; background:rgba(255,177,74,.10); border-color:rgba(255,177,74,.20)}
+    .pill.green{color:#d8ffea; background:rgba(56,216,137,.10); border-color:rgba(56,216,137,.22)}
+    .pill.red{color:#ffd5d2; background:rgba(255,95,87,.10); border-color:rgba(255,95,87,.20)}
+
+    .list{
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .event-item, .rank-item, .sensor-item, .log-item, .check-item, .asset-item, .code-chip, .history-item, .network-item{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:18px;
+      transition:all .18s ease;
+      min-width:0;
+    }
+    .event-item:hover, .sensor-item:hover, .asset-item:hover, .code-chip:hover{
+      border-color:rgba(79,140,255,.28);
+      transform:translateY(-1px);
+      box-shadow:0 12px 24px rgba(0,0,0,.18);
+    }
+    .event-btn, .sensor-btn, .asset-btn, .code-btn{
+      width:100%;
+      border:none;
+      background:none;
+      color:inherit;
+      text-align:left;
+      padding:14px 16px;
+      font:inherit;
+      cursor:pointer;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .event-main, .sensor-main, .asset-main{min-width:0}
+    .event-time, .meta-line, .muted{
+      color:var(--text-2); font-size:12px;
+    }
+    .event-title, .sensor-title, .rank-name, .asset-title{
+      font-size:15px; font-weight:660; line-height:1.35;
+      margin-top:4px;
+      word-break:break-word;
+    }
+    .event-route{
+      align-self:center;
+      color:var(--blue);
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .split{
+      display:grid; grid-template-columns:360px minmax(0,1fr); gap:var(--page-gap);
+    }
+    .detail-stack{display:grid; gap:var(--page-gap)}
+    .kpi-row{
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px;
+    }
+    .kpi{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.035);
+      border-radius:18px;
+      padding:14px;
+    }
+    .kpi-name{font-size:12px; color:var(--text-2)}
+    .kpi-value{margin-top:8px; font-size:22px; font-weight:760}
+    .big-nav{
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px;
+    }
+    .nav-tile{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-radius:22px;
+      padding:16px;
+      min-height:110px;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      transition:all .2s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .nav-tile:hover{
+      transform:translateY(-2px);
+      border-color:rgba(79,140,255,.30);
+      box-shadow:0 16px 28px rgba(0,0,0,.20);
+    }
+    .nav-tile::before{
+      content:"";
+      position:absolute; right:-18px; top:-18px; width:86px; height:86px; border-radius:50%;
+      background:radial-gradient(circle, rgba(79,140,255,.16), transparent 70%);
+    }
+    .nav-tile-top{
+      display:flex; justify-content:space-between; align-items:center; gap:8px;
+    }
+    .nav-tile-icon{
+      width:42px; height:42px; border-radius:14px;
+      display:grid; place-items:center;
+      background:rgba(79,140,255,.16);
+      color:var(--blue);
+      font-weight:800; font-size:13px;
+    }
+    .nav-tile-name{font-size:16px; font-weight:700}
+    .nav-tile-desc{color:var(--text-2); font-size:13px; line-height:1.45}
+    .rank-item{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .rank-left{min-width:0}
+    .rank-top{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .rank-index{
+      width:28px; height:28px; border-radius:999px; display:grid; place-items:center;
+      background:rgba(255,255,255,.06);
+      color:var(--text); font-size:13px; font-weight:760;
+    }
+    .rank-count{
+      font-size:24px; font-weight:760;
+      color:var(--orange);
+      white-space:nowrap;
+    }
+    .data-table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 10px;
+    }
+    .data-table th{
+      color:var(--text-3);
+      font-size:12px;
+      font-weight:600;
+      text-align:left;
+      padding:0 12px 6px;
+      letter-spacing:.04em;
+    }
+    .data-table td{
+      padding:14px 12px;
+      background:rgba(255,255,255,.03);
+      border-top:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      font-size:14px;
+    }
+    .data-table tr td:first-child{
+      border-left:1px solid var(--line);
+      border-top-left-radius:16px; border-bottom-left-radius:16px;
+    }
+    .data-table tr td:last-child{
+      border-right:1px solid var(--line);
+      border-top-right-radius:16px; border-bottom-right-radius:16px;
+    }
+    .chart-card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      border-radius:22px;
+      padding:14px 16px 16px;
+      min-width:0;
+    }
+    .chart-head{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:10px;
+    }
+    .chart-title{margin:0; font-size:15px; font-weight:700}
+    .chart-meta{font-size:12px; color:var(--text-2); margin-top:6px}
+    .chart-wrap{
+      height:260px;
+      position:relative;
+    }
+    .chart-wrap.tall{height:320px}
+    .chart-svg{
+      width:100%; height:100%;
+      display:block;
+      border-radius:16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid rgba(255,255,255,.04);
+    }
+    .chart-legend{
+      display:flex; flex-wrap:wrap; gap:10px;
+      margin-top:12px;
+    }
+    .legend-item{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; color:var(--text-2);
+      padding:6px 10px;
+      background:rgba(255,255,255,.04);
+      border-radius:999px;
+      border:1px solid var(--line);
+    }
+    .legend-line{
+      width:18px; height:4px; border-radius:999px;
+      background:var(--blue);
+      box-shadow:0 0 10px rgba(255,255,255,.15);
+    }
+    .log-list, .alarm-list, .history-list, .asset-list{
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .log-item, .history-item, .asset-item, .network-item{
+      padding:14px 16px;
+    }
+    .log-time{
+      color:var(--text-3); font-size:12px;
+      margin-bottom:6px;
+    }
+    .log-text{
+      font-size:14px; line-height:1.45;
+    }
+    .log-item.alarm{
+      border-color:rgba(255,95,87,.24);
+      background:rgba(255,95,87,.06);
+    }
+    .filter-bar{
+      display:flex; flex-wrap:wrap; gap:12px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:rgba(255,255,255,.03);
+    }
+    .control, .search-input, .text-input, .textarea, .date-input{
+      height:44px;
+      background:rgba(255,255,255,.045);
+      border:1px solid var(--line);
+      border-radius:14px;
+      color:var(--text);
+      padding:0 14px;
+      font:inherit;
+      min-width:0;
+      outline:none;
+    }
+    .textarea{
+      height:auto; min-height:112px; padding:12px 14px; resize:vertical;
+    }
+    .control:focus,.search-input:focus,.text-input:focus,.textarea:focus,.date-input:focus{
+      border-color:rgba(79,140,255,.45);
+      box-shadow:0 0 0 3px rgba(79,140,255,.14);
+    }
+    .button{
+      height:44px;
+      padding:0 16px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+      color:var(--text);
+      font:inherit; font-weight:650;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+    .button:hover{transform:translateY(-1px); border-color:rgba(79,140,255,.30)}
+    .button.primary{
+      background:linear-gradient(180deg, rgba(79,140,255,.88), rgba(55,115,230,.82));
+      border-color:rgba(79,140,255,.40);
+      box-shadow:0 16px 24px rgba(79,140,255,.18);
+    }
+    .button.warning{
+      background:linear-gradient(180deg, rgba(255,177,74,.84), rgba(228,139,27,.80));
+      color:#17130c;
+      border-color:rgba(255,177,74,.40);
+      box-shadow:0 16px 24px rgba(255,177,74,.12);
+    }
+    .button.ghost{background:transparent}
+    .button.success{
+      background:linear-gradient(180deg, rgba(56,216,137,.84), rgba(35,166,102,.82));
+      color:#0d1510;
+      border-color:rgba(56,216,137,.38);
+    }
+    .input-row{
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;
+    }
+    .setting-grid{
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--page-gap);
+    }
+    .field-grid{
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;
+    }
+    .field{
+      display:flex; flex-direction:column; gap:8px;
+    }
+    .field label{
+      font-size:12px; color:var(--text-2);
+      padding-left:2px;
+    }
+    .code-grid{
+      display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px;
+    }
+    .code-chip{overflow:hidden}
+    .code-btn{
+      padding:14px 12px;
+      justify-content:center;
+      font-weight:700;
+      color:var(--text);
+    }
+    .code-chip.active{
+      border-color:rgba(79,140,255,.36);
+      background:rgba(79,140,255,.10);
+    }
+    .search-row{
+      display:flex; gap:12px; flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+    .search-row .search-input{flex:1 1 220px}
+    .result-box{
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:18px;
+      background:rgba(255,255,255,.03);
+      min-height:260px;
+    }
+    .result-code{
+      display:inline-flex; align-items:center; gap:10px;
+      font-size:24px; font-weight:760;
+      margin-bottom:12px;
+    }
+    .result-desc{font-size:16px; line-height:1.6; margin-bottom:16px}
+    .result-tip{
+      border-radius:16px;
+      padding:14px 16px;
+      background:rgba(79,140,255,.08);
+      border:1px solid rgba(79,140,255,.18);
+      color:#dce8ff;
+      line-height:1.6;
+      font-size:14px;
+    }
+    .chip-row{
+      display:flex; flex-wrap:wrap; gap:10px;
+    }
+    .selectable-chip{
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text-2);
+      cursor:pointer;
+      font-size:13px;
+      user-select:none;
+      transition:.18s ease;
+    }
+    .selectable-chip:hover{border-color:rgba(79,140,255,.28); color:var(--text)}
+    .selectable-chip.active{
+      color:var(--text);
+      background:rgba(79,140,255,.14);
+      border-color:rgba(79,140,255,.32);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+    .sensor-item.active{
+      border-color:rgba(79,140,255,.36);
+      background:rgba(79,140,255,.10);
+    }
+    .badge{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:52px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px; font-weight:700;
+      white-space:nowrap;
+      border:1px solid transparent;
+    }
+    .badge.success{color:#d8ffea; background:rgba(56,216,137,.10); border-color:rgba(56,216,137,.22)}
+    .badge.warn{color:#ffe8c4; background:rgba(255,177,74,.12); border-color:rgba(255,177,74,.22)}
+    .badge.error{color:#ffd7d4; background:rgba(255,95,87,.10); border-color:rgba(255,95,87,.22)}
+    .badge.info{color:#dce8ff; background:rgba(79,140,255,.10); border-color:rgba(79,140,255,.22)}
+    .check-item{
+      padding:14px 16px;
+      display:flex; align-items:flex-start; gap:12px;
+    }
+    .check-box{
+      margin-top:2px;
+      width:22px; height:22px; border-radius:8px;
+      border:1px solid var(--line-strong);
+      background:rgba(255,255,255,.04);
+      display:grid; place-items:center;
+      cursor:pointer;
+      user-select:none;
+      flex:0 0 22px;
+      transition:.18s ease;
+    }
+    .check-item.done .check-box{
+      background:rgba(56,216,137,.16);
+      border-color:rgba(56,216,137,.26);
+      color:var(--green);
+    }
+    .check-title{
+      font-size:14px; line-height:1.6;
+    }
+    .history-item{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .asset-item{
+      display:flex; justify-content:space-between; align-items:center; gap:14px;
+    }
+    .asset-meta{font-size:12px; color:var(--text-2); margin-top:6px}
+    .empty{
+      color:var(--text-3); font-size:14px; line-height:1.7;
+      padding:18px;
+      border:1px dashed var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.02);
+    }
+    .footer-note{
+      color:var(--text-3); font-size:12px; margin-top:10px; line-height:1.6;
+    }
+    .two-col{
+      display:grid; grid-template-columns:1.15fr .85fr; gap:var(--page-gap);
+    }
+    .stack{display:grid; gap:var(--page-gap)}
+    .mini-list{display:grid; gap:10px}
+    .network-grid{
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;
+    }
+    .network-item strong{display:block; font-size:15px}
+    .network-item span{display:block; margin-top:6px; color:var(--text-2); font-size:13px}
+    .section-spacer{height:6px}
+
+    @media (max-width: 1320px){
+      .hero-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .split, .two-col{grid-template-columns:1fr}
+      .setting-grid{grid-template-columns:1fr}
+      .code-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+      .toolbar{height:auto; padding:16px 20px; align-items:flex-start}
+      .toolbar-right{flex-direction:column; align-items:flex-end}
+    }
+    @media (max-width: 1120px){
+      .app{grid-template-columns:1fr; padding:12px}
+      .sidebar{display:none}
+      .content{padding:14px}
+      .grid-12{grid-template-columns:repeat(6,1fr)}
+      .span-8,.span-7,.span-6,.span-5,.span-4,.span-3,.span-2{grid-column:span 6}
+      .big-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .code-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .field-grid,.input-row,.network-grid{grid-template-columns:1fr}
+      .toolbar-right{align-items:flex-start}
+      .status-cluster{justify-content:flex-start}
+    }
+    @media (max-width: 820px){
+      .hero-grid,.grid-2,.grid-3,.grid-4,.big-nav{grid-template-columns:1fr}
+      .code-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .toolbar{gap:12px}
+      .clock-box{min-width:0; width:100%; text-align:left}
+    }
+  
+
+    /* ===== 10.1 英寸平板版 V2 调整 ===== */
+    :root{
+      --toolbar-h:78px;
+      --page-gap:16px;
+      --sidebar-w:0px;
+    }
+    body{
+      overflow:hidden;
+    }
+    .app{
+      grid-template-columns:1fr !important;
+      max-width:1380px;
+      padding:18px;
+      gap:0;
+      height:100vh;
+    }
+    .sidebar{display:none !important;}
+    .workspace{
+      border-radius:28px;
+      min-height:calc(100vh - 36px);
+    }
+    .toolbar{
+      padding:0 26px;
+    }
+    .toolbar-left{gap:16px;}
+    .home-btn{
+      min-width:106px;
+      height:46px;
+      border-radius:16px;
+    }
+    .page-title{font-size:26px;}
+    .page-subtitle{font-size:14px;}
+    .content{padding:20px 22px 24px;}
+    .hero-grid{grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px;}
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:var(--page-gap);
+    }
+    .summary-card{
+      width:100%;
+      border:none;
+      color:inherit;
+      text-align:left;
+      cursor:pointer;
+      border-radius:24px;
+      padding:18px;
+      min-height:176px;
+      background:linear-gradient(180deg, rgba(30,39,52,.88), rgba(18,24,33,.92));
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:14px;
+      position:relative;
+      overflow:hidden;
+      transition:all .18s ease;
+      font:inherit;
+    }
+    .summary-card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(79,140,255,.30);
+      box-shadow:0 18px 30px rgba(0,0,0,.24);
+    }
+    .summary-card::after{
+      content:"";
+      position:absolute;
+      width:120px;
+      height:120px;
+      right:-32px;
+      top:-34px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(255,255,255,.12), transparent 72%);
+      opacity:.6;
+      pointer-events:none;
+    }
+    .summary-card.orange::after{background:radial-gradient(circle, rgba(255,177,74,.25), transparent 72%);}
+    .summary-card.red::after{background:radial-gradient(circle, rgba(255,95,87,.22), transparent 72%);}
+    .summary-card.green::after{background:radial-gradient(circle, rgba(56,216,137,.22), transparent 72%);}
+    .summary-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      position:relative;
+      z-index:1;
+    }
+    .summary-label{
+      font-size:15px;
+      font-weight:720;
+      letter-spacing:.02em;
+    }
+    .summary-time,
+    .summary-sub,
+    .summary-foot{
+      color:var(--text-2);
+      font-size:13px;
+      line-height:1.45;
+    }
+    .summary-count{
+      min-width:42px;
+      text-align:right;
+      font-size:30px;
+      line-height:1;
+      font-weight:800;
+      color:var(--text);
+    }
+    .summary-card.orange .summary-count{color:var(--orange);}
+    .summary-card.red .summary-count{color:var(--red);}
+    .summary-card.green .summary-count{color:var(--green);}
+    .summary-main{
+      display:grid;
+      gap:8px;
+      position:relative;
+      z-index:1;
+    }
+    .summary-title{
+      font-size:18px;
+      font-weight:740;
+      line-height:1.45;
+      margin:0;
+    }
+    .summary-foot{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      position:relative;
+      z-index:1;
+    }
+    .summary-link{
+      color:var(--blue);
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .big-nav{
+      display:grid;
+      grid-template-columns:repeat(5, minmax(0,1fr));
+      gap:16px;
+    }
+    .nav-tile{
+      min-height:132px;
+      padding:18px 14px;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      gap:14px;
+      border-radius:24px;
+    }
+    .nav-tile::before{
+      width:84px;
+      height:84px;
+      right:-16px;
+      top:-18px;
+    }
+    .nav-tile-top{display:block;}
+    .nav-tile-icon{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      margin:0 auto 14px;
+      font-size:20px;
+      background:rgba(79,140,255,.18);
+      color:#dce8ff;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .nav-tile .badge,
+    .nav-tile-desc{display:none !important;}
+    .nav-tile-name{
+      font-size:17px;
+      font-weight:720;
+      line-height:1.4;
+    }
+
+    .checkin-layout{
+      display:grid;
+      grid-template-columns:420px minmax(0, 1fr);
+      gap:var(--page-gap);
+    }
+    .calendar-wrap{display:grid; gap:12px;}
+    .calendar-toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .calendar-month{
+      font-size:18px;
+      font-weight:760;
+      letter-spacing:.02em;
+    }
+    .calendar-legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .calendar-legend-item{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      font-size:12px;
+      color:var(--text-2);
+    }
+    .legend-dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      display:inline-block;
+    }
+    .legend-dot.done{background:var(--green);}
+    .legend-dot.partial{background:var(--orange);}
+    .legend-dot.missed{background:var(--red);}
+    .legend-dot.empty{background:#6f7786;}
+
+    .calendar-grid{
+      display:grid;
+      grid-template-columns:repeat(7, minmax(0, 1fr));
+      gap:10px;
+    }
+    .calendar-weekday{
+      padding:4px 0 2px;
+      text-align:center;
+      font-size:12px;
+      color:var(--text-3);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .calendar-cell{
+      min-height:94px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:8px;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+    .calendar-cell:hover{
+      transform:translateY(-1px);
+      border-color:rgba(79,140,255,.30);
+    }
+    .calendar-cell.empty{
+      background:rgba(255,255,255,.015);
+      border-style:dashed;
+      cursor:default;
+    }
+    .calendar-cell.done{
+      background:rgba(56,216,137,.08);
+      border-color:rgba(56,216,137,.22);
+    }
+    .calendar-cell.partial{
+      background:rgba(255,177,74,.08);
+      border-color:rgba(255,177,74,.22);
+    }
+    .calendar-cell.missed{
+      background:rgba(255,95,87,.07);
+      border-color:rgba(255,95,87,.22);
+    }
+    .calendar-cell.selected{
+      box-shadow:inset 0 0 0 2px rgba(79,140,255,.34);
+      border-color:rgba(79,140,255,.34);
+    }
+    .calendar-date{
+      font-size:15px;
+      font-weight:760;
+      line-height:1;
+    }
+    .calendar-badge{
+      display:inline-flex;
+      align-items:center;
+      width:max-content;
+      max-width:100%;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:700;
+      border:1px solid var(--line);
+      color:var(--text-2);
+      background:rgba(255,255,255,.05);
+    }
+    .calendar-badge.done{color:#d8ffea; background:rgba(56,216,137,.14); border-color:rgba(56,216,137,.22);}
+    .calendar-badge.partial{color:#ffe8c4; background:rgba(255,177,74,.14); border-color:rgba(255,177,74,.22);}
+    .calendar-badge.missed{color:#ffd7d4; background:rgba(255,95,87,.12); border-color:rgba(255,95,87,.22);}
+    .calendar-badge.empty{color:var(--text-3);}
+    .calendar-note{
+      font-size:12px;
+      color:var(--text-2);
+      line-height:1.4;
+      display:-webkit-box;
+      -webkit-box-orient:vertical;
+      -webkit-line-clamp:2;
+      overflow:hidden;
+    }
+    .calendar-detail{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:rgba(255,255,255,.03);
+      padding:16px 18px;
+      display:grid;
+      gap:12px;
+    }
+    .calendar-detail-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+    }
+    .calendar-detail-title{
+      font-size:18px;
+      font-weight:760;
+      margin:0;
+    }
+    .calendar-detail-meta{
+      font-size:13px;
+      color:var(--text-2);
+      margin-top:6px;
+    }
+    .calendar-detail-note{
+      font-size:14px;
+      line-height:1.6;
+      color:var(--text);
+    }
+    .calendar-detail-list{
+      display:grid;
+      gap:8px;
+    }
+    .calendar-detail-row{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      color:var(--text-2);
+      font-size:13px;
+      line-height:1.5;
+    }
+    .calendar-detail-row strong{
+      color:var(--text);
+      min-width:74px;
+      font-weight:700;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(5,9,14,.72);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:26px;
+      z-index:1000;
+    }
+    .overlay.open{display:flex;}
+    .overlay-card{
+      width:min(980px, 100%);
+      max-height:84vh;
+      background:linear-gradient(180deg, rgba(19,26,35,.96), rgba(14,20,28,.98));
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:0 22px 60px rgba(0,0,0,.35);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .overlay-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      padding:20px 22px 14px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    }
+    .overlay-title{
+      margin:0;
+      font-size:22px;
+      font-weight:780;
+    }
+    .overlay-subtitle{
+      margin:8px 0 0;
+      font-size:13px;
+      color:var(--text-2);
+      line-height:1.5;
+    }
+    .overlay-close{
+      flex:0 0 auto;
+      min-width:88px;
+      height:42px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font:inherit;
+      font-weight:680;
+      cursor:pointer;
+    }
+    .overlay-body{
+      padding:18px 22px 22px;
+      overflow:auto;
+      display:grid;
+      gap:14px;
+    }
+    .overlay-foot{
+      display:flex;
+      justify-content:flex-end;
+      gap:12px;
+      padding-top:8px;
+    }
+    .mini-note{
+      color:var(--text-2);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    @media (max-width: 1320px){
+      .big-nav{grid-template-columns:repeat(4, minmax(0,1fr));}
+      .checkin-layout{grid-template-columns:1fr;}
+    }
+    @media (max-width: 1180px){
+      .hero-grid{grid-template-columns:repeat(2, minmax(0,1fr));}
+      .summary-grid{grid-template-columns:1fr;}
+      .big-nav{grid-template-columns:repeat(3, minmax(0,1fr));}
+    }
+    @media (max-width: 900px){
+      .toolbar{height:auto; padding:16px 20px; align-items:flex-start;}
+      .toolbar-right{flex-direction:column; align-items:flex-start;}
+      .clock-box{min-width:0; width:100%; text-align:left;}
+      .big-nav{grid-template-columns:repeat(2, minmax(0,1fr));}
+      .calendar-grid{gap:8px;}
+      .calendar-cell{min-height:78px;}
+    }
+
+  
+
+    /* ===== 登录界面 V3 ===== */
+    body.auth-locked .app{
+      filter:blur(20px) saturate(.78);
+      transform:scale(.985);
+      opacity:.16;
+      pointer-events:none;
+      user-select:none;
+    }
+    .login-shell{
+      position:fixed;
+      inset:0;
+      z-index:90;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+      background:linear-gradient(180deg, rgba(6,9,13,.56), rgba(6,9,13,.74));
+      backdrop-filter:blur(18px);
+    }
+    body.auth-locked .login-shell{display:flex;}
+    .login-stage{
+      width:min(1120px, 100%);
+      display:grid;
+      grid-template-columns:minmax(0, 1.08fr) minmax(380px, .92fr);
+      gap:20px;
+      align-items:stretch;
+    }
+    .login-visual,
+    .login-card{
+      background:linear-gradient(180deg, rgba(18,24,33,.92), rgba(11,16,22,.96));
+      border:1px solid var(--line);
+      border-radius:32px;
+      box-shadow:0 18px 44px rgba(0,0,0,.34);
+      position:relative;
+      overflow:hidden;
+    }
+    .login-visual{
+      padding:30px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:24px;
+      min-height:560px;
+    }
+    .login-visual::before,
+    .login-card::before{
+      content:"";
+      position:absolute;
+      width:220px;
+      height:220px;
+      border-radius:50%;
+      right:-72px;
+      top:-76px;
+      background:radial-gradient(circle, rgba(79,140,255,.22), transparent 72%);
+      pointer-events:none;
+    }
+    .login-card::before{background:radial-gradient(circle, rgba(72,199,255,.18), transparent 72%);}
+    .login-logo{
+      width:72px;
+      height:72px;
+      border-radius:24px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(145deg, rgba(79,140,255,.94), rgba(72,199,255,.68));
+      box-shadow:0 16px 34px rgba(79,140,255,.24);
+      font-size:26px;
+      font-weight:820;
+      letter-spacing:.08em;
+      margin-bottom:20px;
+    }
+    .login-kicker{
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--text-3);
+      margin-bottom:12px;
+    }
+    .login-visual h1{
+      margin:0;
+      font-size:40px;
+      line-height:1.12;
+      letter-spacing:.02em;
+    }
+    .login-visual-text{
+      margin:16px 0 0;
+      font-size:15px;
+      line-height:1.72;
+      color:var(--text-2);
+      max-width:560px;
+    }
+    .login-chip-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:20px;
+    }
+    .login-metric-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:14px;
+    }
+    .login-metric{
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px 18px;
+      background:rgba(255,255,255,.03);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.02);
+    }
+    .login-metric span{
+      display:block;
+      font-size:12px;
+      color:var(--text-3);
+      margin-bottom:8px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+    .login-metric strong{
+      display:block;
+      font-size:18px;
+      line-height:1.35;
+    }
+    .login-card{
+      padding:28px;
+      display:grid;
+      align-content:center;
+      gap:16px;
+      min-height:560px;
+    }
+    .login-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:6px;
+      position:relative;
+      z-index:1;
+    }
+    .login-label{
+      display:inline-flex;
+      align-items:center;
+      height:30px;
+      padding:0 12px;
+      border-radius:999px;
+      border:1px solid rgba(79,140,255,.22);
+      background:rgba(79,140,255,.12);
+      color:#dce8ff;
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.06em;
+      margin-bottom:12px;
+    }
+    .login-head h2{
+      margin:0;
+      font-size:30px;
+      line-height:1.15;
+    }
+    .login-head p{
+      margin:10px 0 0;
+      color:var(--text-2);
+      line-height:1.7;
+      font-size:14px;
+      max-width:360px;
+    }
+    .login-state-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      height:40px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      color:var(--text-2);
+      white-space:nowrap;
+      flex-shrink:0;
+    }
+    .login-field{
+      display:grid;
+      gap:10px;
+      position:relative;
+      z-index:1;
+    }
+    .login-field span{
+      font-size:14px;
+      color:var(--text-2);
+      font-weight:650;
+    }
+    .login-input{
+      width:100%;
+      height:58px;
+      padding:0 18px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+      font:inherit;
+      font-size:17px;
+      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .login-input::placeholder{color:rgba(245,247,251,.34);}
+    .login-input:focus{
+      border-color:rgba(79,140,255,.36);
+      background:rgba(255,255,255,.055);
+      box-shadow:0 0 0 4px rgba(79,140,255,.10);
+    }
+    .login-options{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:2px;
+      position:relative;
+      z-index:1;
+    }
+    .remember-option{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      color:var(--text-2);
+      font-size:14px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .remember-option input{
+      width:18px;
+      height:18px;
+      accent-color:var(--blue);
+      cursor:pointer;
+    }
+    .fill-demo-btn,
+    .toolbar-ghost{
+      height:42px;
+      padding:0 16px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font:inherit;
+      font-weight:700;
+      cursor:pointer;
+      transition:all .18s ease;
+      white-space:nowrap;
+    }
+    .fill-demo-btn:hover,
+    .toolbar-ghost:hover{
+      border-color:rgba(79,140,255,.28);
+      background:rgba(79,140,255,.10);
+      transform:translateY(-1px);
+    }
+    .login-hint,
+    .login-error{
+      min-height:48px;
+      border-radius:18px;
+      padding:14px 16px;
+      font-size:14px;
+      line-height:1.65;
+      position:relative;
+      z-index:1;
+    }
+    .login-hint{
+      border:1px solid rgba(72,199,255,.20);
+      background:rgba(72,199,255,.08);
+      color:#d7f6ff;
+    }
+    .login-hint strong{font-weight:800;}
+    .login-error{
+      display:none;
+      border:1px solid rgba(255,95,87,.20);
+      background:rgba(255,95,87,.08);
+      color:#ffd9d5;
+    }
+    .login-error.show{display:block;}
+    .login-submit{
+      width:100%;
+      height:58px;
+      border:none;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(79,140,255,.95), rgba(58,114,235,.90));
+      color:white;
+      font:inherit;
+      font-size:17px;
+      font-weight:780;
+      letter-spacing:.03em;
+      cursor:pointer;
+      box-shadow:0 16px 32px rgba(58,114,235,.28);
+      position:relative;
+      z-index:1;
+    }
+    .status-chip.user{
+      border-color:rgba(72,199,255,.18);
+      background:rgba(72,199,255,.08);
+      color:#dff7ff;
+    }
+    .status-chip.user .status-dot{
+      background:var(--cyan);
+      box-shadow:0 0 0 4px rgba(72,199,255,.12);
+    }
+    .toolbar-ghost{height:44px; flex:0 0 auto;}
+
+    @media (max-width: 1180px){
+      .login-stage{grid-template-columns:1fr; width:min(760px, 100%);}
+      .login-visual,
+      .login-card{min-height:auto;}
+      .login-visual h1{font-size:34px;}
+    }
+    @media (max-width: 720px){
+      .login-shell{padding:14px;}
+      .login-visual,
+      .login-card{border-radius:24px; padding:22px;}
+      .login-metric-grid{grid-template-columns:1fr;}
+      .login-head{flex-direction:column;}
+      .login-head h2{font-size:26px;}
+    }
+
+  </style>
+</head>
+<body class="auth-locked">
+  <div class="login-shell" id="loginShell">
+    <div class="login-stage">
+      <section class="login-visual">
+        <div>
+          <div class="login-logo">CM</div>
+          <div class="login-kicker">10.1 英寸平板应用 · Ubuntu HMI</div>
+          <h1>采煤机故障诊断点检仪</h1>
+          <p class="login-visual-text">用于采煤机故障诊断、传感器点检、故障代码查询、日常检修打卡与知识资料查询的平板端应用。</p>
+          <div class="login-chip-row">
+            <span class="chip"><span class="chip-dot"></span>暗色工业风</span>
+            <span class="chip">macOS 风格层级</span>
+            <span class="chip">离线原型</span>
+          </div>
+        </div>
+        <div class="login-metric-grid">
+          <div class="login-metric">
+            <span>工控机</span>
+            <strong>8G + 64G Ubuntu</strong>
+          </div>
+          <div class="login-metric">
+            <span>手持平板</span>
+            <strong>16G + 128G Ubuntu</strong>
+          </div>
+          <div class="login-metric">
+            <span>网络</span>
+            <strong>同一局域网互联</strong>
+          </div>
+          <div class="login-metric">
+            <span>通讯状态</span>
+            <strong>HPC / MOC / BOC</strong>
+          </div>
+        </div>
+      </section>
+
+      <form class="login-card" id="loginForm" autocomplete="on">
+        <div class="login-head">
+          <div>
+            <div class="login-label">账号登录</div>
+            <h2>进入主界面</h2>
+            <p>用户输入工号和密码后进入主界面，并支持记住账号和密码。</p>
+          </div>
+          <div class="login-state-pill"><span class="status-dot"></span><span>待登录</span></div>
+        </div>
+
+        <label class="login-field">
+          <span>工号</span>
+          <input class="login-input" id="loginEmployeeNo" type="text" autocomplete="username" placeholder="请输入工号" />
+        </label>
+
+        <label class="login-field">
+          <span>密码</span>
+          <input class="login-input" id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码" />
+        </label>
+
+        <div class="login-options">
+          <label class="remember-option">
+            <input type="checkbox" id="rememberCredentials" checked />
+            <span>记住账号和密码</span>
+          </label>
+          <button class="fill-demo-btn" id="fillDemoAccountBtn" type="button">填入初始账号</button>
+        </div>
+
+        <div class="login-hint" id="loginHint"></div>
+        <div class="login-error" id="loginError"></div>
+
+        <button class="login-submit" type="submit">登录进入主界面</button>
+      </form>
+    </div>
+  </div>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-top">
+          <div class="brand-logo">CM</div>
+          <div>
+            <h1>采煤机故障诊断点检仪</h1>
+            <p>10.1 英寸平板原型 · Ubuntu HMI</p>
+          </div>
+        </div>
+        <div class="machine-note">
+          <span class="chip"><span class="chip-dot"></span>暗色工业风</span>
+          <span class="chip">macOS 风格层级</span>
+          <span class="chip">离线可用原型</span>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">概览</div>
+        <div class="nav-list">
+          <button class="nav-item active" data-page="home"><span class="nav-icon">主</span><span>主页面</span></button>
+          <button class="nav-item" data-page="run-cycle"><span class="nav-icon">循</span><span>运行循环图</span></button>
+          <button class="nav-item" data-page="recent-ranking"><span class="nav-icon">排</span><span>近期故障排名</span></button>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">诊断分析</div>
+        <div class="nav-list">
+          <button class="nav-item" data-page="sensors"><span class="nav-icon">传</span><span>传感器</span></button>
+          <button class="nav-item" data-page="fault-codes"><span class="nav-icon">码</span><span>故障代码查询</span></button>
+          <button class="nav-item" data-page="cutting-analysis"><span class="nav-icon">截</span><span>截割部分析</span></button>
+          <button class="nav-item" data-page="traction-analysis"><span class="nav-icon">牵</span><span>牵引部分析</span></button>
+          <button class="nav-item" data-page="pump-analysis"><span class="nav-icon">泵</span><span>泵分析</span></button>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">运维管理</div>
+        <div class="nav-list">
+          <button class="nav-item" data-page="checkin"><span class="nav-icon">检</span><span>日常检修打卡</span></button>
+          <button class="nav-item" data-page="knowledge"><span class="nav-icon">知</span><span>采煤机知识库</span></button>
+          <button class="nav-item" data-page="settings"><span class="nav-icon">设</span><span>系统设置</span></button>
+        </div>
+      </div>
+
+      <div class="sidebar-foot">
+        <div class="small-chip">工控机：8G + 64G Ubuntu</div>
+        <div class="small-chip">手持平板：16G + 128G Ubuntu</div>
+        <div class="small-chip">同一局域网 · 诊断点检一体化</div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="toolbar">
+        <div class="toolbar-left">
+          <button class="home-btn" id="goHome">主菜单</button>
+          <div class="page-heading">
+            <h2 class="page-title" id="pageTitle">主页面</h2>
+            <div class="page-subtitle" id="pageSubtitle">面向 10.1 英寸平板的采煤机故障诊断与点检主控台</div>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <div class="status-cluster">
+            <div class="status-chip user" id="currentUserChip"><span class="status-dot"></span><span id="currentUserLabel">当前工号 未登录</span></div>
+            <div class="status-chip success" id="tabletConnection"><span class="status-dot"></span><span>平板↔工控机 已连接</span></div>
+            <div class="status-chip success" id="hpcChip"><span class="status-dot"></span><span>HPC 正常</span></div>
+            <div class="status-chip success" id="mocChip"><span class="status-dot"></span><span>MOC 正常</span></div>
+            <div class="status-chip warn" id="bocChip"><span class="status-dot"></span><span>BOC 预警</span></div>
+          </div>
+          <div class="clock-box">
+            <div class="clock-time" id="clockTime">13:10:23</div>
+            <div class="clock-date" id="clockDate">2026-03-16 Monday</div>
+          </div>
+          <button class="toolbar-ghost" id="logoutBtn" type="button">退出登录</button>
+        </div>
+      </header>
+
+      <div class="content">
+        
+        <section class="page active" id="page-home">
+          <div class="grid-12">
+            <div class="span-12 panel">
+              <div class="panel-body">
+                <div class="hero-grid">
+                  <div class="hero-card">
+                    <div class="hero-label">上一次数据同步</div>
+                    <p class="hero-value" style="font-size:24px">2026-03-16</p>
+                    <div class="hero-meta">13:10:23 · 同步耗时 2.8s</div>
+                  </div>
+                  <div class="hero-card">
+                    <div class="hero-label">当前日期</div>
+                    <p class="hero-value" id="heroDate">2026-03-16</p>
+                    <div class="hero-meta">班次：早班 · 工作面 3106</div>
+                  </div>
+                  <div class="hero-card">
+                    <div class="hero-label">本周异常事件</div>
+                    <p class="hero-value" style="color:var(--orange)">8</p>
+                    <div class="hero-meta">主页仅显示 1 条预览，点击下方卡片展开</div>
+                  </div>
+                  <div class="hero-card">
+                    <div class="hero-label">通信健康度</div>
+                    <p class="hero-value" style="color:var(--green)">96%</p>
+                    <div class="hero-meta">HPC 正常 · MOC 正常 · BOC 轻微波动</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="span-12">
+              <div class="summary-grid">
+                <button class="summary-card orange" id="openWeeklySummary">
+                  <div class="summary-top">
+                    <div>
+                      <div class="summary-label">异常事件总览</div>
+                      <div class="summary-time" id="weeklyPreviewTime">2026-03-16 15:11:36</div>
+                    </div>
+                    <div class="summary-count" id="weeklyPreviewCount">8</div>
+                  </div>
+                  <div class="summary-main">
+                    <div class="summary-title" id="weeklyPreviewTitle">变频器冷却水道水流量过小</div>
+                    <div class="summary-sub">主页只保留 1 条预览，点击后查看本周全部异常事件。</div>
+                  </div>
+                  <div class="summary-foot">
+                    <span>支持跳转到对应分析页</span>
+                    <span class="summary-link">查看全部 →</span>
+                  </div>
+                </button>
+
+                <button class="summary-card red" id="openFaultSummary">
+                  <div class="summary-top">
+                    <div>
+                      <div class="summary-label">本月故障排名</div>
+                      <div class="summary-time" id="faultPreviewTime">最近一次 2026-03-10 14:10:23</div>
+                    </div>
+                    <div class="summary-count" id="faultPreviewCount">20</div>
+                  </div>
+                  <div class="summary-main">
+                    <div class="summary-title" id="faultPreviewTitle">摇臂过温</div>
+                    <div class="summary-sub">首页只展示第 1 名，点击展开完整 Top 排名。</div>
+                  </div>
+                  <div class="summary-foot">
+                    <span>按次数排序</span>
+                    <span class="summary-link">查看全部 →</span>
+                  </div>
+                </button>
+
+                <button class="summary-card green" id="openSensorSummary">
+                  <div class="summary-top">
+                    <div>
+                      <div class="summary-label">本月传感器失效排名</div>
+                      <div class="summary-time" id="sensorPreviewTime">最近一次 2026-03-10 14:10:23</div>
+                    </div>
+                    <div class="summary-count" id="sensorPreviewCount">12</div>
+                  </div>
+                  <div class="summary-main">
+                    <div class="summary-title" id="sensorPreviewTitle">右牵引箱温度传感器</div>
+                    <div class="summary-sub">首页只展示第 1 名，点击后查看所有失效记录。</div>
+                  </div>
+                  <div class="summary-foot">
+                    <span>可联动到传感器页</span>
+                    <span class="summary-link">查看全部 →</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div class="span-12 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>功能导航</h3>
+                  <p class="panel-subtitle">改成更适合 10.1 英寸平板触控的大图标主菜单，框内只保留图标和名称。</p>
+                </div>
+                <span class="pill blue">主菜单</span>
+              </div>
+              <div class="panel-body">
+                <div class="big-nav" id="homeNavGrid"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <section class="page" id="page-sensors">
+          <div class="split">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>传感器总览</h3>
+                  <p class="panel-subtitle">展示有效状态、近 30 天失效次数、上次有数据时间。</p>
+                </div>
+                <span class="pill green">支持点选详情</span>
+              </div>
+              <div class="panel-body">
+                <div class="list" id="sensorList"></div>
+              </div>
+            </div>
+
+            <div class="detail-stack">
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>传感器详情</h3>
+                    <p class="panel-subtitle" id="sensorDetailSubtitle">点击左侧条目查看 24 小时数据曲线。</p>
+                  </div>
+                  <span class="pill blue" id="sensorStatusPill">当前状态</span>
+                </div>
+                <div class="panel-body">
+                  <div class="kpi-row" id="sensorKpis"></div>
+                  <div class="section-spacer"></div>
+                  <div class="chart-card">
+                    <div class="chart-head">
+                      <div>
+                        <h4 class="chart-title" id="sensorChartTitle">24 小时数据曲线</h4>
+                        <div class="chart-meta">采样间隔：1 小时 · 数据仅为交互示意</div>
+                      </div>
+                      <span class="badge info" id="sensorTypeBadge">传感器</span>
+                    </div>
+                    <div class="chart-wrap tall" id="sensorChartWrap"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>近一个月失效次数排名</h3>
+                    <p class="panel-subtitle">便于快速发现高频失效点位。</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="list" id="sensorRankingExtended"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-fault-codes">
+          <div class="two-col">
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>常见系统故障代码</h3>
+                    <p class="panel-subtitle">点击代码即可查看释义与建议动作。</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="code-grid" id="systemCodeGrid"></div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>常见变频器故障代码</h3>
+                    <p class="panel-subtitle">同样支持点击查询与手动输入检索。</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="code-grid" id="inverterCodeGrid"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>自定义故障查询</h3>
+                    <p class="panel-subtitle">示例：系统故障 0x0094 / 变频器故障 3130。</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="search-row">
+                    <select class="control" id="faultCategorySelect">
+                      <option value="system">系统故障</option>
+                      <option value="inverter">变频器故障</option>
+                    </select>
+                    <input class="search-input" id="faultSearchInput" placeholder="输入故障代码，例如 0x0094 或 3130" />
+                    <button class="button primary" id="faultSearchBtn">查询</button>
+                  </div>
+                  <div class="result-box" id="faultResultBox"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-cutting-analysis">
+          <div class="grid-12">
+            <div class="span-12 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>截割部 24 小时趋势</h3>
+                  <p class="panel-subtitle">左右截割电机、左右摇臂的温度与电流统一展示。</p>
+                </div>
+                <span class="pill blue">24h 时序</span>
+              </div>
+              <div class="panel-body">
+                <div class="grid-2">
+                  <div class="chart-card">
+                    <div class="chart-head">
+                      <div>
+                        <h4 class="chart-title">左右截割电机 · 温度 / 电流</h4>
+                        <div class="chart-meta">左 / 右温度与电流四曲线叠加</div>
+                      </div>
+                    </div>
+                    <div class="chart-wrap" id="cuttingMotorChart"></div>
+                  </div>
+                  <div class="chart-card">
+                    <div class="chart-head">
+                      <div>
+                        <h4 class="chart-title">左右摇臂 · 温度 / 电流</h4>
+                        <div class="chart-meta">摇臂状态与负载变化</div>
+                      </div>
+                    </div>
+                    <div class="chart-wrap" id="armChart"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="span-7 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>统计信息</h3>
+                  <p class="panel-subtitle">平均带载功率、平均带载温度、运行与超限时间。</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <table class="data-table" id="cuttingStatsTable"></table>
+              </div>
+            </div>
+
+            <div class="span-5 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>最近两分钟操作日志</h3>
+                  <p class="panel-subtitle">动作链与系统执行结果。</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="log-list" id="cuttingLogs"></div>
+              </div>
+            </div>
+
+            <div class="span-12 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>近两分钟异常状态</h3>
+                  <p class="panel-subtitle">高亮显示报警与保护事件，便于班中快速研判。</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="grid-2" id="cuttingAlerts"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-traction-analysis">
+          <div class="grid-12">
+            <div class="span-12 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>牵引部 24 小时趋势</h3>
+                  <p class="panel-subtitle">牵引电机温度 / 电流与变频器关键变量同屏对比。</p>
+                </div>
+                <span class="pill blue">变频器联动</span>
+              </div>
+              <div class="panel-body">
+                <div class="grid-2">
+                  <div class="chart-card">
+                    <div class="chart-head">
+                      <div>
+                        <h4 class="chart-title">左右牵引电机 · 温度 / 电流</h4>
+                        <div class="chart-meta">左右电机负载差异对比</div>
+                      </div>
+                    </div>
+                    <div class="chart-wrap" id="tractionMotorChart"></div>
+                  </div>
+                  <div class="chart-card">
+                    <div class="chart-head">
+                      <div>
+                        <h4 class="chart-title">变频器关键变量</h4>
+                        <div class="chart-meta">输入电压 / 直流电压 / 输出转矩 / IGBT 温度</div>
+                      </div>
+                    </div>
+                    <div class="chart-wrap" id="inverterChart"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="span-7 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>统计信息</h3>
+                  <p class="panel-subtitle">牵引部今日运行画像与超限时长。</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <table class="data-table" id="tractionStatsTable"></table>
+              </div>
+            </div>
+
+            <div class="span-5 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>最近两分钟操作日志</h3>
+                  <p class="panel-subtitle">保留与截割部一致的统一日志结构。</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="log-list" id="tractionLogs"></div>
+              </div>
+            </div>
+
+            <div class="span-12 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>近两分钟异常状态</h3>
+                  <p class="panel-subtitle">用于跟踪变频器与牵引链路的保护动作。</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="grid-2" id="tractionAlerts"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-pump-analysis">
+          <div class="grid-12">
+            <div class="span-8 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>泵电机 24 小时趋势</h3>
+                  <p class="panel-subtitle">泵电机温度、电流及负载状态的综合展示。</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="chart-card">
+                  <div class="chart-head">
+                    <div>
+                      <h4 class="chart-title">泵电机 · 温度 / 电流 / 功率估算</h4>
+                      <div class="chart-meta">趋势数据用于原型演示，可替换为实时采样源</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap tall" id="pumpChart"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="span-4 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>统计信息</h3>
+                  <p class="panel-subtitle">泵电机带载统计</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="kpi-row" id="pumpStatsCards"></div>
+              </div>
+            </div>
+
+            <div class="span-6 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>最近两分钟操作日志</h3>
+                  <p class="panel-subtitle">泵站动作与操作记录</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="log-list" id="pumpLogs"></div>
+              </div>
+            </div>
+
+            <div class="span-6 panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>近两分钟异常状态</h3>
+                  <p class="panel-subtitle">集中显示 EDCR / RDCR 相关状态</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="log-list" id="pumpAlerts"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-recent-ranking">
+          <div class="stack">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>筛选条件</h3>
+                  <p class="panel-subtitle">支持日期范围与系统选择，便于查看指定时间段故障排名。</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="filter-bar">
+                  <input type="date" class="date-input" value="2026-03-01" />
+                  <input type="date" class="date-input" value="2026-03-31" />
+                  <select class="control">
+                    <option>全部系统</option>
+                    <option>液压系统</option>
+                    <option>截割系统</option>
+                    <option>牵引系统</option>
+                  </select>
+                  <button class="button primary">应用筛选</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-3">
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>系统故障</h3>
+                    <p class="panel-subtitle">近一个月系统故障 Top 排名</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="list" id="systemFaultRankings"></div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>变频器故障</h3>
+                    <p class="panel-subtitle">变频器类代码统计</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="list" id="inverterFaultRankings"></div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>传感器失效</h3>
+                    <p class="panel-subtitle">按失效次数排序</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="list" id="sensorFaultRankings"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        
+        <section class="page" id="page-checkin">
+          <div class="checkin-layout">
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>今日打卡项</h3>
+                    <p class="panel-subtitle">打卡界面保持简洁，适合现场快速勾选并提交。</p>
+                  </div>
+                  <span class="pill green">简洁模式</span>
+                </div>
+                <div class="panel-body">
+                  <div class="list" id="checkinList"></div>
+                  <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;">
+                    <button class="button success" id="submitCheckinBtn">提交今日打卡</button>
+                    <button class="button ghost">保存草稿</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>历史打卡记录</h3>
+                    <p class="panel-subtitle">以月历方式查看每天的打卡情况，点击日期可查看详细信息。</p>
+                  </div>
+                  <span class="pill blue">日历视图</span>
+                </div>
+                <div class="panel-body">
+                  <div class="calendar-wrap" id="checkinCalendar"></div>
+                  <div class="calendar-detail" id="checkinCalendarDetail"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <section class="page" id="page-knowledge">
+          <div class="grid-3">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>机械 / 电气图纸图册</h3>
+                  <p class="panel-subtitle">按机型与部件分类归档</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="asset-list" id="drawingAssets"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>安装指导视频</h3>
+                  <p class="panel-subtitle">适用于新机入井与部件更换</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="asset-list" id="installAssets"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>故障排查视频</h3>
+                  <p class="panel-subtitle">现场问题闭环与示教资料</p>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="asset-list" id="troubleshootAssets"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-settings">
+          <div class="setting-grid">
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>连接状态</h3>
+                    <p class="panel-subtitle">建立联系时显示“已连接采煤机”，否则显示“未连接”。</p>
+                  </div>
+                  <span class="pill" id="settingsConnectionLabel">已连接采煤机</span>
+                </div>
+                <div class="panel-body">
+                  <div class="kpi-row" id="settingsConnectionCards"></div>
+                  <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;">
+                    <button class="button primary" id="toggleConnectionBtn">点击连接</button>
+                    <button class="button ghost">刷新网络信息</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>工作面信息</h3>
+                    <p class="panel-subtitle">用于绑定现场工况与机型配置。</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="field-grid" id="faceFields"></div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>采煤机机型信息</h3>
+                    <p class="panel-subtitle">机型参数可作为分析页标题和知识库索引。</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="field-grid" id="machineFields"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>软件版本与更新记录</h3>
+                    <p class="panel-subtitle">支持展示当前版本与更新说明。</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="history-list" id="versionHistory"></div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3 class="panel-title"><span class="accent-bar"></span>网络与工控机信息</h3>
+                    <p class="panel-subtitle">工控机主机名、IP、链路、系统版本等。</p>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="network-grid" id="networkInfo"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-run-cycle">
+          <div class="stack">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3 class="panel-title"><span class="accent-bar"></span>运行循环图</h3>
+                  <p class="panel-subtitle">每张图都支持选择横坐标与多个纵坐标。</p>
+                </div>
+                <span class="pill blue">双图联动</span>
+              </div>
+              <div class="panel-body">
+                <div class="grid-2">
+                  <div class="chart-card">
+                    <div class="chart-head">
+                      <div>
+                        <h4 class="chart-title">运行循环图 A</h4>
+                        <div class="chart-meta">横坐标可选：时间 / 工作面 / 温度</div>
+                      </div>
+                    </div>
+                    <div class="stack">
+                      <div class="filter-bar" id="cycleControlsA"></div>
+                      <div class="chart-wrap tall" id="cycleChartA"></div>
+                    </div>
+                  </div>
+
+                  <div class="chart-card">
+                    <div class="chart-head">
+                      <div>
+                        <h4 class="chart-title">运行循环图 B</h4>
+                        <div class="chart-meta">纵坐标支持多选：速度 / 电机温度 / 电机电流</div>
+                      </div>
+                    </div>
+                    <div class="stack">
+                      <div class="filter-bar" id="cycleControlsB"></div>
+                      <div class="chart-wrap tall" id="cycleChartB"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="footer-note">说明：该原型使用静态演示数据模拟“横坐标 / 纵坐标可配置”的交互方式，接入实时源后可直接替换数据生成逻辑。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+
+  <div class="overlay" id="detailOverlay">
+    <div class="overlay-card">
+      <div class="overlay-head">
+        <div>
+          <h3 class="overlay-title" id="detailOverlayTitle">完整信息</h3>
+          <p class="overlay-subtitle" id="detailOverlaySubtitle">点击条目可查看更完整的内容。</p>
+        </div>
+        <button class="overlay-close" id="closeDetailOverlay">关闭</button>
+      </div>
+      <div class="overlay-body" id="detailOverlayBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const pageMeta = {
+      home: {
+        title: '主页面',
+        subtitle: '更适合 10.1 英寸平板的采煤机故障诊断与点检主控台'
+      },
+      sensors: {
+        title: '传感器',
+        subtitle: '查看有效状态、失效排名与单个传感器 24 小时变化曲线'
+      },
+      'fault-codes': {
+        title: '故障代码查询',
+        subtitle: '系统故障与变频器故障双词典，支持点击与自定义查询'
+      },
+      'cutting-analysis': {
+        title: '截割部分析',
+        subtitle: '左右截割电机、左右摇臂的温度 / 电流 / 日统计 / 两分钟日志'
+      },
+      'traction-analysis': {
+        title: '牵引部分析',
+        subtitle: '牵引电机与变频器关键变量统一分析'
+      },
+      'pump-analysis': {
+        title: '泵分析',
+        subtitle: '泵电机运行趋势、运行统计及两分钟异常状态'
+      },
+      'recent-ranking': {
+        title: '近期故障排名',
+        subtitle: '支持日期范围和系统维度筛选的月度排名页'
+      },
+      checkin: {
+        title: '采煤机日常检修打卡',
+        subtitle: '极简打卡界面，支持查看历史记录'
+      },
+      knowledge: {
+        title: '采煤机知识库',
+        subtitle: '图纸图册、安装指导视频、故障排查视频'
+      },
+      settings: {
+        title: '系统设置',
+        subtitle: '连接状态、工作面信息、机型信息、版本与网络信息'
+      },
+      'run-cycle': {
+        title: '运行循环图',
+        subtitle: '双图配置式循环图，支持自定义横坐标与多纵轴'
+      }
+    };
+
+    const appState = {
+      currentPage: 'home',
+      connected: true,
+      statuses: { hpc: 'success', moc: 'success', boc: 'warn' },
+      selectedSensorId: 'sensor-2',
+      checkins: [true, true, true, false],
+      cycleConfigs: {
+        A: { x: '时间', ys: ['采煤机速度', '左截割电机温度'] },
+        B: { x: '工作面', ys: ['左牵引电机电流', '泵电机温度'] }
+      },
+      selectedCheckinDate: '2026-03-16',
+      loggedInUser: '未登录'
+    };
+
+    const weeklyEvents = [
+      { time:'2026-03-09 12:10:23', text:'左泵电机异常停机', target:'pump-analysis' },
+      { time:'2026-03-10 14:10:23', text:'左牵引电机异常停机', target:'traction-analysis' },
+      { time:'2026-03-11 18:10:23', text:'左截割电机频繁过载，本日过载 8 次', target:'cutting-analysis' },
+      { time:'2026-03-11 12:10:23', text:'左牵引电机发生断轴', target:'traction-analysis' },
+      { time:'2026-03-12 18:10:23', text:'左截割电机今日持续过温', target:'cutting-analysis' },
+      { time:'2026-03-14 19:11:23', text:'左摇臂今日持续过温', target:'cutting-analysis' },
+      { time:'2026-03-15 20:11:23', text:'泵箱油位过低', target:'pump-analysis' },
+      { time:'2026-03-16 15:11:36', text:'变频器冷却水道水流量过小', target:'traction-analysis' }
+    ];
+
+    const homeNav = [
+      { label:'传感器', desc:'查看传感器有效状态与 24 小时曲线', page:'sensors', icon:'传' },
+      { label:'故障代码查询', desc:'系统 / 变频器代码词典', page:'fault-codes', icon:'码' },
+      { label:'截割部分析', desc:'截割电机、摇臂、操作日志', page:'cutting-analysis', icon:'截' },
+      { label:'牵引部分析', desc:'牵引电机与变频器趋势', page:'traction-analysis', icon:'牵' },
+      { label:'泵分析', desc:'泵电机趋势与两分钟异常', page:'pump-analysis', icon:'泵' },
+      { label:'近期故障排名', desc:'指定日期 / 系统的故障排行', page:'recent-ranking', icon:'排' },
+      { label:'日常检修打卡', desc:'简洁打卡与历史记录', page:'checkin', icon:'检' },
+      { label:'知识库', desc:'图纸图册 / 视频资料', page:'knowledge', icon:'知' },
+      { label:'运行循环图', desc:'自选横纵坐标双图分析', page:'run-cycle', icon:'循' },
+      { label:'系统设置', desc:'连接、机型、网络、版本', page:'settings', icon:'设' }
+    ];
+
+    const monthlyFaultRanking = [
+      { name:'摇臂过温', count:20, last:'2026-03-10 14:10:23' },
+      { name:'左牵引电机异常停机', count:16, last:'2026-03-11 14:10:23' },
+      { name:'左截割电机过载', count:14, last:'2026-03-12 14:10:23' }
+    ];
+
+    const monthlySensorFailures = [
+      { name:'右牵引箱温度传感器', count:12, last:'2026-03-10 14:10:23' },
+      { name:'水路压力传感器', count:8, last:'2026-03-11 14:10:23' },
+      { name:'左牵引电机温度传感器', count:5, last:'2026-03-12 14:10:23' }
+    ];
+
+    const sensors = [
+      { id:'sensor-1', name:'右牵引箱温度传感器', type:'温度', state:'失效频发', valid:false, failures:12, lastSeen:'2026-03-10 14:10:23', unit:'℃', avg:'58.3℃', peak:'73.6℃', location:'右牵引箱' },
+      { id:'sensor-2', name:'水路压力传感器', type:'压力', state:'正常', valid:true, failures:8, lastSeen:'2026-03-16 13:08:11', unit:'MPa', avg:'4.2MPa', peak:'5.1MPa', location:'水路总管' },
+      { id:'sensor-3', name:'左牵引电机温度传感器', type:'温度', state:'正常', valid:true, failures:5, lastSeen:'2026-03-16 13:09:42', unit:'℃', avg:'67.1℃', peak:'81.0℃', location:'左牵引电机' },
+      { id:'sensor-4', name:'左截割电机温度传感器', type:'温度', state:'过温关注', valid:true, failures:3, lastSeen:'2026-03-16 13:09:17', unit:'℃', avg:'74.6℃', peak:'92.4℃', location:'左截割电机' },
+      { id:'sensor-5', name:'泵箱油位传感器', type:'液位', state:'低位预警', valid:true, failures:2, lastSeen:'2026-03-16 13:10:03', unit:'%', avg:'37%', peak:'61%', location:'泵箱' },
+      { id:'sensor-6', name:'变频器冷却水流量传感器', type:'流量', state:'波动', valid:true, failures:4, lastSeen:'2026-03-16 13:10:01', unit:'L/min', avg:'26.3L/min', peak:'34.8L/min', location:'变频器水路' },
+      { id:'sensor-7', name:'右摇臂温度传感器', type:'温度', state:'正常', valid:true, failures:1, lastSeen:'2026-03-16 13:09:58', unit:'℃', avg:'63.8℃', peak:'79.0℃', location:'右摇臂' }
+    ];
+
+    const systemCodes = ['0x0021','0x0028','0x0035','0x0042','0x0059','0x0067','0x0074','0x0081','0x0098','0x00A5','0x00B3','0x00C7','0x00D9','0x00E2','0x00F8','0x0105','0x0119','0x0126','0x0138','0x0147'];
+    const inverterCodes = ['2310','2330','2340','3130','3210','3211','3220','4110','4210','4290','4310','5210','7000','3181','5080','5682','5690','5692'];
+
+    const faultDictionary = {
+      system: {
+        '0x0094': {
+          desc:'来自右无线遥控总停操作。',
+          tip:'建议优先检查右无线遥控器总停链路、急停恢复状态，以及总停输入点在 PLC/HPC 侧的采集状态。'
+        },
+        '0x0021': { desc:'系统保护链路异常（原型示意）。', tip:'检查总停回路、保护链路与控制输入。' },
+        '0x0028': { desc:'截割系统互锁异常（原型示意）。', tip:'排查互锁条件、限位与控制反馈。' },
+        '0x0035': { desc:'液压子系统压力异常（原型示意）。', tip:'检查压力采样、液压站与管路泄漏。' },
+        '0x0042': { desc:'牵引使能链路异常（原型示意）。', tip:'检查牵引接触器、使能条件与安全回路。' },
+        '0x0059': { desc:'系统反馈超时（原型示意）。', tip:'确认 HPC 与现场 I/O 通讯时延。' },
+        '0x0067': { desc:'遥控优先级冲突（原型示意）。', tip:'检查遥控/手控切换状态。' },
+        '0x0074': { desc:'摇臂动作反馈异常（原型示意）。', tip:'检查位移反馈或电磁阀响应。' },
+        '0x0081': { desc:'截割保护触发（原型示意）。', tip:'检查电机电流、过载阈值与机械卡阻。' },
+        '0x0098': { desc:'系统急停历史记录（原型示意）。', tip:'查看急停来源并确认复位完成。' },
+        '0x00A5': { desc:'工控机与现场总线时钟偏差（原型示意）。', tip:'同步时间源并检查总线稳定性。' },
+        '0x00B3': { desc:'牵引侧状态位异常（原型示意）。', tip:'检查 MOC 返回状态与执行反馈。' },
+        '0x00C7': { desc:'泵站启动失败（原型示意）。', tip:'检查泵电机、电源和油位联锁。' },
+        '0x00D9': { desc:'摇臂过温保护历史（原型示意）。', tip:'检查温度传感器与负载工况。' },
+        '0x00E2': { desc:'水路压力不足（原型示意）。', tip:'检查供水压力与水路阻塞。' },
+        '0x00F8': { desc:'系统自检异常（原型示意）。', tip:'查看启动自检日志与模块状态。' },
+        '0x0105': { desc:'远程控制输入异常（原型示意）。', tip:'检查遥控接收模块与信号质量。' },
+        '0x0119': { desc:'位移采样异常（原型示意）。', tip:'排查编码器或位移传感器。' },
+        '0x0126': { desc:'保护阈值配置冲突（原型示意）。', tip:'检查配置文件与版本匹配性。' },
+        '0x0138': { desc:'工作面参数未加载（原型示意）。', tip:'确认系统设置页中的工作面信息已配置。' },
+        '0x0147': { desc:'控制箱按钮反馈异常（原型示意）。', tip:'检查按钮接点与盖板接线。' }
+      },
+      inverter: {
+        '3130': {
+          desc:'由于电源缺相或熔丝熔断，中间直流电压振荡。',
+          tip:'确认变频器电源无问题；若 31.21 供电缺相可临时关闭，并检查三相供电与熔丝。'
+        },
+        '2310': { desc:'直流母线监测告警（原型示意）。', tip:'检查输入电压稳定性。' },
+        '2330': { desc:'整流单元预警（原型示意）。', tip:'检查整流桥与上电过程。' },
+        '2340': { desc:'输入侧谐波异常（原型示意）。', tip:'检查供电品质与滤波。' },
+        '3210': { desc:'输出过流（原型示意）。', tip:'排查电机负载突变或电缆短路。' },
+        '3211': { desc:'输出电流不平衡（原型示意）。', tip:'检查电机绕组与连接线。' },
+        '3220': { desc:'转矩限幅触发（原型示意）。', tip:'检查机械阻滞与参数整定。' },
+        '4110': { desc:'IGBT 温度超限（原型示意）。', tip:'检查散热器与冷却风道。' },
+        '4210': { desc:'冷却水流量不足（原型示意）。', tip:'检查冷却水道与流量传感器。' },
+        '4290': { desc:'冷却回路压差异常（原型示意）。', tip:'检查水路堵塞和泵状态。' },
+        '4310': { desc:'散热模块通信异常（原型示意）。', tip:'检查变频器内部通信模块。' },
+        '5210': { desc:'转速反馈异常（原型示意）。', tip:'检查编码器和反馈接口。' },
+        '7000': { desc:'变频器运行状态不一致（原型示意）。', tip:'检查上位控制命令与本地状态。' },
+        '3181': { desc:'输出相缺相（原型示意）。', tip:'检查输出电缆与端子。' },
+        '5080': { desc:'参数区校验失败（原型示意）。', tip:'核对参数版本并重新下装。' },
+        '5682': { desc:'外部故障输入触发（原型示意）。', tip:'检查外部联锁输入。' },
+        '5690': { desc:'保护停机历史记录（原型示意）。', tip:'结合故障时间轴追溯来源。' },
+        '5692': { desc:'控制板重启记录（原型示意）。', tip:'排查控制板供电与接插件。' }
+      }
+    };
+
+    const logs = [
+      '2026-03-10 14:10:23 记忆截割1右升',
+      '2026-03-10 14:10:23 系统执行1右升',
+      '2026-03-10 14:10:42 记忆截割1左升',
+      '2026-03-10 14:10:42 系统执行1左升',
+      '2026-03-10 14:11:23 记忆截割2左降'
+    ];
+
+    const alerts = [
+      '2026-03-10 14:10:23 EDCR泵箱温度高报警！',
+      '2026-03-10 14:10:23 EDCR流量检测通道1报警！',
+      '2026-03-10 14:10:42 RDCR流量通道1保护！',
+      '2026-03-10 14:10:42 EDCR流量监测通道2保护！',
+      '2026-03-10 14:11:23 EDCR流量监测通道2报警！'
+    ];
+
+    const cuttingStats = [
+      ['左截割电机','352 kW','78.5℃','6h 42m','38m','1h 18m'],
+      ['右截割电机','344 kW','75.2℃','6h 18m','25m','52m'],
+      ['左摇臂','118 kW','64.8℃','5h 56m','12m','44m'],
+      ['右摇臂','122 kW','66.3℃','5h 49m','18m','51m']
+    ];
+
+    const tractionStats = [
+      ['左牵引电机','264 kW','72.4℃','7h 12m','16m','42m'],
+      ['右牵引电机','257 kW','70.8℃','7h 06m','14m','38m']
+    ];
+
+    const pumpStats = [
+      ['平均带载功率','298 kW'],
+      ['平均带载温度','69.8℃'],
+      ['今日带载运行时间','7h 58m'],
+      ['今日过载时间','22m'],
+      ['今日过温时间','36m']
+    ];
+
+    const systemFaultRankings = [
+      { name:'0x0094 右无线遥控总停', count:11, last:'2026-03-12 10:20:11' },
+      { name:'0x00C7 泵站启动失败', count:7, last:'2026-03-14 08:42:18' },
+      { name:'0x0147 控制箱按钮反馈异常', count:5, last:'2026-03-15 12:08:51' }
+    ];
+    const inverterFaultRankings = [
+      { name:'4210 冷却水流量不足', count:9, last:'2026-03-16 09:33:02' },
+      { name:'3130 中间直流电压振荡', count:6, last:'2026-03-11 13:55:26' },
+      { name:'4110 IGBT 温度超限', count:4, last:'2026-03-13 18:20:41' }
+    ];
+    const sensorFaultRankings = monthlySensorFailures;
+
+    const checkinItems = [
+      '检查主电缆损耗情况，确保无明显破损。',
+      '检查压力接点引出电缆，确保无明显破损。',
+      '检查压力接点上刻度，并作记录，确保没有松动变化。',
+      '检查控制箱盖板上按钮，确保可靠通断；检查紧固螺钉是否松动，并及时紧固。'
+    ];
+
+    const checkinHistoryData = [
+      { date:'2026-03-15', shift:'早班', person:'张工', result:'已完成', note:'4/4 项已确认' },
+      { date:'2026-03-14', shift:'中班', person:'张工', result:'已完成', note:'发现 1 处螺钉松动并紧固' },
+      { date:'2026-03-13', shift:'夜班', person:'李工', result:'已完成', note:'压力接点刻度正常' }
+    ];
+
+
+
+    const checkinCalendarRecords = {
+      '2026-03-01': { status:'done', shift:'早班', person:'张工', result:'已完成', note:'4/4 项已确认', detail:'主电缆、压力接点、按钮和紧固件检查正常。' },
+      '2026-03-02': { status:'done', shift:'中班', person:'张工', result:'已完成', note:'4/4 项已确认', detail:'控制箱盖板按钮可靠通断。' },
+      '2026-03-03': { status:'partial', shift:'夜班', person:'王工', result:'补检完成', note:'3/4 项完成', detail:'压力接点引出电缆外护套有磨损，已登记观察。' },
+      '2026-03-04': { status:'done', shift:'早班', person:'李工', result:'已完成', note:'4/4 项已确认', detail:'主电缆无明显破损。' },
+      '2026-03-05': { status:'done', shift:'中班', person:'李工', result:'已完成', note:'4/4 项已确认', detail:'压力接点刻度记录正常。' },
+      '2026-03-06': { status:'missed', shift:'夜班', person:'-', result:'未打卡', note:'无记录', detail:'当日未提交点检表。' },
+      '2026-03-07': { status:'done', shift:'早班', person:'张工', result:'已完成', note:'4/4 项已确认', detail:'盖板紧固螺钉无松动。' },
+      '2026-03-08': { status:'partial', shift:'中班', person:'王工', result:'部分完成', note:'3/4 项完成', detail:'发现 1 处螺钉松动并及时紧固。' },
+      '2026-03-09': { status:'done', shift:'夜班', person:'李工', result:'已完成', note:'4/4 项已确认', detail:'压力接点引出电缆检查正常。' },
+      '2026-03-10': { status:'done', shift:'早班', person:'张工', result:'已完成', note:'4/4 项已确认', detail:'控制箱按钮、刻度记录均正常。' },
+      '2026-03-11': { status:'partial', shift:'中班', person:'张工', result:'部分完成', note:'2/4 项完成', detail:'设备处理中途停机，后续补检。' },
+      '2026-03-12': { status:'done', shift:'夜班', person:'李工', result:'已完成', note:'4/4 项已确认', detail:'控制箱盖板与紧固螺钉状态正常。' },
+      '2026-03-13': { status:'done', shift:'早班', person:'李工', result:'已完成', note:'4/4 项已确认', detail:'主电缆及压力接点无异常。' },
+      '2026-03-14': { status:'done', shift:'中班', person:'张工', result:'已完成', note:'发现 1 处螺钉松动并紧固', detail:'复查后确认已恢复正常。' },
+      '2026-03-15': { status:'done', shift:'早班', person:'张工', result:'已完成', note:'4/4 项已确认', detail:'压力接点刻度正常，按钮可靠通断。' },
+      '2026-03-16': { status:'done', shift:'早班', person:'张工', result:'已完成', note:'4/4 项已确认', detail:'今日打卡完成并已上传。' }
+    };
+
+    const knowledgeAssets = {
+      drawing: [
+        { title:'MG500/1180-WD 机械总图', meta:'PDF · 28 页 · 机身 / 截割部 / 牵引部' },
+        { title:'MG500 电控系统接线图册', meta:'PDF · 42 页 · HPC/MOC/BOC 接线' },
+        { title:'泵站油路原理图', meta:'PDF · 12 页 · 维护常用' }
+      ],
+      install: [
+        { title:'摇臂总成安装指导', meta:'视频 · 18 分钟 · 含注意事项' },
+        { title:'牵引电机更换与复位', meta:'视频 · 14 分钟 · 适用于井下更换' },
+        { title:'变频器冷却水路安装检查', meta:'视频 · 9 分钟 · 联调示例' }
+      ],
+      troubleshoot: [
+        { title:'左截割电机过载排查流程', meta:'视频 · 11 分钟 · 过载闭环' },
+        { title:'泵电机异常停机诊断案例', meta:'视频 · 13 分钟 · 现场复盘' },
+        { title:'4210 冷却水流量不足排查', meta:'视频 · 8 分钟 · 典型故障' }
+      ]
+    };
+
+    const workFaceFields = [
+      ['推进方向长度','328 m'],
+      ['煤层厚度','2.8 m'],
+      ['平均厚度','2.6 m'],
+      ['煤岩硬度','f=3.2'],
+      ['工作面编号','3106'],
+      ['工作面长度','286 m'],
+      ['工作面倾角','8°'],
+      ['工作面俯仰角','2°']
+    ];
+    const machineFields = [
+      ['机型名称','MG500/1180-WD'],
+      ['软件版本','v2.6.4'],
+      ['硬件版本','HW-1.3'],
+      ['滚筒截深','800 mm']
+    ];
+    const versionHistoryData = [
+      { date:'v2.6.4', desc:'新增运行循环图页面、主页面异常事件联动、连接状态集中展示。' },
+      { date:'v2.6.3', desc:'增加牵引部变频器多曲线趋势图与近期故障排名筛选。' },
+      { date:'v2.6.1', desc:'补充知识库分类与日常检修打卡历史记录。' }
+    ];
+    const networkInfoData = [
+      ['工控机主机名','cm-ipc-3106'],
+      ['工控机 IP','192.168.10.36'],
+      ['平板 IP','192.168.10.102'],
+      ['局域网状态','同一子网 / RTT 6ms'],
+      ['Ubuntu 版本','22.04 LTS'],
+      ['数据服务','gRPC + WebSocket'],
+      ['上次握手时间','2026-03-16 13:10:23'],
+      ['系统运行时长','12 天 06 小时']
+    ];
+
+    const cycleXAxisOptions = ['时间', '工作面', '温度'];
+    const cycleYAxisOptions = ['采煤机速度', '左截割电机温度', '右截割电机温度', '左截割电机电流', '左牵引电机电流', '泵电机温度'];
+
+    function $(id){ return document.getElementById(id); }
+
+
+    const authStorageKeys = {
+      credentials: 'cmPrototype.auth.credentials',
+      remembered: 'cmPrototype.auth.remembered'
+    };
+
+    function safeReadJSON(key, fallback=null){
+      try{
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      }catch(err){
+        return fallback;
+      }
+    }
+
+    function safeWriteJSON(key, value){
+      try{
+        localStorage.setItem(key, JSON.stringify(value));
+      }catch(err){}
+    }
+
+    function createRandomAdminCredentials(){
+      const suffix = String(Math.floor(1000 + Math.random() * 9000));
+      return {
+        employeeNo: `admin${suffix}`,
+        password: `admin${suffix}`
+      };
+    }
+
+    function getSystemCredentials(){
+      let creds = safeReadJSON(authStorageKeys.credentials);
+      if(!creds || !creds.employeeNo || !creds.password){
+        creds = createRandomAdminCredentials();
+        safeWriteJSON(authStorageKeys.credentials, creds);
+      }
+      return creds;
+    }
+
+    function getRememberedCredentials(){
+      return safeReadJSON(authStorageKeys.remembered);
+    }
+
+    function saveRememberedCredentials(employeeNo, password){
+      safeWriteJSON(authStorageKeys.remembered, {
+        remember: true,
+        employeeNo,
+        password
+      });
+    }
+
+    function clearRememberedCredentials(){
+      try{ localStorage.removeItem(authStorageKeys.remembered); }catch(err){}
+    }
+
+    function setCurrentUser(employeeNo){
+      appState.loggedInUser = employeeNo || '未登录';
+      if($('currentUserLabel')) $('currentUserLabel').textContent = `当前工号 ${appState.loggedInUser}`;
+    }
+
+    function setLoginError(message=''){
+      if(!$('loginError')) return;
+      $('loginError').textContent = message;
+      $('loginError').classList.toggle('show', !!message);
+    }
+
+    function fillDemoAccount(){
+      const creds = getSystemCredentials();
+      $('loginEmployeeNo').value = creds.employeeNo;
+      $('loginPassword').value = creds.password;
+      setLoginError('');
+    }
+
+    function prepareLoginView(){
+      const creds = getSystemCredentials();
+      const remembered = getRememberedCredentials();
+      $('loginHint').innerHTML = `首次启动已生成随机 admin 账号：<strong>${creds.employeeNo}</strong>　密码：<strong>${creds.password}</strong>`;
+      if(remembered?.remember){
+        $('rememberCredentials').checked = true;
+        $('loginEmployeeNo').value = remembered.employeeNo || '';
+        $('loginPassword').value = remembered.password || '';
+      }else{
+        $('rememberCredentials').checked = true;
+        $('loginEmployeeNo').value = '';
+        $('loginPassword').value = '';
+      }
+      setCurrentUser('未登录');
+      setLoginError('');
+      requestAnimationFrame(() => $('loginEmployeeNo').focus());
+    }
+
+    function unlockApp(employeeNo){
+      document.body.classList.remove('auth-locked');
+      setCurrentUser(employeeNo);
+      openPage('home');
+    }
+
+    function lockApp(){
+      document.body.classList.add('auth-locked');
+      openPage('home');
+      prepareLoginView();
+    }
+
+    function handleLoginSubmit(event){
+      event.preventDefault();
+      const employeeNo = $('loginEmployeeNo').value.trim();
+      const password = $('loginPassword').value;
+      const creds = getSystemCredentials();
+      if(employeeNo === creds.employeeNo && password === creds.password){
+        if($('rememberCredentials').checked){
+          saveRememberedCredentials(employeeNo, password);
+        }else{
+          clearRememberedCredentials();
+        }
+        setLoginError('');
+        unlockApp(employeeNo);
+        return;
+      }
+      setLoginError('工号或密码错误，请核对初始随机 admin 账号后重试。');
+      $('loginPassword').select();
+    }
+
+    function bindAuthActions(){
+      $('loginForm').addEventListener('submit', handleLoginSubmit);
+      $('fillDemoAccountBtn').addEventListener('click', fillDemoAccount);
+      $('logoutBtn').addEventListener('click', lockApp);
+    }
+
+    function openPage(page){
+      closeOverlay();
+      appState.currentPage = page;
+      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+      document.querySelector(`#page-${page}`).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
+      $('pageTitle').textContent = pageMeta[page].title;
+      $('pageSubtitle').textContent = pageMeta[page].subtitle;
+    }
+
+
+
+    function renderHomePreviews(){
+      const latestEvent = weeklyEvents[weeklyEvents.length - 1];
+      const topFault = monthlyFaultRanking[0];
+      const topSensor = monthlySensorFailures[0];
+      if($('weeklyPreviewTime')) $('weeklyPreviewTime').textContent = latestEvent.time;
+      if($('weeklyPreviewTitle')) $('weeklyPreviewTitle').textContent = latestEvent.text;
+      if($('weeklyPreviewCount')) $('weeklyPreviewCount').textContent = weeklyEvents.length;
+      if($('faultPreviewTitle')) $('faultPreviewTitle').textContent = topFault.name;
+      if($('faultPreviewTime')) $('faultPreviewTime').textContent = `最近一次 ${topFault.last}`;
+      if($('faultPreviewCount')) $('faultPreviewCount').textContent = topFault.count;
+      if($('sensorPreviewTitle')) $('sensorPreviewTitle').textContent = topSensor.name;
+      if($('sensorPreviewTime')) $('sensorPreviewTime').textContent = `最近一次 ${topSensor.last}`;
+      if($('sensorPreviewCount')) $('sensorPreviewCount').textContent = topSensor.count;
+    }
+
+    function openOverlay(title, subtitle, bodyHTML){
+      $('detailOverlayTitle').textContent = title;
+      $('detailOverlaySubtitle').textContent = subtitle;
+      $('detailOverlayBody').innerHTML = bodyHTML;
+      $('detailOverlay').classList.add('open');
+    }
+
+    function closeOverlay(){
+      $('detailOverlay').classList.remove('open');
+    }
+
+    function findSensorByName(name){
+      return sensors.find(item => item.name === name);
+    }
+
+    function openWeeklySummaryOverlay(){
+      openOverlay(
+        '本周异常事件总览',
+        '主页仅显示 1 条预览；这里展示全部异常事件，点击任一条目可跳转到对应分析页。',
+        `<div class="list">${weeklyEvents.map((item, idx) => `
+          <div class="event-item">
+            <button class="event-btn overlay-event-link" data-target="${item.target}">
+              <div class="event-main">
+                <div class="event-time">#${idx + 1} · ${item.time}</div>
+                <div class="event-title">${item.text}</div>
+              </div>
+              <div class="event-route">打开分析页 →</div>
+            </button>
+          </div>
+        `).join('')}</div>`
+      );
+      $('detailOverlayBody').querySelectorAll('.overlay-event-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+          closeOverlay();
+          openPage(btn.dataset.target);
+        });
+      });
+    }
+
+    function openFaultSummaryOverlay(){
+      openOverlay(
+        '本月故障排名',
+        '主页仅显示第 1 名；这里展开完整的月度故障排行。',
+        `<div class="list">${monthlyFaultRanking.map((item, idx) => `
+          <div class="rank-item">
+            <div class="rank-left">
+              <div class="rank-top">
+                <div class="rank-index">${idx + 1}</div>
+                <div class="rank-name">${item.name}</div>
+              </div>
+              <div class="meta-line">最近一次：${item.last}</div>
+            </div>
+            <div class="rank-count">${item.count} 次</div>
+          </div>
+        `).join('')}</div>
+         <div class="overlay-foot">
+           <button class="button primary" id="openRecentRankingPage">打开近期故障排名页</button>
+         </div>`
+      );
+      $('openRecentRankingPage').addEventListener('click', () => {
+        closeOverlay();
+        openPage('recent-ranking');
+      });
+    }
+
+    function openSensorSummaryOverlay(){
+      openOverlay(
+        '本月传感器失效排名',
+        '主页仅显示第 1 名；这里展示完整失效排行，点击条目可联动到传感器详情。',
+        `<div class="list">${monthlySensorFailures.map((item, idx) => `
+          <div class="event-item">
+            <button class="event-btn overlay-sensor-link" data-sensor-name="${item.name}">
+              <div class="event-main">
+                <div class="event-time">#${idx + 1} · 最近一次 ${item.last}</div>
+                <div class="event-title">${item.name} · ${item.count} 次</div>
+              </div>
+              <div class="event-route">查看传感器 →</div>
+            </button>
+          </div>
+        `).join('')}</div>`
+      );
+      $('detailOverlayBody').querySelectorAll('.overlay-sensor-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetSensor = findSensorByName(btn.dataset.sensorName);
+          if(targetSensor){
+            appState.selectedSensorId = targetSensor.id;
+            renderSensorDetail();
+          }
+          closeOverlay();
+          openPage('sensors');
+        });
+      });
+    }
+
+    function bindHomeSummaryActions(){
+      if($('openWeeklySummary')) $('openWeeklySummary').addEventListener('click', openWeeklySummaryOverlay);
+      if($('openFaultSummary')) $('openFaultSummary').addEventListener('click', openFaultSummaryOverlay);
+      if($('openSensorSummary')) $('openSensorSummary').addEventListener('click', openSensorSummaryOverlay);
+    }
+
+    function checkinStatusConfig(status){
+      if(status === 'done') return { text:'已打卡', badge:'done', tag:'已完成' };
+      if(status === 'partial') return { text:'部分完成', badge:'partial', tag:'部分完成' };
+      if(status === 'missed') return { text:'未打卡', badge:'missed', tag:'未完成' };
+      return { text:'无记录', badge:'empty', tag:'暂无记录' };
+    }
+
+    function renderCheckinCalendar(){
+      if(!$('checkinCalendar')) return;
+      const year = 2026;
+      const month = 3;
+      const firstDay = new Date(year, month - 1, 1).getDay();
+      const dayCount = new Date(year, month, 0).getDate();
+      const weekdays = ['日','一','二','三','四','五','六'];
+      const cells = [];
+      for(let i = 0; i < firstDay; i++){
+        cells.push('<div class="calendar-cell empty"></div>');
+      }
+      for(let day = 1; day <= dayCount; day++){
+        const key = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const record = checkinCalendarRecords[key];
+        const status = checkinStatusConfig(record?.status);
+        const classes = ['calendar-cell'];
+        if(record?.status) classes.push(record.status);
+        if(appState.selectedCheckinDate === key) classes.push('selected');
+        cells.push(`
+          <div class="${classes.join(' ')}" data-date="${key}">
+            <div class="calendar-date">${day}</div>
+            <div>
+              <div class="calendar-badge ${status.badge}">${status.text}</div>
+              <div class="calendar-note">${record ? record.note : '暂无打卡记录'}</div>
+            </div>
+          </div>
+        `);
+      }
+      $('checkinCalendar').innerHTML = `
+        <div class="calendar-toolbar">
+          <div class="calendar-month">2026 年 03 月</div>
+          <div class="calendar-legend">
+            <span class="calendar-legend-item"><span class="legend-dot done"></span>已完成</span>
+            <span class="calendar-legend-item"><span class="legend-dot partial"></span>部分完成</span>
+            <span class="calendar-legend-item"><span class="legend-dot missed"></span>未打卡</span>
+            <span class="calendar-legend-item"><span class="legend-dot empty"></span>暂无记录</span>
+          </div>
+        </div>
+        <div class="calendar-grid">
+          ${weekdays.map(day => `<div class="calendar-weekday">${day}</div>`).join('')}
+          ${cells.join('')}
+        </div>
+      `;
+      $('checkinCalendar').querySelectorAll('.calendar-cell[data-date]').forEach(cell => {
+        cell.addEventListener('click', () => {
+          appState.selectedCheckinDate = cell.dataset.date;
+          renderCheckinCalendar();
+          renderCheckinCalendarDetail();
+        });
+      });
+    }
+
+    function renderCheckinCalendarDetail(){
+      if(!$('checkinCalendarDetail')) return;
+      const date = appState.selectedCheckinDate;
+      const record = checkinCalendarRecords[date];
+      if(!record){
+        $('checkinCalendarDetail').innerHTML = `
+          <div class="calendar-detail-head">
+            <div>
+              <h4 class="calendar-detail-title">${date}</h4>
+              <div class="calendar-detail-meta">当日暂无历史打卡记录</div>
+            </div>
+            <span class="badge info">无记录</span>
+          </div>
+          <div class="calendar-detail-note">该日期尚未录入打卡信息，可在实际系统中继续补录。</div>
+        `;
+        return;
+      }
+      const status = checkinStatusConfig(record.status);
+      const badgeClass = record.status === 'done' ? 'success' : (record.status === 'partial' ? 'warn' : 'error');
+      $('checkinCalendarDetail').innerHTML = `
+        <div class="calendar-detail-head">
+          <div>
+            <h4 class="calendar-detail-title">${date}</h4>
+            <div class="calendar-detail-meta">${record.shift} · ${record.person} · ${record.result}</div>
+          </div>
+          <span class="badge ${badgeClass}">${status.tag}</span>
+        </div>
+        <div class="calendar-detail-note">${record.detail}</div>
+        <div class="calendar-detail-list">
+          <div class="calendar-detail-row"><strong>记录摘要</strong><span>${record.note}</span></div>
+          <div class="calendar-detail-row"><strong>点检内容</strong><span>主电缆、压力接点引出电缆、刻度记录、控制箱按钮及紧固螺钉检查。</span></div>
+          <div class="calendar-detail-row"><strong>适用说明</strong><span>该区域用于展示当天打卡结论、责任人和值班班次。</span></div>
+        </div>
+      `;
+    }
+
+    function setClock(){
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const d = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+      const t = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      $('clockDate').textContent = d + ' · ' + ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now.getDay()];
+      $('clockTime').textContent = t;
+      $('heroDate').textContent = d;
+    }
+
+    function renderWeeklyEvents(){
+      if(!$('weeklyEventsList')) return;
+      $('weeklyEventsList').innerHTML = weeklyEvents.map((item, idx) => `
+        <div class="event-item">
+          <button class="event-btn" data-target="${item.target}">
+            <div class="event-main">
+              <div class="event-time">#${idx+1} · ${item.time}</div>
+              <div class="event-title">${item.text}</div>
+            </div>
+            <div class="event-route">打开分析页 →</div>
+          </button>
+        </div>
+      `).join('');
+      $('weeklyEventsList').querySelectorAll('.event-btn').forEach(btn => {
+        btn.addEventListener('click', () => openPage(btn.dataset.target));
+      });
+    }
+
+    function renderHomeNav(){
+      $('homeNavGrid').innerHTML = homeNav.map(item => `
+        <div class="nav-tile" data-page="${item.page}">
+          <div class="nav-tile-icon">${item.icon}</div>
+          <div class="nav-tile-name">${item.label}</div>
+        </div>
+      `).join('');
+      $('homeNavGrid').querySelectorAll('.nav-tile').forEach(tile => {
+        tile.addEventListener('click', () => openPage(tile.dataset.page));
+      });
+    }
+
+    function renderRanking(targetId, data){
+      const mount = $(targetId);
+      if(!mount) return;
+      mount.innerHTML = data.map((item, idx) => `
+        <div class="rank-item">
+          <div class="rank-left">
+            <div class="rank-top">
+              <div class="rank-index">${idx+1}</div>
+              <div class="rank-name">${item.name}</div>
+            </div>
+            <div class="meta-line">最近一次：${item.last}</div>
+          </div>
+          <div class="rank-count">${item.count} 次</div>
+        </div>
+      `).join('');
+    }
+
+    function sensorStatusBadge(sensor){
+      if(!sensor.valid) return '<span class="badge error">失效</span>';
+      if(sensor.state.includes('预警') || sensor.state.includes('关注') || sensor.state.includes('波动')) return '<span class="badge warn">预警</span>';
+      return '<span class="badge success">有效</span>';
+    }
+
+    function renderSensorList(){
+      $('sensorList').innerHTML = sensors.map(sensor => `
+        <div class="sensor-item ${sensor.id === appState.selectedSensorId ? 'active' : ''}" data-id="${sensor.id}">
+          <button class="sensor-btn">
+            <div class="sensor-main">
+              <div class="meta-line">${sensor.location} · 上次数据 ${sensor.lastSeen}</div>
+              <div class="sensor-title">${sensor.name}</div>
+              <div class="meta-line">近 30 天失效 ${sensor.failures} 次 · 当前状态 ${sensor.state}</div>
+            </div>
+            ${sensorStatusBadge(sensor)}
+          </button>
+        </div>
+      `).join('');
+      $('sensorList').querySelectorAll('.sensor-item').forEach(item => {
+        item.addEventListener('click', () => {
+          appState.selectedSensorId = item.dataset.id;
+          renderSensorList();
+          renderSensorDetail();
+        });
+      });
+    }
+
+    function generateSeries(length, base, amplitude, shift=0, noise=.35){
+      return Array.from({length}, (_, i) => {
+        const sin = Math.sin((i + shift) / 3.3);
+        const cos = Math.cos((i + shift) / 5.2);
+        const drift = (i / length) * amplitude * .18;
+        const wobble = ((i % 5) - 2) * amplitude * noise * 0.08;
+        return +(base + sin * amplitude + cos * amplitude * .35 + drift + wobble).toFixed(1);
+      });
+    }
+
+    function sensorSeries(sensor){
+      switch(sensor.type){
+        case '压力': return generateSeries(24, 4.2, 0.55, 1, 0.18);
+        case '液位': return generateSeries(24, 44, 11, 2, 0.14);
+        case '流量': return generateSeries(24, 28, 4.6, 0, 0.18);
+        default: return generateSeries(24, sensor.name.includes('截割') ? 76 : 62, sensor.name.includes('截割') ? 8.8 : 6.3, 1, 0.12);
+      }
+    }
+
+    function renderSensorDetail(){
+      const sensor = sensors.find(s => s.id === appState.selectedSensorId) || sensors[0];
+      $('sensorDetailSubtitle').textContent = `${sensor.location} · ${sensor.name}`;
+      $('sensorChartTitle').textContent = `${sensor.name} · 24 小时数据曲线`;
+      $('sensorTypeBadge').textContent = sensor.type + '传感器';
+      $('sensorStatusPill').textContent = sensor.valid ? `当前状态：${sensor.state}` : `当前状态：${sensor.state}`;
+      $('sensorStatusPill').className = 'pill ' + (!sensor.valid ? 'red' : (sensor.state.includes('预警') || sensor.state.includes('关注') || sensor.state.includes('波动')) ? 'orange' : 'green');
+
+      $('sensorKpis').innerHTML = [
+        ['当前状态', sensor.state],
+        ['近 30 天失效', sensor.failures + ' 次'],
+        ['平均值', sensor.avg],
+        ['峰值', sensor.peak]
+      ].map(([label, value]) => `
+        <div class="kpi">
+          <div class="kpi-name">${label}</div>
+          <div class="kpi-value" style="font-size:${label === '当前状态' ? '20px' : '22px'}">${value}</div>
+        </div>
+      `).join('');
+
+      renderChart('sensorChartWrap', {
+        labels: Array.from({length:24}, (_, i) => `${String(i).padStart(2, '0')}:00`),
+        unit: sensor.unit,
+        series: [{ name:sensor.name, color:'#48c7ff', values:sensorSeries(sensor) }]
+      });
+    }
+
+    function renderSensorExtendedRanking(){
+      const data = [...sensors].sort((a,b) => b.failures - a.failures);
+      $('sensorRankingExtended').innerHTML = data.map((item, idx) => `
+        <div class="rank-item">
+          <div class="rank-left">
+            <div class="rank-top">
+              <span class="rank-index">${idx+1}</span>
+              <div class="rank-name">${item.name}</div>
+            </div>
+            <div class="meta-line">上一次记录：${item.lastSeen}</div>
+          </div>
+          <div class="rank-count">${item.failures}<span style="font-size:13px; color:var(--text-2); margin-left:4px;">次</span></div>
+        </div>
+      `).join('');
+    }
+
+    function renderCodeGrid(targetId, codes, category){
+      $(targetId).innerHTML = codes.map(code => `
+        <div class="code-chip" data-category="${category}" data-code="${code}">
+          <button class="code-btn">${code}</button>
+        </div>
+      `).join('');
+      $(targetId).querySelectorAll('.code-chip').forEach(el => {
+        el.addEventListener('click', () => showFaultResult(el.dataset.category, el.dataset.code, true));
+      });
+    }
+
+    function showFaultResult(category, code, highlight=false){
+      document.querySelectorAll('.code-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.category === category && chip.dataset.code === code && highlight);
+      });
+      $('faultCategorySelect').value = category;
+      $('faultSearchInput').value = code;
+      const entry = faultDictionary[category][code];
+      const categoryLabel = category === 'system' ? '系统故障' : '变频器故障';
+      $('faultResultBox').innerHTML = entry ? `
+        <div class="result-code"><span class="badge info">${categoryLabel}</span><span>${code}</span></div>
+        <div class="result-desc">${entry.desc}</div>
+        <div class="result-tip">${entry.tip}</div>
+      ` : `
+        <div class="empty">
+          当前原型中未录入 <strong>${code}</strong> 的详细释义。<br/>
+          正式版可从知识库 / 后端词典动态同步该故障信息。
+        </div>
+      `;
+    }
+
+    function renderStatsTable(targetId, rows, headers){
+      $(targetId).innerHTML = `
+        <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+      `;
+    }
+
+    function renderLogList(targetId, data, alarm=false){
+      $(targetId).innerHTML = data.map(text => {
+        const time = text.slice(0,19);
+        const content = text.slice(20);
+        return `<div class="log-item ${alarm ? 'alarm' : ''}"><div class="log-time">${time}</div><div class="log-text">${content}</div></div>`;
+      }).join('');
+    }
+
+    function renderAlertGrid(targetId, data){
+      $(targetId).innerHTML = data.map(text => {
+        const time = text.slice(0,19);
+        const content = text.slice(20);
+        return `<div class="log-item alarm"><div class="log-time">${time}</div><div class="log-text">${content}</div></div>`;
+      }).join('');
+    }
+
+    function renderAssets(targetId, items){
+      $(targetId).innerHTML = items.map(item => `
+        <div class="asset-item">
+          <div class="asset-main">
+            <div class="asset-title">${item.title}</div>
+            <div class="asset-meta">${item.meta}</div>
+          </div>
+          <button class="button ghost">打开</button>
+        </div>
+      `).join('');
+    }
+
+    function renderFields(targetId, fields){
+      $(targetId).innerHTML = fields.map(([label, value]) => `
+        <div class="field">
+          <label>${label}</label>
+          <input class="text-input" value="${value}" />
+        </div>
+      `).join('');
+    }
+
+    function renderVersionHistory(){
+      $('versionHistory').innerHTML = versionHistoryData.map(item => `
+        <div class="history-item">
+          <div>
+            <div class="asset-title">${item.date}</div>
+            <div class="asset-meta">${item.desc}</div>
+          </div>
+          <span class="badge info">记录</span>
+        </div>
+      `).join('');
+    }
+
+    function renderNetworkInfo(){
+      $('networkInfo').innerHTML = networkInfoData.map(([k,v]) => `
+        <div class="network-item"><strong>${k}</strong><span>${v}</span></div>
+      `).join('');
+    }
+
+    function renderCheckins(){
+      $('checkinList').innerHTML = checkinItems.map((item, idx) => `
+        <div class="check-item ${appState.checkins[idx] ? 'done' : ''}" data-index="${idx}">
+          <div class="check-box">${appState.checkins[idx] ? '✓' : ''}</div>
+          <div class="check-title">${item}</div>
+        </div>
+      `).join('');
+      $('checkinList').querySelectorAll('.check-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const index = +item.dataset.index;
+          appState.checkins[index] = !appState.checkins[index];
+          renderCheckins();
+        });
+      });
+    }
+
+    function renderCheckinHistory(){
+      renderCheckinCalendar();
+      renderCheckinCalendarDetail();
+    }
+
+    function renderConnectionCards(){
+      const cards = [
+        ['平板与工控机', appState.connected ? '已连接' : '未连接'],
+        ['HPC 通讯', appState.connected ? '正常' : '断开'],
+        ['MOC 通讯', appState.connected ? '正常' : '断开'],
+        ['BOC 通讯', appState.connected ? (appState.statuses.boc === 'warn' ? '预警' : '正常') : '断开']
+      ];
+      $('settingsConnectionCards').innerHTML = cards.map(([n,v]) => `
+        <div class="kpi">
+          <div class="kpi-name">${n}</div>
+          <div class="kpi-value" style="font-size:20px">${v}</div>
+        </div>
+      `).join('');
+      $('settingsConnectionLabel').textContent = appState.connected ? '已连接采煤机' : '未连接采煤机';
+      $('settingsConnectionLabel').className = 'pill ' + (appState.connected ? 'green' : 'red');
+      $('toggleConnectionBtn').textContent = appState.connected ? '断开连接' : '点击连接';
+    }
+
+    function updateConnectionChips(){
+      const tabletText = appState.connected ? '平板↔工控机 已连接' : '平板↔工控机 未连接';
+      const tabletEl = $('tabletConnection');
+      tabletEl.className = 'status-chip ' + (appState.connected ? 'success' : 'offline');
+      tabletEl.querySelector('span:last-child').textContent = tabletText;
+
+      const setChip = (id, label, state) => {
+        const el = $(id);
+        el.className = 'status-chip ' + (!appState.connected ? 'offline' : state);
+        let text = label + ' ' + (!appState.connected ? '断开' : (state === 'success' ? '正常' : state === 'warn' ? '预警' : '异常'));
+        el.querySelector('span:last-child').textContent = text;
+      };
+      setChip('hpcChip', 'HPC', appState.statuses.hpc);
+      setChip('mocChip', 'MOC', appState.statuses.moc);
+      setChip('bocChip', 'BOC', appState.statuses.boc);
+      renderConnectionCards();
+    }
+
+    function toggleConnection(){
+      appState.connected = !appState.connected;
+      updateConnectionChips();
+    }
+
+    function renderCycleControls(letter){
+      const config = appState.cycleConfigs[letter];
+      const targetId = 'cycleControls' + letter;
+      $(targetId).innerHTML = `
+        <select class="control" id="cycleX${letter}">
+          ${cycleXAxisOptions.map(item => `<option value="${item}" ${item === config.x ? 'selected' : ''}>横坐标：${item}</option>`).join('')}
+        </select>
+        <div class="chip-row" id="cycleY${letter}">
+          ${cycleYAxisOptions.map(item => `<div class="selectable-chip ${config.ys.includes(item) ? 'active' : ''}" data-value="${item}">${item}</div>`).join('')}
+        </div>
+      `;
+      $('cycleX' + letter).addEventListener('change', e => {
+        appState.cycleConfigs[letter].x = e.target.value;
+        renderCycleChart(letter);
+      });
+      $('cycleY' + letter).querySelectorAll('.selectable-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const value = chip.dataset.value;
+          const ys = appState.cycleConfigs[letter].ys;
+          if(ys.includes(value)){
+            if(ys.length === 1) return;
+            appState.cycleConfigs[letter].ys = ys.filter(v => v !== value);
+          }else{
+            appState.cycleConfigs[letter].ys = [...ys, value];
+          }
+          renderCycleControls(letter);
+          renderCycleChart(letter);
+        });
+      });
+    }
+
+    function cycleSeriesFor(label){
+      switch(label){
+        case '采煤机速度': return { name:label, color:'#48c7ff', values:generateSeries(20, 4.2, 1.8, 0, .15) };
+        case '左截割电机温度': return { name:label, color:'#ffb14a', values:generateSeries(20, 72, 10.5, 1, .11) };
+        case '右截割电机温度': return { name:label, color:'#f7d65c', values:generateSeries(20, 69, 8.6, 2, .10) };
+        case '左截割电机电流': return { name:label, color:'#4f8cff', values:generateSeries(20, 198, 42, 3, .11) };
+        case '左牵引电机电流': return { name:label, color:'#38d889', values:generateSeries(20, 156, 28, 1, .12) };
+        case '泵电机温度': return { name:label, color:'#9f86ff', values:generateSeries(20, 66, 8.4, 2, .09) };
+        default: return { name:label, color:'#48c7ff', values:generateSeries(20, 0, 1) };
+      }
+    }
+
+    function cycleLabelsByX(x){
+      if(x === '工作面') return Array.from({length:20}, (_, i) => `段 ${i+1}`);
+      if(x === '温度') return Array.from({length:20}, (_, i) => `${40 + i * 3}℃`);
+      return Array.from({length:20}, (_, i) => `${String(i).padStart(2,'0')}:00`);
+    }
+
+    function renderCycleChart(letter){
+      const config = appState.cycleConfigs[letter];
+      renderChart('cycleChart' + letter, {
+        labels: cycleLabelsByX(config.x),
+        unit: config.ys.join(' / '),
+        series: config.ys.map(cycleSeriesFor)
+      });
+    }
+
+    function renderChart(targetId, config){
+      const mount = $(targetId);
+      const labels = config.labels || [];
+      const series = config.series || [];
+      if(!mount || !series.length){
+        if(mount) mount.innerHTML = '<div class="empty">暂无图表数据</div>';
+        return;
+      }
+      const width = 980, height = 360, padL = 54, padR = 26, padT = 22, padB = 40;
+      const values = series.flatMap(s => s.values);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const range = Math.max(1, max - min);
+      const xStep = (width - padL - padR) / Math.max(1, labels.length - 1);
+      const y = val => height - padB - ((val - min) / range) * (height - padT - padB);
+      const x = idx => padL + idx * xStep;
+
+      const gridLines = Array.from({length:5}, (_, i) => {
+        const yy = padT + ((height - padT - padB) / 4) * i;
+        const v = (max - ((max - min) / 4) * i).toFixed(1);
+        return `
+          <line x1="${padL}" y1="${yy}" x2="${width-padR}" y2="${yy}" stroke="rgba(255,255,255,.08)" stroke-dasharray="4 6"/>
+          <text x="${padL-10}" y="${yy+4}" text-anchor="end" fill="rgba(245,247,251,.45)" font-size="12">${v}</text>
+        `;
+      }).join('');
+
+      const xLabels = labels.map((label, idx) => {
+        if(idx % Math.ceil(labels.length / 5) !== 0 && idx !== labels.length - 1) return '';
+        return `<text x="${x(idx)}" y="${height-12}" text-anchor="middle" fill="rgba(245,247,251,.45)" font-size="12">${label}</text>`;
+      }).join('');
+
+      const polylines = series.map(s => {
+        const points = s.values.map((val, idx) => `${x(idx)},${y(val)}`).join(' ');
+        return `
+          <polyline points="${points}" fill="none" stroke="${s.color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+          ${s.values.map((val, idx) => idx % Math.ceil(s.values.length/6) === 0 || idx === s.values.length - 1 ? `<circle cx="${x(idx)}" cy="${y(val)}" r="3.5" fill="${s.color}" />` : '').join('')}
+        `;
+      }).join('');
+
+      mount.innerHTML = `
+        <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="chartBg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(255,255,255,.05)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,.01)"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="${width}" height="${height}" fill="url(#chartBg)" rx="22"/>
+          ${gridLines}
+          <line x1="${padL}" y1="${height-padB}" x2="${width-padR}" y2="${height-padB}" stroke="rgba(255,255,255,.14)"/>
+          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${height-padB}" stroke="rgba(255,255,255,.14)"/>
+          ${xLabels}
+          ${polylines}
+        </svg>
+        <div class="chart-legend">
+          ${series.map(s => `<div class="legend-item"><span class="legend-line" style="background:${s.color}"></span>${s.name}</div>`).join('')}
+        </div>
+      `;
+    }
+
+    function renderAnalysisCharts(){
+      renderChart('cuttingMotorChart', {
+        labels:Array.from({length:24}, (_, i) => `${String(i).padStart(2,'0')}:00`),
+        series:[
+          { name:'左截割电机温度', color:'#ffb14a', values:generateSeries(24, 78, 10.2, 1, .10) },
+          { name:'右截割电机温度', color:'#f7d65c', values:generateSeries(24, 74, 9.0, 2, .10) },
+          { name:'左截割电机电流', color:'#4f8cff', values:generateSeries(24, 208, 44, 0, .09) },
+          { name:'右截割电机电流', color:'#48c7ff', values:generateSeries(24, 196, 38, 1, .08) }
+        ]
+      });
+
+      renderChart('armChart', {
+        labels:Array.from({length:24}, (_, i) => `${String(i).padStart(2,'0')}:00`),
+        series:[
+          { name:'左摇臂温度', color:'#38d889', values:generateSeries(24, 65, 7.2, 0, .10) },
+          { name:'右摇臂温度', color:'#9f86ff', values:generateSeries(24, 66.5, 7.8, 1, .10) },
+          { name:'左摇臂电流', color:'#ffb14a', values:generateSeries(24, 116, 18, 2, .09) },
+          { name:'右摇臂电流', color:'#4f8cff', values:generateSeries(24, 121, 21, 1, .09) }
+        ]
+      });
+
+      renderChart('tractionMotorChart', {
+        labels:Array.from({length:24}, (_, i) => `${String(i).padStart(2,'0')}:00`),
+        series:[
+          { name:'左牵引电机温度', color:'#ffb14a', values:generateSeries(24, 73, 7.5, 1, .10) },
+          { name:'右牵引电机温度', color:'#f7d65c', values:generateSeries(24, 70.5, 6.8, 2, .10) },
+          { name:'左牵引电机电流', color:'#4f8cff', values:generateSeries(24, 168, 28, 1, .10) },
+          { name:'右牵引电机电流', color:'#48c7ff', values:generateSeries(24, 162, 26, 0, .09) }
+        ]
+      });
+
+      renderChart('inverterChart', {
+        labels:Array.from({length:24}, (_, i) => `${String(i).padStart(2,'0')}:00`),
+        series:[
+          { name:'输入电压', color:'#38d889', values:generateSeries(24, 1140, 32, 0, .06) },
+          { name:'直流电压', color:'#4f8cff', values:generateSeries(24, 1550, 55, 1, .06) },
+          { name:'输出转矩', color:'#ffb14a', values:generateSeries(24, 72, 16, 2, .10) },
+          { name:'IGBT温度', color:'#ff5f57', values:generateSeries(24, 68, 11, 1, .10) }
+        ]
+      });
+
+      renderChart('pumpChart', {
+        labels:Array.from({length:24}, (_, i) => `${String(i).padStart(2,'0')}:00`),
+        series:[
+          { name:'泵电机温度', color:'#ffb14a', values:generateSeries(24, 70, 8.0, 1, .09) },
+          { name:'泵电机电流', color:'#48c7ff', values:generateSeries(24, 184, 34, 2, .09) },
+          { name:'估算带载功率', color:'#4f8cff', values:generateSeries(24, 298, 42, 0, .08) }
+        ]
+      });
+    }
+
+    function renderPumpStats(){
+      $('pumpStatsCards').innerHTML = pumpStats.map(([name, value]) => `
+        <div class="kpi">
+          <div class="kpi-name">${name}</div>
+          <div class="kpi-value" style="font-size:20px">${value}</div>
+        </div>
+      `).join('');
+    }
+
+    function init(){
+      setClock();
+      setInterval(setClock, 1000);
+      bindAuthActions();
+      prepareLoginView();
+
+      document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => openPage(btn.dataset.page)));
+      $('goHome').addEventListener('click', () => openPage('home'));
+      $('closeDetailOverlay').addEventListener('click', closeOverlay);
+      $('detailOverlay').addEventListener('click', e => { if(e.target === $('detailOverlay')) closeOverlay(); });
+      document.addEventListener('keydown', e => { if(e.key === 'Escape') closeOverlay(); });
+      $('toggleConnectionBtn').addEventListener('click', toggleConnection);
+      $('faultSearchBtn').addEventListener('click', () => showFaultResult($('faultCategorySelect').value, $('faultSearchInput').value.trim() || '0x0094'));
+      $('faultSearchInput').addEventListener('keydown', e => {
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          showFaultResult($('faultCategorySelect').value, $('faultSearchInput').value.trim() || '0x0094');
+        }
+      });
+      $('submitCheckinBtn').addEventListener('click', () => {
+        const done = appState.checkins.filter(Boolean).length;
+        const now = new Date();
+        const key = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        checkinCalendarRecords[key] = {
+          status: done === checkinItems.length ? 'done' : (done > 0 ? 'partial' : 'missed'),
+          shift:'当前班次',
+          person:'当前点检员',
+          result: done === checkinItems.length ? '已完成' : (done > 0 ? '部分完成' : '未打卡'),
+          note:`${done}/${checkinItems.length} 项已确认`,
+          detail:'由平板端提交的当日点检记录（原型示意）。'
+        };
+        appState.selectedCheckinDate = key;
+        renderCheckinCalendar();
+        renderCheckinCalendarDetail();
+        alert(`已提交今日打卡：${done}/${checkinItems.length} 项已完成（原型示意）`);
+      });
+
+      renderHomePreviews();
+      bindHomeSummaryActions();
+      renderHomeNav();
+      renderSensorList();
+      renderSensorDetail();
+      renderSensorExtendedRanking();
+      renderCodeGrid('systemCodeGrid', systemCodes, 'system');
+      renderCodeGrid('inverterCodeGrid', inverterCodes, 'inverter');
+      showFaultResult('system', '0x0094');
+      renderStatsTable('cuttingStatsTable', cuttingStats, ['部件', '平均带载功率', '平均带载温度', '今日带载运行时间', '今日过载时间', '今日过温时间']);
+      renderStatsTable('tractionStatsTable', tractionStats, ['部件', '平均带载功率', '平均带载温度', '今日带载运行时间', '今日过载时间', '今日过温时间']);
+      renderLogList('cuttingLogs', logs);
+      renderLogList('tractionLogs', logs);
+      renderLogList('pumpLogs', logs);
+      renderAlertGrid('cuttingAlerts', alerts);
+      renderAlertGrid('tractionAlerts', alerts);
+      renderLogList('pumpAlerts', alerts, true);
+      renderAnalysisCharts();
+      renderPumpStats();
+      renderRanking('systemFaultRankings', systemFaultRankings);
+      renderRanking('inverterFaultRankings', inverterFaultRankings);
+      renderRanking('sensorFaultRankings', sensorFaultRankings);
+      renderCheckins();
+      renderCheckinCalendar();
+      renderCheckinCalendarDetail();
+      renderAssets('drawingAssets', knowledgeAssets.drawing);
+      renderAssets('installAssets', knowledgeAssets.install);
+      renderAssets('troubleshootAssets', knowledgeAssets.troubleshoot);
+      renderFields('faceFields', workFaceFields);
+      renderFields('machineFields', machineFields);
+      renderVersionHistory();
+      renderNetworkInfo();
+      updateConnectionChips();
+      renderCycleControls('A');
+      renderCycleControls('B');
+      renderCycleChart('A');
+      renderCycleChart('B');
+    }
+
+    init();
+  </script>
+</body>
+</html>
