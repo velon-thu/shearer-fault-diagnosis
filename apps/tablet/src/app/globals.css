@@ -820,6 +820,10 @@ input {
   box-shadow: 0 16px 24px rgba(79, 140, 255, 0.18);
 }
 
+.button.ghost {
+  background: transparent;
+}
+
 .code-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -901,6 +905,110 @@ input {
   line-height: 1.6;
 }
 
+.setting-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--page-gap);
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field label {
+  padding-left: 2px;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.text-input {
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item,
+.network-item {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.asset-title {
+  font-size: 15px;
+  font-weight: 660;
+  line-height: 1.35;
+}
+
+.asset-meta {
+  margin-top: 6px;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.network-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.network-item {
+  padding: 14px 16px;
+}
+
+.network-item strong {
+  display: block;
+  font-size: 15px;
+}
+
+.network-item span {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.settings-kpi-value {
+  font-size: 20px;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -964,6 +1072,10 @@ input {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .setting-grid {
+    grid-template-columns: 1fr;
+  }
+
   .two-col,
   .split {
     grid-template-columns: 1fr;
@@ -999,6 +1111,11 @@ input {
 
   .code-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .field-grid,
+  .network-grid {
+    grid-template-columns: 1fr;
   }
 
   .toolbar-right {

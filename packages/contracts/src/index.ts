@@ -77,9 +77,17 @@ export const FaultCodeResultSchema = z.object({
   tip: z.string().nullable(),
 });
 
+export const SettingsVersionHistoryItemSchema = z.object({
+  date: z.string(),
+  desc: z.string(),
+});
+
 export const SettingsSnapshotSchema = z.object({
+  connected: z.boolean(),
+  connection: ConnectionStatusSchema,
   workFaceFields: z.array(KeyValueFieldSchema),
   machineFields: z.array(KeyValueFieldSchema),
+  versionHistoryData: z.array(SettingsVersionHistoryItemSchema),
   networkInfoData: z.array(KeyValueFieldSchema),
 });
 
@@ -132,6 +140,7 @@ export type SensorSummary = z.infer<typeof SensorSummarySchema>;
 export type SensorDetail = z.infer<typeof SensorDetailSchema>;
 export type SensorTrendPoint = z.infer<typeof SensorTrendPointSchema>;
 export type FaultCodeResult = z.infer<typeof FaultCodeResultSchema>;
+export type SettingsVersionHistoryItem = z.infer<typeof SettingsVersionHistoryItemSchema>;
 export type SettingsSnapshot = z.infer<typeof SettingsSnapshotSchema>;
 export type KeyValueField = z.infer<typeof KeyValueFieldSchema>;
 export type FaultCategory = z.infer<typeof FaultCategorySchema>;

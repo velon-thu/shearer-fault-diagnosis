@@ -9,6 +9,7 @@ import {
   type SensorSummary,
   type SensorTrendPoint,
   type SettingsSnapshot,
+  type SettingsVersionHistoryItem,
   type WeeklyEvent,
 } from "@shearer/contracts";
 
@@ -357,6 +358,12 @@ export const machineFields: KeyValueField[] = toFields([
   ["滚筒截深", "800 mm"],
 ]);
 
+export const versionHistoryData: SettingsVersionHistoryItem[] = [
+  { date: "v2.6.4", desc: "新增运行循环图页面、主页面异常事件联动、连接状态集中展示。" },
+  { date: "v2.6.3", desc: "增加牵引部变频器多曲线趋势图与近期故障排名筛选。" },
+  { date: "v2.6.1", desc: "补充知识库分类与日常检修打卡历史记录。" },
+];
+
 export const networkInfoData: KeyValueField[] = toFields([
   ["工控机主机名", "cm-ipc-3106"],
   ["工控机 IP", "192.168.10.36"],
@@ -389,11 +396,18 @@ export const createHomeSummary = (): HomeSummary => {
   };
 };
 
-export const createSettingsSnapshot = (): SettingsSnapshot => ({
-  workFaceFields,
-  machineFields,
-  networkInfoData,
-});
+export const createSettingsSnapshot = (): SettingsSnapshot => {
+  const connection = createConnectionStatus();
+
+  return {
+    connected: connection.tabletToIpc === "connected",
+    connection,
+    workFaceFields,
+    machineFields,
+    versionHistoryData,
+    networkInfoData,
+  };
+};
 
 export const getSensorSummaries = (): SensorSummary[] =>
   sensors.map(
