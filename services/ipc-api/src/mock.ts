@@ -1,5 +1,10 @@
 import {
   type BootstrapResponse,
+  type CuttingAnalysisLogEntry,
+  type CuttingAnalysisRange,
+  type CuttingAnalysisResponse,
+  type CuttingAnalysisSeries,
+  type CuttingAnalysisStatsRow,
   type ConnectionStatus,
   type FaultCategory,
   type FaultCodeResult,
@@ -403,6 +408,41 @@ const pumpStats: KeyValueField[] = toFields([
   ["今日过温时间", "36m"],
 ]);
 
+const cuttingStats: CuttingAnalysisStatsRow[] = [
+  {
+    part: "左截割电机",
+    averageLoadPower: "352 kW",
+    averageLoadTemperature: "78.5℃",
+    todayLoadedRuntime: "6h 42m",
+    todayOverloadTime: "38m",
+    todayOverTemperatureTime: "1h 18m",
+  },
+  {
+    part: "右截割电机",
+    averageLoadPower: "344 kW",
+    averageLoadTemperature: "75.2℃",
+    todayLoadedRuntime: "6h 18m",
+    todayOverloadTime: "25m",
+    todayOverTemperatureTime: "52m",
+  },
+  {
+    part: "左摇臂",
+    averageLoadPower: "118 kW",
+    averageLoadTemperature: "64.8℃",
+    todayLoadedRuntime: "5h 56m",
+    todayOverloadTime: "12m",
+    todayOverTemperatureTime: "44m",
+  },
+  {
+    part: "右摇臂",
+    averageLoadPower: "122 kW",
+    averageLoadTemperature: "66.3℃",
+    todayLoadedRuntime: "5h 49m",
+    todayOverloadTime: "18m",
+    todayOverTemperatureTime: "51m",
+  },
+];
+
 const tractionStats: TractionAnalysisStatsRow[] = [
   {
     part: "左牵引电机",
@@ -431,6 +471,22 @@ const logs: PumpAnalysisLogEntry[] = parseLogEntries([
 ]);
 
 const alerts: PumpAnalysisLogEntry[] = parseLogEntries([
+  "2026-03-10 14:10:23 EDCR泵箱温度高报警！",
+  "2026-03-10 14:10:23 EDCR流量检测通道1报警！",
+  "2026-03-10 14:10:42 RDCR流量通道1保护！",
+  "2026-03-10 14:10:42 EDCR流量监测通道2保护！",
+  "2026-03-10 14:11:23 EDCR流量监测通道2报警！",
+]);
+
+const cuttingLogs: CuttingAnalysisLogEntry[] = parseLogEntries([
+  "2026-03-10 14:10:23 记忆截割1右升",
+  "2026-03-10 14:10:23 系统执行1右升",
+  "2026-03-10 14:10:42 记忆截割1左升",
+  "2026-03-10 14:10:42 系统执行1左升",
+  "2026-03-10 14:11:23 记忆截割2左降",
+]);
+
+const cuttingAlerts: CuttingAnalysisLogEntry[] = parseLogEntries([
   "2026-03-10 14:10:23 EDCR泵箱温度高报警！",
   "2026-03-10 14:10:23 EDCR流量检测通道1报警！",
   "2026-03-10 14:10:42 RDCR流量通道1保护！",
@@ -596,6 +652,70 @@ export const createPumpAnalysis = (range: PumpAnalysisRange = "24h"): PumpAnalys
     stats: pumpStats,
     logs,
     alerts,
+  };
+};
+
+export const createCuttingAnalysis = (
+  range: CuttingAnalysisRange = "24h",
+): CuttingAnalysisResponse => {
+  const labels = Array.from({ length: range === "24h" ? 24 : 24 }, (_, index) =>
+    `${String(index).padStart(2, "0")}:00`,
+  );
+
+  const motorSeries: CuttingAnalysisSeries[] = [
+    {
+      name: "左截割电机温度",
+      color: "#ffb14a",
+      values: generateSeries(24, 78, 10.2, 1, 0.1),
+    },
+    {
+      name: "右截割电机温度",
+      color: "#f7d65c",
+      values: generateSeries(24, 74, 9.0, 2, 0.1),
+    },
+    {
+      name: "左截割电机电流",
+      color: "#4f8cff",
+      values: generateSeries(24, 208, 44, 0, 0.09),
+    },
+    {
+      name: "右截割电机电流",
+      color: "#48c7ff",
+      values: generateSeries(24, 196, 38, 1, 0.08),
+    },
+  ];
+
+  const armSeries: CuttingAnalysisSeries[] = [
+    {
+      name: "左摇臂温度",
+      color: "#38d889",
+      values: generateSeries(24, 65, 7.2, 0, 0.1),
+    },
+    {
+      name: "右摇臂温度",
+      color: "#9f86ff",
+      values: generateSeries(24, 66.5, 7.8, 1, 0.1),
+    },
+    {
+      name: "左摇臂电流",
+      color: "#ffb14a",
+      values: generateSeries(24, 116, 18, 2, 0.09),
+    },
+    {
+      name: "右摇臂电流",
+      color: "#4f8cff",
+      values: generateSeries(24, 121, 21, 1, 0.09),
+    },
+  ];
+
+  return {
+    range,
+    labels,
+    motorSeries,
+    armSeries,
+    stats: cuttingStats,
+    logs: cuttingLogs,
+    alerts: cuttingAlerts,
   };
 };
 

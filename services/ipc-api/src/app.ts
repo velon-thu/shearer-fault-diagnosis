@@ -4,6 +4,8 @@ import websocket from "@fastify/websocket";
 import {
   ApiErrorResponseSchema,
   BootstrapResponseSchema,
+  CuttingAnalysisQuerySchema,
+  CuttingAnalysisResponseSchema,
   FaultCodeResultSchema,
   FaultCodeSearchQuerySchema,
   HealthResponseSchema,
@@ -24,6 +26,7 @@ import {
 } from "@shearer/contracts";
 import {
   buildSensorTrend,
+  createCuttingAnalysis,
   createPumpAnalysis,
   createTractionAnalysis,
   createBootstrapPayload,
@@ -43,6 +46,7 @@ const SensorSummariesApiResponseSchema = createApiSuccessResponseSchema(SensorSu
 const SensorDetailApiResponseSchema = createApiSuccessResponseSchema(SensorDetailSchema);
 const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendPointSchema.array());
 const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
+const CuttingAnalysisApiResponseSchema = createApiSuccessResponseSchema(CuttingAnalysisResponseSchema);
 const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysisResponseSchema);
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
 const TractionAnalysisApiResponseSchema = createApiSuccessResponseSchema(TractionAnalysisResponseSchema);
@@ -157,6 +161,15 @@ export const buildApp = () => {
     return PumpAnalysisApiResponseSchema.parse({
       success: true,
       data: createPumpAnalysis(range),
+    });
+  });
+
+  app.get("/api/analysis/cutting", async (request) => {
+    const { range } = CuttingAnalysisQuerySchema.parse(request.query);
+
+    return CuttingAnalysisApiResponseSchema.parse({
+      success: true,
+      data: createCuttingAnalysis(range),
     });
   });
 
