@@ -1,0 +1,12 @@
+{
+  "name": "shearer-fault-diagnosis",
+  "private": true,
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "pnpm --filter @shearer/contracts build && pnpm -r --parallel --filter @shearer/tablet --filter @shearer/ipc-api run dev",
+    "dev:tablet": "pnpm --filter @shearer/tablet run dev",
+    "dev:ipc-api": "pnpm --filter @shearer/ipc-api run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint"
+  }
+}
