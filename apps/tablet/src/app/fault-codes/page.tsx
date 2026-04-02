@@ -6,8 +6,8 @@ import {
   type FaultCodeResult,
   createApiSuccessResponseSchema,
 } from "@shearer/contracts";
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AppShell, useAppShellState } from "@/components/app-shell";
 
 const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
 
@@ -94,6 +94,7 @@ const getCategoryLabel = (category: FaultCategory) =>
   category === "system" ? "系统故障" : "变频器故障";
 
 export default function FaultCodesPage() {
+  const shellState = useAppShellState();
   const [category, setCategory] = useState<FaultCategory>("system");
   const [codeInput, setCodeInput] = useState("0x0094");
   const [queryResult, setQueryResult] = useState<FaultCodeResult | null>(null);
@@ -137,159 +138,145 @@ export default function FaultCodesPage() {
   }, []);
 
   return (
-    <main className="app-shell">
-      <section className="workspace">
-        <header className="toolbar">
-          <div className="toolbar-left">
-            <Link className="home-btn" href="/">
-              主菜单
-            </Link>
-            <div className="page-heading">
-              <h1 className="page-title">故障代码查询</h1>
-              <p className="page-subtitle">系统故障与变频器故障双词典，支持点击与自定义查询</p>
-            </div>
-          </div>
-          <div className="toolbar-right">
-            <span className="pill blue">代码词典</span>
-          </div>
-        </header>
+    <AppShell
+      shellState={shellState}
+      subtitle="系统故障与变频器故障双词典，支持点击与自定义查询"
+      tagText="代码词典"
+      title="故障代码查询"
+    >
+      {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
-        <div className="content">
-          {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
-
-          <section className="page active">
-            <div className="two-col">
-              <div className="stack">
-                <div className="panel">
-                  <div className="panel-head">
-                    <div>
-                      <h3 className="panel-title">
-                        <span className="accent-bar" />
-                        常见系统故障代码
-                      </h3>
-                      <p className="panel-subtitle">点击代码即可查看释义与建议动作。</p>
-                    </div>
-                  </div>
-                  <div className="panel-body">
-                    <div className="code-grid">
-                      {systemCodes.map((code) => (
-                        <div
-                          className={`code-chip ${activeChipKey === `system:${code}` ? "active" : ""}`}
-                          key={code}
-                        >
-                          <button
-                            className="code-btn"
-                            onClick={() => void queryFaultCode("system", code, true)}
-                            type="button"
-                          >
-                            {code}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="panel">
-                  <div className="panel-head">
-                    <div>
-                      <h3 className="panel-title">
-                        <span className="accent-bar" />
-                        常见变频器故障代码
-                      </h3>
-                      <p className="panel-subtitle">同样支持点击查询与手动输入检索。</p>
-                    </div>
-                  </div>
-                  <div className="panel-body">
-                    <div className="code-grid">
-                      {inverterCodes.map((code) => (
-                        <div
-                          className={`code-chip ${activeChipKey === `inverter:${code}` ? "active" : ""}`}
-                          key={code}
-                        >
-                          <button
-                            className="code-btn"
-                            onClick={() => void queryFaultCode("inverter", code, true)}
-                            type="button"
-                          >
-                            {code}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+      <section className="page active">
+        <div className="two-col">
+          <div className="stack">
+            <div className="panel">
+              <div className="panel-head">
+                <div>
+                  <h3 className="panel-title">
+                    <span className="accent-bar" />
+                    常见系统故障代码
+                  </h3>
+                  <p className="panel-subtitle">点击代码即可查看释义与建议动作。</p>
                 </div>
               </div>
-
-              <div className="stack">
-                <div className="panel">
-                  <div className="panel-head">
-                    <div>
-                      <h3 className="panel-title">
-                        <span className="accent-bar" />
-                        自定义故障查询
-                      </h3>
-                      <p className="panel-subtitle">示例：系统故障 0x0094 / 变频器故障 3130。</p>
-                    </div>
-                  </div>
-                  <div className="panel-body">
-                    <div className="search-row">
-                      <select
-                        className="control"
-                        onChange={(event) => setCategory(event.target.value as FaultCategory)}
-                        value={category}
-                      >
-                        <option value="system">系统故障</option>
-                        <option value="inverter">变频器故障</option>
-                      </select>
-                      <input
-                        className="search-input"
-                        onChange={(event) => setCodeInput(event.target.value)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            void queryFaultCode(category, codeInput, false);
-                          }
-                        }}
-                        placeholder="输入故障代码，例如 0x0094 或 3130"
-                        value={codeInput}
-                      />
+              <div className="panel-body">
+                <div className="code-grid">
+                  {systemCodes.map((code) => (
+                    <div
+                      className={`code-chip ${activeChipKey === `system:${code}` ? "active" : ""}`}
+                      key={code}
+                    >
                       <button
-                        className="button primary"
-                        onClick={() => void queryFaultCode(category, codeInput, false)}
+                        className="code-btn"
+                        onClick={() => void queryFaultCode("system", code, true)}
                         type="button"
                       >
-                        查询
+                        {code}
                       </button>
                     </div>
-
-                    <div className="result-box">
-                      {loading ? (
-                        <div className="empty">正在查询故障代码...</div>
-                      ) : queryResult?.found ? (
-                        <>
-                          <div className="result-code">
-                            <span className="badge info">{getCategoryLabel(queryResult.category)}</span>
-                            <span>{queryResult.code}</span>
-                          </div>
-                          <div className="result-desc">{queryResult.description}</div>
-                          <div className="result-tip">{queryResult.tip}</div>
-                        </>
-                      ) : (
-                        <div className="empty">
-                          当前原型中未录入 <strong>{queryResult?.code ?? codeInput}</strong> 的详细释义。
-                          <br />
-                          正式版可从知识库 / 后端词典动态同步该故障信息。
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
-          </section>
+
+            <div className="panel">
+              <div className="panel-head">
+                <div>
+                  <h3 className="panel-title">
+                    <span className="accent-bar" />
+                    常见变频器故障代码
+                  </h3>
+                  <p className="panel-subtitle">同样支持点击查询与手动输入检索。</p>
+                </div>
+              </div>
+              <div className="panel-body">
+                <div className="code-grid">
+                  {inverterCodes.map((code) => (
+                    <div
+                      className={`code-chip ${activeChipKey === `inverter:${code}` ? "active" : ""}`}
+                      key={code}
+                    >
+                      <button
+                        className="code-btn"
+                        onClick={() => void queryFaultCode("inverter", code, true)}
+                        type="button"
+                      >
+                        {code}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="stack">
+            <div className="panel">
+              <div className="panel-head">
+                <div>
+                  <h3 className="panel-title">
+                    <span className="accent-bar" />
+                    自定义故障查询
+                  </h3>
+                  <p className="panel-subtitle">示例：系统故障 0x0094 / 变频器故障 3130。</p>
+                </div>
+              </div>
+              <div className="panel-body">
+                <div className="search-row">
+                  <select
+                    className="control"
+                    onChange={(event) => setCategory(event.target.value as FaultCategory)}
+                    value={category}
+                  >
+                    <option value="system">系统故障</option>
+                    <option value="inverter">变频器故障</option>
+                  </select>
+                  <input
+                    className="search-input"
+                    onChange={(event) => setCodeInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        void queryFaultCode(category, codeInput, false);
+                      }
+                    }}
+                    placeholder="输入故障代码，例如 0x0094 或 3130"
+                    value={codeInput}
+                  />
+                  <button
+                    className="button primary"
+                    onClick={() => void queryFaultCode(category, codeInput, false)}
+                    type="button"
+                  >
+                    查询
+                  </button>
+                </div>
+
+                <div className="result-box">
+                  {loading ? (
+                    <div className="empty">正在查询故障代码...</div>
+                  ) : queryResult?.found ? (
+                    <>
+                      <div className="result-code">
+                        <span className="badge info">{getCategoryLabel(queryResult.category)}</span>
+                        <span>{queryResult.code}</span>
+                      </div>
+                      <div className="result-desc">{queryResult.description}</div>
+                      <div className="result-tip">{queryResult.tip}</div>
+                    </>
+                  ) : (
+                    <div className="empty">
+                      当前原型中未录入 <strong>{queryResult?.code ?? codeInput}</strong> 的详细释义。
+                      <br />
+                      正式版可从知识库 / 后端词典动态同步该故障信息。
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
-    </main>
+    </AppShell>
   );
 }
