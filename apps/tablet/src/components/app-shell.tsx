@@ -245,43 +245,47 @@ export function AppShell({
     <main className="app-shell">
       <section className="workspace">
         <header className="toolbar">
-          <div className="toolbar-left">
-            {disableHomeButton ? (
-              <span aria-current="page" className="home-btn is-current">
-                主页面
-              </span>
-            ) : (
-              <Link className="home-btn" href="/">
-                返回主页面
-              </Link>
-            )}
-            <div className="page-heading">
-              <div className="page-title-row">
-                <h1 className="page-title">{title}</h1>
-                {tagText ? <span className={`pill ${tagTone}`}>{tagText}</span> : null}
-              </div>
-              <p className="page-subtitle">{subtitle}</p>
-            </div>
-          </div>
-          <div className="toolbar-right">
-            <div className="status-cluster">
-              {statusChips.map((chip) => (
-                <div className={`status-chip ${chip.tone}`} key={chip.label}>
-                  <span className="status-dot" />
-                  <span>
-                    {chip.label} {chip.value}
-                  </span>
+          <div className="toolbar-inner">
+            <div className="toolbar-left">
+              {disableHomeButton ? (
+                <span aria-current="page" className="home-btn is-current">
+                  主页面
+                </span>
+              ) : (
+                <Link className="home-btn" href="/">
+                  返回主页面
+                </Link>
+              )}
+              <div className="page-heading">
+                <div className="page-title-row">
+                  <h1 className="page-title">{title}</h1>
+                  {tagText ? <span className={`pill ${tagTone}`}>{tagText}</span> : null}
                 </div>
-              ))}
+                <p className="page-subtitle">{subtitle}</p>
+              </div>
             </div>
-            <div className="clock-box">
-              <div className="clock-time">{formatTime(now)}</div>
-              <div className="clock-date">{formatDate(now, true)}</div>
+            <div className="toolbar-right">
+              <div className="status-cluster">
+                {statusChips.map((chip) => (
+                  <div className={`status-chip ${chip.tone}`} key={chip.label}>
+                    <span className="status-dot" />
+                    <span>
+                      {chip.label} {chip.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="clock-box">
+                <div className="clock-time">{formatTime(now)}</div>
+                <div className="clock-date">{formatDate(now, true)}</div>
+              </div>
             </div>
           </div>
         </header>
 
-        <div className="content">{children}</div>
+        <div className="content">
+          <div className="content-inner">{children}</div>
+        </div>
       </section>
     </main>
   );
