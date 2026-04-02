@@ -2,14 +2,42 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import {
+  ApiErrorResponseSchema,
   BootstrapResponseSchema,
+  FaultCodeResultSchema,
+  FaultCodeSearchQuerySchema,
   HealthResponseSchema,
+  HomeSummarySchema,
   LiveMessageSchema,
+  SensorDetailSchema,
+  SensorIdParamsSchema,
+  SensorSummarySchema,
+  SensorTrendPointSchema,
+  SensorTrendQuerySchema,
+  SettingsSnapshotSchema,
+  WeeklyEventSchema,
   createApiSuccessResponseSchema,
 } from "@shearer/contracts";
-import { createBootstrapPayload, createConnectionStatus } from "./mock";
+import {
+  buildSensorTrend,
+  createBootstrapPayload,
+  createConnectionStatus,
+  createHomeSummary,
+  createSettingsSnapshot,
+  findFaultCode,
+  findSensorById,
+  getSensorSummaries,
+  weeklyEvents,
+} from "./mock";
 
 const BootstrapApiResponseSchema = createApiSuccessResponseSchema(BootstrapResponseSchema);
+const HomeSummaryApiResponseSchema = createApiSuccessResponseSchema(HomeSummarySchema);
+const WeeklyEventsApiResponseSchema = createApiSuccessResponseSchema(WeeklyEventSchema.array());
+const SensorSummariesApiResponseSchema = createApiSuccessResponseSchema(SensorSummarySchema.array());
+const SensorDetailApiResponseSchema = createApiSuccessResponseSchema(SensorDetailSchema);
+const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendPointSchema.array());
+const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
+const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
 const HealthApiResponseSchema = createApiSuccessResponseSchema(HealthResponseSchema);
 
 export const buildApp = () => {
@@ -37,6 +65,88 @@ export const buildApp = () => {
     BootstrapApiResponseSchema.parse({
       success: true,
       data: createBootstrapPayload(),
+    }),
+  );
+
+  app.get("/api/home/summary", async () =>
+    HomeSummaryApiResponseSchema.parse({
+      success: true,
+      data: createHomeSummary(),
+    }),
+  );
+
+  app.get("/api/events/weekly", async () =>
+    WeeklyEventsApiResponseSchema.parse({
+      success: true,
+      data: weeklyEvents,
+    }),
+  );
+
+  app.get("/api/sensors", async () =>
+    SensorSummariesApiResponseSchema.parse({
+      success: true,
+      data: getSensorSummaries(),
+    }),
+  );
+
+  app.get("/api/sensors/:id", async (request, reply) => {
+    const { id } = SensorIdParamsSchema.parse(request.params);
+    const sensor = findSensorById(id);
+
+    if (!sensor) {
+      return reply.code(404).send(
+        ApiErrorResponseSchema.parse({
+          success: false,
+          error: {
+            code: "SENSOR_NOT_FOUND",
+            message: `未找到传感器 ${id}`,
+          },
+        }),
+      );
+    }
+
+    return SensorDetailApiResponseSchema.parse({
+      success: true,
+      data: sensor,
+    });
+  });
+
+  app.get("/api/sensors/:id/trend", async (request, reply) => {
+    const { id } = SensorIdParamsSchema.parse(request.params);
+    const { range } = SensorTrendQuerySchema.parse(request.query);
+    const sensor = findSensorById(id);
+
+    if (!sensor) {
+      return reply.code(404).send(
+        ApiErrorResponseSchema.parse({
+          success: false,
+          error: {
+            code: "SENSOR_NOT_FOUND",
+            message: `未找到传感器 ${id}`,
+          },
+        }),
+      );
+    }
+
+    return SensorTrendApiResponseSchema.parse({
+      success: true,
+      data: buildSensorTrend(sensor, range),
+    });
+  });
+
+  app.get("/api/fault-codes/search", async (request) => {
+    const { category, code } = FaultCodeSearchQuerySchema.parse(request.query);
+
+    return FaultCodeResultApiResponseSchema.parse({
+      success: true,
+      data: findFaultCode(category, code),
+    });
+  });
+
+  app.get("/api/settings", async () =>
+    SettingsSnapshotApiResponseSchema.parse({
+      success: true,
+      data: createSettingsSnapshot(),
     }),
   );
 
