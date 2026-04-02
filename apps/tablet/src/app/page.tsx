@@ -2,21 +2,41 @@
 
 import {
   BootstrapResponseSchema,
+  HomeSummarySchema,
+  LiveMessageSchema,
+  WeeklyEventSchema,
   createApiSuccessResponseSchema,
   type BootstrapResponse,
   type ConnectionStatus,
+  type HomeSummary,
+  type WeeklyEvent,
 } from "@shearer/contracts";
 import { useEffect, useMemo, useState } from "react";
 
 const BootstrapApiResponseSchema = createApiSuccessResponseSchema(BootstrapResponseSchema);
+const HomeSummaryApiResponseSchema = createApiSuccessResponseSchema(HomeSummarySchema);
+const WeeklyEventsApiResponseSchema = createApiSuccessResponseSchema(WeeklyEventSchema.array());
 
-const emptyStatus: ConnectionStatus = {
+const fallbackConnection: ConnectionStatus = {
   tabletToIpc: "disconnected",
   hpc: "offline",
   moc: "offline",
   boc: "offline",
-  syncAt: new Date(0).toISOString(),
+  syncAt: "",
 };
+
+const homeNavItems = [
+  { label: "传感器", page: "sensors", icon: "传" },
+  { label: "故障代码查询", page: "fault-codes", icon: "码" },
+  { label: "截割部分析", page: "cutting-analysis", icon: "截" },
+  { label: "牵引部分析", page: "traction-analysis", icon: "牵" },
+  { label: "泵分析", page: "pump-analysis", icon: "泵" },
+  { label: "近期故障排名", page: "recent-ranking", icon: "排" },
+  { label: "日常检修打卡", page: "checkin", icon: "检" },
+  { label: "知识库", page: "knowledge", icon: "知" },
+  { label: "运行循环图", page: "run-cycle", icon: "循" },
+  { label: "系统设置", page: "settings", icon: "设" },
+] as const;
 
 const resolveHttpBase = () => {
   if (typeof window === "undefined") {
@@ -55,7 +75,7 @@ const resolveWsUrl = () => {
   return `${wsProtocol}//${window.location.host}/ws/live`;
 };
 
-const formatConnectionText = (status: string) => {
+const formatStatusText = (status: string) => {
   switch (status) {
     case "connected":
       return "已连接";
@@ -74,55 +94,168 @@ const formatConnectionText = (status: string) => {
   }
 };
 
+const formatDate = (value: Date | string | null, withWeekday = false) => {
+  if (!value) {
+    return "--";
+  }
+
+  const date = typeof value === "string" ? new Date(value) : value;
+
+  if (Number.isNaN(date.getTime())) {
+    return "--";
+  }
+
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: withWeekday ? "long" : undefined,
+  });
+};
+
+const formatTime = (value: Date | string | null) => {
+  if (!value) {
+    return "--:--:--";
+  }
+
+  const date = typeof value === "string" ? new Date(value) : value;
+
+  if (Number.isNaN(date.getTime())) {
+    return "--:--:--";
+  }
+
+  return date.toLocaleTimeString("zh-CN", {
+    hour12: false,
+  });
+};
+
+const getShiftLabel = (now: Date | null) => {
+  if (!now) {
+    return "--";
+  }
+
+  const hour = now.getHours();
+
+  if (hour >= 8 && hour < 16) {
+    return "早班";
+  }
+
+  if (hour >= 16 && hour < 24) {
+    return "中班";
+  }
+
+  return "夜班";
+};
+
+const getHealthScore = (connection: ConnectionStatus) => {
+  if (connection.tabletToIpc !== "connected") {
+    return 0;
+  }
+
+  const scores = {
+    ok: 100,
+    warn: 88,
+    error: 60,
+    offline: 0,
+  } as const;
+
+  return Math.round((scores[connection.hpc] + scores[connection.moc] + scores[connection.boc]) / 3);
+};
+
+const getHealthTone = (score: number) => {
+  if (score >= 95) {
+    return "green";
+  }
+
+  if (score >= 80) {
+    return "orange";
+  }
+
+  return "red";
+};
+
 export default function HomePage() {
   const [bootstrap, setBootstrap] = useState<BootstrapResponse | null>(null);
-  const [connection, setConnection] = useState<ConnectionStatus>(emptyStatus);
+  const [homeSummary, setHomeSummary] = useState<HomeSummary | null>(null);
+  const [weeklyEvents, setWeeklyEvents] = useState<WeeklyEvent[]>([]);
+  const [connection, setConnection] = useState<ConnectionStatus>(fallbackConnection);
+  const [now, setNow] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     const controller = new AbortController();
 
-    const loadBootstrap = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch(`${resolveHttpBase()}/api/bootstrap`, {
-          signal: controller.signal,
-          cache: "no-store",
-        });
-        const json = await response.json();
-        const parsed = BootstrapApiResponseSchema.parse(json);
+        const [bootstrapResponse, homeSummaryResponse, weeklyEventsResponse] = await Promise.all([
+          fetch(`${resolveHttpBase()}/api/bootstrap`, {
+            signal: controller.signal,
+            cache: "no-store",
+          }),
+          fetch(`${resolveHttpBase()}/api/home/summary`, {
+            signal: controller.signal,
+            cache: "no-store",
+          }),
+          fetch(`${resolveHttpBase()}/api/events/weekly`, {
+            signal: controller.signal,
+            cache: "no-store",
+          }),
+        ]);
+
+        const [bootstrapJson, homeSummaryJson, weeklyEventsJson] = await Promise.all([
+          bootstrapResponse.json(),
+          homeSummaryResponse.json(),
+          weeklyEventsResponse.json(),
+        ]);
+
+        const parsedBootstrap = BootstrapApiResponseSchema.parse(bootstrapJson);
+        const parsedHomeSummary = HomeSummaryApiResponseSchema.parse(homeSummaryJson);
+        const parsedWeeklyEvents = WeeklyEventsApiResponseSchema.parse(weeklyEventsJson);
 
         if (cancelled) {
           return;
         }
 
-        setBootstrap(parsed.data);
-        setConnection(parsed.data.connection);
-      } catch (error) {
+        setBootstrap(parsedBootstrap.data);
+        setConnection(parsedBootstrap.data.connection);
+        setHomeSummary(parsedHomeSummary.data);
+        setWeeklyEvents(parsedWeeklyEvents.data);
+        setErrorMessage(null);
+      } catch {
         if (!cancelled) {
-          setErrorMessage("当前未获取到 IPC bootstrap mock 数据。");
+          setErrorMessage("首页 mock 数据暂时不可用，请先启动 IPC 服务。");
         }
       }
     };
 
-    void loadBootstrap();
+    void loadData();
 
     const ws = new WebSocket(resolveWsUrl());
 
     ws.onmessage = (event) => {
       try {
-        const parsed = JSON.parse(event.data) as { type?: string; data?: ConnectionStatus };
-
-        if (parsed.type === "connection_status" && parsed.data) {
-          setConnection(parsed.data);
-        }
+        const parsed = LiveMessageSchema.parse(JSON.parse(event.data));
+        setConnection(parsed.data);
       } catch {
         setErrorMessage("实时状态消息解析失败。");
       }
     };
 
     ws.onerror = () => {
-      setErrorMessage("当前未连接到 /ws/live mock 通道。");
+      setErrorMessage((current) => current ?? "当前未连接到 /ws/live mock 通道。");
     };
 
     return () => {
@@ -132,84 +265,192 @@ export default function HomePage() {
     };
   }, []);
 
-  const machineMeta = useMemo(
-    () => [
-      { label: "机型", value: bootstrap?.machineModel ?? "MG500/1180-WD" },
-      { label: "设备名称", value: bootstrap?.machineName ?? "西翼 2305 工作面采煤机" },
-      { label: "前端形态", value: "Next.js App Router + static export" },
-      { label: "后端形态", value: "Fastify + WebSocket mock 服务" },
-    ],
-    [bootstrap],
+  const latestWeeklyEvent = useMemo(
+    () => weeklyEvents[weeklyEvents.length - 1] ?? homeSummary?.latestWeeklyEvent ?? null,
+    [homeSummary?.latestWeeklyEvent, weeklyEvents],
   );
 
-  const connectionCards = useMemo(
+  const weeklyEventCount = weeklyEvents.length || homeSummary?.weeklyEventCount || 0;
+  const healthScore = getHealthScore(connection);
+  const healthTone = getHealthTone(healthScore);
+  const syncDate = connection.syncAt ? formatDate(connection.syncAt) : "--";
+  const syncTime = connection.syncAt ? formatTime(connection.syncAt) : "--:--:--";
+
+  const statusChips = useMemo(
     () => [
-      { label: "平板↔工控机", value: connection.tabletToIpc, className: connection.tabletToIpc },
-      { label: "HPC", value: connection.hpc, className: connection.hpc },
-      { label: "MOC", value: connection.moc, className: connection.moc },
-      { label: "BOC", value: connection.boc, className: connection.boc },
+      {
+        label: "平板↔工控机",
+        value: formatStatusText(connection.tabletToIpc),
+        tone: connection.tabletToIpc === "connected" ? "success" : "offline",
+      },
+      { label: "HPC", value: formatStatusText(connection.hpc), tone: connection.hpc === "ok" ? "success" : connection.hpc },
+      { label: "MOC", value: formatStatusText(connection.moc), tone: connection.moc === "ok" ? "success" : connection.moc },
+      { label: "BOC", value: formatStatusText(connection.boc), tone: connection.boc === "ok" ? "success" : connection.boc },
     ],
     [connection],
   );
 
+  const heroCards = useMemo(
+    () => [
+      {
+        label: "上一次数据同步",
+        value: syncDate,
+        meta: `${syncTime} · 来自 IPC 实时链路`,
+        toneClass: "",
+      },
+      {
+        label: "当前日期",
+        value: formatDate(now),
+        meta: `班次：${getShiftLabel(now)} · ${bootstrap?.machineName ?? "采煤机主控台"}`,
+        toneClass: "",
+      },
+      {
+        label: "本周异常事件",
+        value: String(weeklyEventCount),
+        meta: latestWeeklyEvent ? `最新事件：${latestWeeklyEvent.text}` : "等待事件流更新",
+        toneClass: "hero-value-orange",
+      },
+      {
+        label: "通信健康度",
+        value: `${healthScore}%`,
+        meta: `HPC ${formatStatusText(connection.hpc)} · MOC ${formatStatusText(connection.moc)} · BOC ${formatStatusText(connection.boc)}`,
+        toneClass: healthTone === "green" ? "hero-value-green" : healthTone === "orange" ? "hero-value-orange" : "hero-value-red",
+      },
+    ],
+    [bootstrap?.machineName, connection.boc, connection.hpc, connection.moc, healthScore, healthTone, latestWeeklyEvent, now, syncDate, syncTime, weeklyEventCount],
+  );
+
+  const previewCards = useMemo(
+    () => [
+      {
+        tone: "orange",
+        label: "异常事件总览",
+        time: latestWeeklyEvent?.time ?? "--",
+        count: weeklyEventCount,
+        title: latestWeeklyEvent?.text ?? "等待本周异常事件",
+        description: "主页只保留 1 条预览，正式版会联动到对应分析页。",
+        footLeft: `本周记录 ${weeklyEventCount} 条`,
+      },
+      {
+        tone: "red",
+        label: "本月故障排名",
+        time: homeSummary?.topFault ? `最近一次 ${homeSummary.topFault.lastOccurredAt}` : "--",
+        count: homeSummary?.topFault.count ?? 0,
+        title: homeSummary?.topFault.name ?? "等待故障排行数据",
+        description: "首页先展示第 1 名，后续再补完整 Top 排名页。",
+        footLeft: "按次数排序",
+      },
+      {
+        tone: "green",
+        label: "本月传感器失效排名",
+        time: homeSummary?.topSensor ? `最近一次 ${homeSummary.topSensor.lastOccurredAt}` : "--",
+        count: homeSummary?.topSensor.count ?? 0,
+        title: homeSummary?.topSensor.name ?? "等待传感器排行数据",
+        description: "首页先展示第 1 名，后续再接入传感器详情与联动跳转。",
+        footLeft: "按失效次数排序",
+      },
+    ],
+    [homeSummary, latestWeeklyEvent, weeklyEventCount],
+  );
+
   return (
-    <main className="shell">
-      <section className="panel">
-        <div className="hero">
-          <div className="hero-copy">
-            <span className="eyebrow">MVP 工程骨架</span>
-            <h1 className="title">采煤机故障诊断点检仪平板端</h1>
-            <p className="subtitle">
-              当前页面只承载第一版骨架验证：样式 token 已沿用设计稿，数据全部来自 IPC mock
-              服务，未接入真实采集链路，也没有在 Next API Routes 中承载业务后端。
-            </p>
-            <div className="hint-list">
-              <div className="hint">已预留 `packages/contracts` 作为前后端返回结构唯一来源。</div>
-              <div className="hint">静态导出模式下，bootstrap 与实时状态都在客户端拉取。</div>
-              <div className="hint">
-                启动 IPC 服务后，可通过 <span className="code">/api/bootstrap</span> 和{" "}
-                <span className="code">/ws/live</span> 验证联通性。
-              </div>
+    <main className="app-shell">
+      <section className="workspace">
+        <header className="toolbar">
+          <div className="toolbar-left">
+            <div className="home-btn" aria-hidden="true">
+              主菜单
+            </div>
+            <div className="page-heading">
+              <h1 className="page-title">主页面</h1>
+              <p className="page-subtitle">
+                面向 10.1 英寸平板的采煤机故障诊断与点检主控台
+              </p>
             </div>
           </div>
-          <div className="card">
-            <h2>设备概览</h2>
-            <div className="meta" style={{ marginTop: 16 }}>
-              {machineMeta.map((item) => (
-                <div className="meta-row" key={item.label}>
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
+          <div className="toolbar-right">
+            <div className="status-cluster">
+              {statusChips.map((chip) => (
+                <div className={`status-chip ${chip.tone}`} key={chip.label}>
+                  <span className="status-dot" />
+                  <span>{chip.label} {chip.value}</span>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-        <div className="grid">
-          <section className="card">
-            <h3>连接状态</h3>
-            <div className="status-list" style={{ marginTop: 16 }}>
-              {connectionCards.map((item) => (
-                <div className="status-chip" key={item.label}>
-                  <span className="status-label">{item.label}</span>
-                  <span className={`status-value status-${item.className}`}>
-                    {formatConnectionText(item.value)}
-                  </span>
-                </div>
-              ))}
+            <div className="clock-box">
+              <div className="clock-time">{formatTime(now)}</div>
+              <div className="clock-date">{formatDate(now, true)}</div>
             </div>
-          </section>
-          <section className="card">
-            <h3>当前阶段说明</h3>
-            <div className="hint-list" style={{ marginTop: 16 }}>
-              <div className="hint">已完成 monorepo、contracts、Next 平板端和 Fastify mock 服务骨架。</div>
-              <div className="hint">下一步适合继续拆首页、传感器页和状态顶栏组件。</div>
-              <div className="hint">
-                最近同步时间：
-                <span className="code" style={{ marginLeft: 8 }}>
-                  {new Date(connection.syncAt).toLocaleString("zh-CN")}
-                </span>
+          </div>
+        </header>
+
+        <div className="content">
+          {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
+
+          <section className="page active">
+            <div className="grid-12">
+              <div className="span-12 panel">
+                <div className="panel-body">
+                  <div className="hero-grid">
+                    {heroCards.map((card) => (
+                      <article className="hero-card" key={card.label}>
+                        <div className="hero-label">{card.label}</div>
+                        <p className={`hero-value ${card.toneClass}`.trim()}>{card.value}</p>
+                        <div className="hero-meta">{card.meta}</div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
               </div>
-              {errorMessage ? <div className="hint">{errorMessage}</div> : null}
+
+              <div className="span-12">
+                <div className="summary-grid">
+                  {previewCards.map((card) => (
+                    <article className={`summary-card ${card.tone}`} key={card.label}>
+                      <div className="summary-top">
+                        <div>
+                          <div className="summary-label">{card.label}</div>
+                          <div className="summary-time">{card.time}</div>
+                        </div>
+                        <div className="summary-count">{card.count}</div>
+                      </div>
+                      <div className="summary-main">
+                        <h2 className="summary-title">{card.title}</h2>
+                        <div className="summary-sub">{card.description}</div>
+                      </div>
+                      <div className="summary-foot">
+                        <span>{card.footLeft}</span>
+                        <span className="summary-link">首页预览</span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+
+              <div className="span-12 panel">
+                <div className="panel-head">
+                  <div>
+                    <h3 className="panel-title">
+                      <span className="accent-bar" />
+                      功能导航
+                    </h3>
+                    <p className="panel-subtitle">
+                      沿用设计稿的大图标主菜单布局，这一版先完成首页迁移，其他页面按钮仅作入口占位。
+                    </p>
+                  </div>
+                  <span className="pill blue">主菜单</span>
+                </div>
+                <div className="panel-body">
+                  <div className="big-nav">
+                    {homeNavItems.map((item) => (
+                      <article className="nav-tile" key={item.page}>
+                        <div className="nav-tile-icon">{item.icon}</div>
+                        <div className="nav-tile-name">{item.label}</div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </div>
