@@ -69,6 +69,28 @@ export const SensorTrendPointSchema = z.object({
   unit: z.string(),
 });
 
+export const PumpAnalysisRangeSchema = z.enum(["24h"]);
+
+export const PumpAnalysisSeriesSchema = z.object({
+  name: z.string(),
+  color: z.string(),
+  values: z.array(z.number()),
+});
+
+export const PumpAnalysisLogEntrySchema = z.object({
+  time: z.string(),
+  text: z.string(),
+});
+
+export const PumpAnalysisResponseSchema = z.object({
+  range: PumpAnalysisRangeSchema,
+  labels: z.array(z.string()),
+  trendSeries: z.array(PumpAnalysisSeriesSchema),
+  stats: z.array(KeyValueFieldSchema),
+  logs: z.array(PumpAnalysisLogEntrySchema),
+  alerts: z.array(PumpAnalysisLogEntrySchema),
+});
+
 export const FaultCodeResultSchema = z.object({
   category: FaultCategorySchema,
   code: z.string(),
@@ -132,6 +154,10 @@ export const FaultCodeSearchQuerySchema = z.object({
   code: z.string().min(1).default("0x0094"),
 });
 
+export const PumpAnalysisQuerySchema = z.object({
+  range: PumpAnalysisRangeSchema.default("24h"),
+});
+
 export type ConnectionStatus = z.infer<typeof ConnectionStatusSchema>;
 export type BootstrapResponse = z.infer<typeof BootstrapResponseSchema>;
 export type WeeklyEvent = z.infer<typeof WeeklyEventSchema>;
@@ -139,11 +165,15 @@ export type HomeSummary = z.infer<typeof HomeSummarySchema>;
 export type SensorSummary = z.infer<typeof SensorSummarySchema>;
 export type SensorDetail = z.infer<typeof SensorDetailSchema>;
 export type SensorTrendPoint = z.infer<typeof SensorTrendPointSchema>;
+export type PumpAnalysisSeries = z.infer<typeof PumpAnalysisSeriesSchema>;
+export type PumpAnalysisLogEntry = z.infer<typeof PumpAnalysisLogEntrySchema>;
+export type PumpAnalysisResponse = z.infer<typeof PumpAnalysisResponseSchema>;
 export type FaultCodeResult = z.infer<typeof FaultCodeResultSchema>;
 export type SettingsVersionHistoryItem = z.infer<typeof SettingsVersionHistoryItemSchema>;
 export type SettingsSnapshot = z.infer<typeof SettingsSnapshotSchema>;
 export type KeyValueField = z.infer<typeof KeyValueFieldSchema>;
 export type FaultCategory = z.infer<typeof FaultCategorySchema>;
+export type PumpAnalysisRange = z.infer<typeof PumpAnalysisRangeSchema>;
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
 export type LiveMessage = z.infer<typeof LiveMessageSchema>;
 export type ApiSuccessResponse<T> = {

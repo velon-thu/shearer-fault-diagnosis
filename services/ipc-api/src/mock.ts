@@ -5,6 +5,10 @@ import {
   type FaultCodeResult,
   type HomeSummary,
   type KeyValueField,
+  type PumpAnalysisLogEntry,
+  type PumpAnalysisRange,
+  type PumpAnalysisResponse,
+  type PumpAnalysisSeries,
   type SensorDetail,
   type SensorSummary,
   type SensorTrendPoint,
@@ -65,6 +69,28 @@ const monthlySensorFailures: RankingEntry[] = [
 ];
 
 const toNumericValue = (value: string) => Number(value.replace(/[^\d.-]/g, ""));
+
+const generateSeries = (
+  length: number,
+  base: number,
+  amplitude: number,
+  shift = 0,
+  noise = 0.35,
+): number[] =>
+  Array.from({ length }, (_, index) => {
+    const sin = Math.sin((index + shift) / 3.3);
+    const cos = Math.cos((index + shift) / 5.2);
+    const drift = (index / length) * amplitude * 0.18;
+    const wobble = ((index % 5) - 2) * amplitude * noise * 0.08;
+
+    return Number((base + sin * amplitude + cos * amplitude * 0.35 + drift + wobble).toFixed(1));
+  });
+
+const parseLogEntries = (rows: string[]): PumpAnalysisLogEntry[] =>
+  rows.map((row) => ({
+    time: row.slice(0, 19),
+    text: row.slice(20),
+  }));
 
 export const sensors: SensorDetail[] = [
   {
@@ -364,6 +390,30 @@ export const versionHistoryData: SettingsVersionHistoryItem[] = [
   { date: "v2.6.1", desc: "补充知识库分类与日常检修打卡历史记录。" },
 ];
 
+const pumpStats: KeyValueField[] = toFields([
+  ["平均带载功率", "298 kW"],
+  ["平均带载温度", "69.8℃"],
+  ["今日带载运行时间", "7h 58m"],
+  ["今日过载时间", "22m"],
+  ["今日过温时间", "36m"],
+]);
+
+const logs: PumpAnalysisLogEntry[] = parseLogEntries([
+  "2026-03-10 14:10:23 记忆截割1右升",
+  "2026-03-10 14:10:23 系统执行1右升",
+  "2026-03-10 14:10:42 记忆截割1左升",
+  "2026-03-10 14:10:42 系统执行1左升",
+  "2026-03-10 14:11:23 记忆截割2左降",
+]);
+
+const alerts: PumpAnalysisLogEntry[] = parseLogEntries([
+  "2026-03-10 14:10:23 EDCR泵箱温度高报警！",
+  "2026-03-10 14:10:23 EDCR流量检测通道1报警！",
+  "2026-03-10 14:10:42 RDCR流量通道1保护！",
+  "2026-03-10 14:10:42 EDCR流量监测通道2保护！",
+  "2026-03-10 14:11:23 EDCR流量监测通道2报警！",
+]);
+
 export const networkInfoData: KeyValueField[] = toFields([
   ["工控机主机名", "cm-ipc-3106"],
   ["工控机 IP", "192.168.10.36"],
@@ -423,22 +473,6 @@ export const getSensorSummaries = (): SensorSummary[] =>
 export const findSensorById = (id: string): SensorDetail | undefined =>
   sensors.find((sensor) => sensor.id === id);
 
-const generateSeries = (
-  length: number,
-  base: number,
-  amplitude: number,
-  shift = 0,
-  noise = 0.35,
-): number[] =>
-  Array.from({ length }, (_, index) => {
-    const sin = Math.sin((index + shift) / 3.3);
-    const cos = Math.cos((index + shift) / 5.2);
-    const drift = (index / length) * amplitude * 0.18;
-    const wobble = ((index % 5) - 2) * amplitude * noise * 0.08;
-
-    return Number((base + sin * amplitude + cos * amplitude * 0.35 + drift + wobble).toFixed(1));
-  });
-
 const sensorSeries = (sensor: SensorDetail): number[] => {
   switch (sensor.type) {
     case "压力":
@@ -490,5 +524,38 @@ export const findFaultCode = (category: FaultCategory, code: string): FaultCodeR
     found: true,
     description: entry.description,
     tip: entry.tip,
+  };
+};
+
+export const createPumpAnalysis = (range: PumpAnalysisRange = "24h"): PumpAnalysisResponse => {
+  const labels = Array.from({ length: range === "24h" ? 24 : 24 }, (_, index) =>
+    `${String(index).padStart(2, "0")}:00`,
+  );
+
+  const trendSeries: PumpAnalysisSeries[] = [
+    {
+      name: "泵电机温度",
+      color: "#ffb14a",
+      values: generateSeries(24, 70, 8.0, 1, 0.09),
+    },
+    {
+      name: "泵电机电流",
+      color: "#48c7ff",
+      values: generateSeries(24, 184, 34, 2, 0.09),
+    },
+    {
+      name: "估算带载功率",
+      color: "#4f8cff",
+      values: generateSeries(24, 298, 42, 0, 0.08),
+    },
+  ];
+
+  return {
+    range,
+    labels,
+    trendSeries,
+    stats: pumpStats,
+    logs,
+    alerts,
   };
 };

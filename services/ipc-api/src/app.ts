@@ -9,6 +9,8 @@ import {
   HealthResponseSchema,
   HomeSummarySchema,
   LiveMessageSchema,
+  PumpAnalysisQuerySchema,
+  PumpAnalysisResponseSchema,
   SensorDetailSchema,
   SensorIdParamsSchema,
   SensorSummarySchema,
@@ -20,6 +22,7 @@ import {
 } from "@shearer/contracts";
 import {
   buildSensorTrend,
+  createPumpAnalysis,
   createBootstrapPayload,
   createConnectionStatus,
   createHomeSummary,
@@ -37,6 +40,7 @@ const SensorSummariesApiResponseSchema = createApiSuccessResponseSchema(SensorSu
 const SensorDetailApiResponseSchema = createApiSuccessResponseSchema(SensorDetailSchema);
 const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendPointSchema.array());
 const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
+const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysisResponseSchema);
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
 const HealthApiResponseSchema = createApiSuccessResponseSchema(HealthResponseSchema);
 
@@ -140,6 +144,15 @@ export const buildApp = () => {
     return FaultCodeResultApiResponseSchema.parse({
       success: true,
       data: findFaultCode(category, code),
+    });
+  });
+
+  app.get("/api/analysis/pump", async (request) => {
+    const { range } = PumpAnalysisQuerySchema.parse(request.query);
+
+    return PumpAnalysisApiResponseSchema.parse({
+      success: true,
+      data: createPumpAnalysis(range),
     });
   });
 
