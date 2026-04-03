@@ -1071,6 +1071,39 @@ input {
   gap: 12px;
 }
 
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.selectable-chip {
+  min-height: 42px;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.selectable-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(79, 140, 255, 0.28);
+}
+
+.selectable-chip.active {
+  border-color: rgba(79, 140, 255, 0.34);
+  background: rgba(79, 140, 255, 0.12);
+  color: #dce8ff;
+}
+
 .date-input {
   min-width: 0;
   height: 44px;
@@ -1100,6 +1133,17 @@ input {
 
 .search-row .search-input {
   flex: 1 1 220px;
+}
+
+.footer-note {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(79, 140, 255, 0.18);
+  border-radius: 18px;
+  background: rgba(79, 140, 255, 0.07);
+  color: #dce8ff;
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .result-box {

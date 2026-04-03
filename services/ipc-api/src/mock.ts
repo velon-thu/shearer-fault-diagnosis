@@ -31,6 +31,8 @@ import {
   type RankingItem,
   type RankingsResponse,
   type RankingSystemFilter,
+  type RunCycleResponse,
+  type RunCycleSeries,
   type SensorDetail,
   type SensorSummary,
   type SensorTrendPoint,
@@ -183,6 +185,16 @@ export const knowledgeAssets: KnowledgeAssetsResponse = {
   ],
 };
 
+export const cycleXAxisOptions = ["时间", "工作面", "温度"] as const;
+export const cycleYAxisOptions = [
+  "采煤机速度",
+  "左截割电机温度",
+  "右截割电机温度",
+  "左截割电机电流",
+  "左牵引电机电流",
+  "泵电机温度",
+] as const;
+
 const monthlyFaultRanking: RankingEntry[] = [
   { name: "摇臂过温", count: 20, last: "2026-03-10 14:10:23" },
   { name: "左牵引电机异常停机", count: 16, last: "2026-03-11 14:10:23" },
@@ -218,6 +230,28 @@ const parseLogEntries = (rows: string[]): PumpAnalysisLogEntry[] =>
     time: row.slice(0, 19),
     text: row.slice(20),
   }));
+
+const toRunCycleSeries = (
+  name: string,
+  color: string,
+  base: number,
+  amplitude: number,
+  shift = 0,
+  noise = 0.12,
+): RunCycleSeries => ({
+  name,
+  color,
+  values: generateSeries(20, base, amplitude, shift, noise),
+});
+
+const cycleSeriesCatalog: RunCycleResponse["seriesCatalog"] = {
+  采煤机速度: toRunCycleSeries("采煤机速度", "#48c7ff", 4.2, 1.8, 0, 0.15),
+  左截割电机温度: toRunCycleSeries("左截割电机温度", "#ffb14a", 72, 10.5, 1, 0.11),
+  右截割电机温度: toRunCycleSeries("右截割电机温度", "#f7d65c", 69, 8.6, 2, 0.1),
+  左截割电机电流: toRunCycleSeries("左截割电机电流", "#4f8cff", 198, 42, 3, 0.11),
+  左牵引电机电流: toRunCycleSeries("左牵引电机电流", "#38d889", 156, 28, 1, 0.12),
+  泵电机温度: toRunCycleSeries("泵电机温度", "#9f86ff", 66, 8.4, 2, 0.09),
+};
 
 export const sensors: SensorDetail[] = [
   {
@@ -848,6 +882,27 @@ export const createHomeSummary = (): HomeSummary => {
 };
 
 export const createKnowledgeAssetsSnapshot = (): KnowledgeAssetsResponse => knowledgeAssets;
+
+export const createRunCycleSnapshot = (): RunCycleResponse => ({
+  xAxisOptions: [...cycleXAxisOptions],
+  yAxisOptions: [...cycleYAxisOptions],
+  defaultCharts: {
+    A: {
+      xAxis: "时间",
+      yAxes: ["采煤机速度", "左截割电机温度"],
+    },
+    B: {
+      xAxis: "工作面",
+      yAxes: ["左截割电机电流", "左牵引电机电流", "泵电机温度"],
+    },
+  },
+  labelSets: {
+    时间: Array.from({ length: 20 }, (_, index) => `${String(index).padStart(2, "0")}:00`),
+    工作面: Array.from({ length: 20 }, (_, index) => `段 ${index + 1}`),
+    温度: Array.from({ length: 20 }, (_, index) => `${40 + index * 3}℃`),
+  },
+  seriesCatalog: cycleSeriesCatalog,
+});
 
 export const createSettingsSnapshot = (): SettingsSnapshot => {
   const connection = createConnectionStatus();

@@ -23,6 +23,7 @@ import {
   PumpAnalysisResponseSchema,
   RankingsQuerySchema,
   RankingsResponseSchema,
+  RunCycleResponseSchema,
   SensorDetailSchema,
   SensorIdParamsSchema,
   SensorSummarySchema,
@@ -45,6 +46,7 @@ import {
   createConnectionStatus,
   createHomeSummary,
   createKnowledgeAssetsSnapshot,
+  createRunCycleSnapshot,
   createSettingsSnapshot,
   findFaultCode,
   findSensorById,
@@ -69,6 +71,7 @@ const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCod
 const RankingsApiResponseSchema = createApiSuccessResponseSchema(RankingsResponseSchema);
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
 const KnowledgeAssetsApiResponseSchema = createApiSuccessResponseSchema(KnowledgeAssetsResponseSchema);
+const RunCycleApiResponseSchema = createApiSuccessResponseSchema(RunCycleResponseSchema);
 const CuttingAnalysisApiResponseSchema = createApiSuccessResponseSchema(CuttingAnalysisResponseSchema);
 const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysisResponseSchema);
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
@@ -287,6 +290,13 @@ export const buildApp = () => {
     KnowledgeAssetsApiResponseSchema.parse({
       success: true,
       data: createKnowledgeAssetsSnapshot(),
+    }),
+  );
+
+  app.get("/api/run-cycle", async () =>
+    RunCycleApiResponseSchema.parse({
+      success: true,
+      data: createRunCycleSnapshot(),
     }),
   );
 
