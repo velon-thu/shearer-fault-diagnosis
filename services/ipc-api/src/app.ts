@@ -17,6 +17,7 @@ import {
   FaultCodeSearchQuerySchema,
   HealthResponseSchema,
   HomeSummarySchema,
+  KnowledgeAssetsResponseSchema,
   LiveMessageSchema,
   PumpAnalysisQuerySchema,
   PumpAnalysisResponseSchema,
@@ -43,6 +44,7 @@ import {
   createBootstrapPayload,
   createConnectionStatus,
   createHomeSummary,
+  createKnowledgeAssetsSnapshot,
   createSettingsSnapshot,
   findFaultCode,
   findSensorById,
@@ -66,6 +68,7 @@ const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendP
 const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
 const RankingsApiResponseSchema = createApiSuccessResponseSchema(RankingsResponseSchema);
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
+const KnowledgeAssetsApiResponseSchema = createApiSuccessResponseSchema(KnowledgeAssetsResponseSchema);
 const CuttingAnalysisApiResponseSchema = createApiSuccessResponseSchema(CuttingAnalysisResponseSchema);
 const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysisResponseSchema);
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
@@ -277,6 +280,13 @@ export const buildApp = () => {
     CheckinsApiResponseSchema.parse({
       success: true,
       data: submitCheckins(CheckinsSubmitRequestSchema.parse(request.body)),
+    }),
+  );
+
+  app.get("/api/knowledge/assets", async () =>
+    KnowledgeAssetsApiResponseSchema.parse({
+      success: true,
+      data: createKnowledgeAssetsSnapshot(),
     }),
   );
 

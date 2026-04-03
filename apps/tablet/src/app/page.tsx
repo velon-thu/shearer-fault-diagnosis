@@ -29,7 +29,7 @@ const homeNavItems = [
   { label: "泵分析", href: "/analysis/pump", icon: "泵" },
   { label: "近期故障排名", href: null, icon: "排" },
   { label: "日常检修打卡", href: null, icon: "检" },
-  { label: "知识库", href: null, icon: "知" },
+  { label: "知识库", href: "/knowledge", icon: "知" },
   { label: "运行循环图", href: null, icon: "循" },
   { label: "系统设置", href: "/settings", icon: "设" },
 ] as const;

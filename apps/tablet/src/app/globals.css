@@ -1261,6 +1261,44 @@ button.check-item {
   padding: 14px 16px;
 }
 
+.asset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.asset-item {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.asset-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.asset-item-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(79, 140, 255, 0.2);
+  background: rgba(79, 140, 255, 0.1);
+  color: #dce8ff;
+  font-size: 12px;
+  font-weight: 760;
+}
+
 .asset-title {
   font-size: 15px;
   font-weight: 660;

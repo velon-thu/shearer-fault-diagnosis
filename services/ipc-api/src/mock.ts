@@ -21,6 +21,8 @@ import {
   type FaultCategory,
   type FaultCodeResult,
   type HomeSummary,
+  type KnowledgeAsset,
+  type KnowledgeAssetsResponse,
   type KeyValueField,
   type PumpAnalysisLogEntry,
   type PumpAnalysisRange,
@@ -157,6 +159,29 @@ export const weeklyEvents: WeeklyEvent[] = [
   { time: "2026-03-15 20:11:23", text: "泵箱油位过低", target: "pump-analysis" },
   { time: "2026-03-16 15:11:36", text: "变频器冷却水道水流量过小", target: "traction-analysis" },
 ];
+
+const toKnowledgeAsset = (title: string, meta: string): KnowledgeAsset => ({
+  title,
+  meta,
+});
+
+export const knowledgeAssets: KnowledgeAssetsResponse = {
+  drawing: [
+    toKnowledgeAsset("MG500/1180-WD 机械总图", "PDF · 28 页 · 机身 / 截割部 / 牵引部"),
+    toKnowledgeAsset("MG500 电控系统接线图册", "PDF · 42 页 · HPC/MOC/BOC 接线"),
+    toKnowledgeAsset("泵站油路原理图", "PDF · 12 页 · 维护常用"),
+  ],
+  install: [
+    toKnowledgeAsset("摇臂总成安装指导", "视频 · 18 分钟 · 含注意事项"),
+    toKnowledgeAsset("牵引电机更换与复位", "视频 · 14 分钟 · 适用于井下更换"),
+    toKnowledgeAsset("变频器冷却水路安装检查", "视频 · 9 分钟 · 联调示例"),
+  ],
+  troubleshoot: [
+    toKnowledgeAsset("左截割电机过载排查流程", "视频 · 11 分钟 · 过载闭环"),
+    toKnowledgeAsset("泵电机异常停机诊断案例", "视频 · 13 分钟 · 现场复盘"),
+    toKnowledgeAsset("4210 冷却水流量不足排查", "视频 · 8 分钟 · 典型故障"),
+  ],
+};
 
 const monthlyFaultRanking: RankingEntry[] = [
   { name: "摇臂过温", count: 20, last: "2026-03-10 14:10:23" },
@@ -821,6 +846,8 @@ export const createHomeSummary = (): HomeSummary => {
     },
   };
 };
+
+export const createKnowledgeAssetsSnapshot = (): KnowledgeAssetsResponse => knowledgeAssets;
 
 export const createSettingsSnapshot = (): SettingsSnapshot => {
   const connection = createConnectionStatus();

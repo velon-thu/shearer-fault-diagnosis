@@ -216,6 +216,17 @@ export const CheckinsSubmitRequestSchema = z.object({
   checkedItemIds: z.array(z.string()),
 });
 
+export const KnowledgeAssetSchema = z.object({
+  title: z.string(),
+  meta: z.string(),
+});
+
+export const KnowledgeAssetsResponseSchema = z.object({
+  drawing: z.array(KnowledgeAssetSchema),
+  install: z.array(KnowledgeAssetSchema),
+  troubleshoot: z.array(KnowledgeAssetSchema),
+});
+
 export const AuthUserSchema = z.object({
   employeeNo: z.string(),
   displayName: z.string(),
@@ -344,6 +355,8 @@ export type CheckinHistoryEntry = z.infer<typeof CheckinHistoryEntrySchema>;
 export type CheckinCalendarRecord = z.infer<typeof CheckinCalendarRecordSchema>;
 export type CheckinsResponse = z.infer<typeof CheckinsResponseSchema>;
 export type CheckinsSubmitRequest = z.infer<typeof CheckinsSubmitRequestSchema>;
+export type KnowledgeAsset = z.infer<typeof KnowledgeAssetSchema>;
+export type KnowledgeAssetsResponse = z.infer<typeof KnowledgeAssetsResponseSchema>;
 export type AuthUser = z.infer<typeof AuthUserSchema>;
 export type AuthLoginRequest = z.infer<typeof AuthLoginRequestSchema>;
 export type AuthLoginResponse = z.infer<typeof AuthLoginResponseSchema>;
