@@ -36,27 +36,15 @@ import {
   createApiSuccessResponseSchema,
 } from "@shearer/contracts";
 import {
-  buildSensorTrend,
-  createCheckinsSnapshot,
-  createCuttingAnalysis,
-  createPumpAnalysis,
-  createRankings,
-  createTractionAnalysis,
-  createBootstrapPayload,
-  createConnectionStatus,
-  createHomeSummary,
-  createKnowledgeAssetsSnapshot,
-  createRunCycleSnapshot,
-  createSettingsSnapshot,
-  findFaultCode,
-  findSensorById,
   getMockAuthSession,
-  getSensorSummaries,
   loginWithMockAuth,
   logoutMockAuth,
-  submitCheckins,
-  weeklyEvents,
 } from "./mock";
+import { initializeSqlite } from "./db/sqlite";
+import {
+  MockDataSourceAdapter,
+  type DataSourceAdapter,
+} from "./ingest";
 
 const AuthLoginApiResponseSchema = createApiSuccessResponseSchema(AuthLoginResponseSchema);
 const AuthMeApiResponseSchema = createApiSuccessResponseSchema(AuthMeResponseSchema);
@@ -92,7 +80,24 @@ const getBearerToken = (authorizationHeader?: string) => {
   return token;
 };
 
-export const buildApp = () => {
+const getRangeWindow = (range: string) => {
+  const to = new Date();
+  const hours = range === "24h" ? 24 : 24;
+  const from = new Date(to.getTime() - hours * 60 * 60 * 1000);
+
+  return {
+    from,
+    to,
+  };
+};
+
+export const buildApp = ({
+  adapter = new MockDataSourceAdapter(),
+}: {
+  adapter?: DataSourceAdapter;
+} = {}) => {
+  initializeSqlite();
+
   const app = Fastify({
     logger: true,
   });
@@ -116,7 +121,7 @@ export const buildApp = () => {
   app.get("/api/bootstrap", async () =>
     BootstrapApiResponseSchema.parse({
       success: true,
-      data: createBootstrapPayload(),
+      data: (await adapter.getLatestSnapshot()).bootstrap,
     }),
   );
 
@@ -189,27 +194,27 @@ export const buildApp = () => {
   app.get("/api/home/summary", async () =>
     HomeSummaryApiResponseSchema.parse({
       success: true,
-      data: createHomeSummary(),
+      data: (await adapter.getLatestSnapshot()).homeSummary,
     }),
   );
 
   app.get("/api/events/weekly", async () =>
     WeeklyEventsApiResponseSchema.parse({
       success: true,
-      data: weeklyEvents,
+      data: (await adapter.getLatestSnapshot()).weeklyEvents,
     }),
   );
 
   app.get("/api/sensors", async () =>
     SensorSummariesApiResponseSchema.parse({
       success: true,
-      data: getSensorSummaries(),
+      data: await adapter.getSensorSummaries(),
     }),
   );
 
   app.get("/api/sensors/:id", async (request, reply) => {
     const { id } = SensorIdParamsSchema.parse(request.params);
-    const sensor = findSensorById(id);
+    const sensor = await adapter.getSensorDetail(id);
 
     if (!sensor) {
       return reply.code(404).send(
@@ -232,7 +237,7 @@ export const buildApp = () => {
   app.get("/api/sensors/:id/trend", async (request, reply) => {
     const { id } = SensorIdParamsSchema.parse(request.params);
     const { range } = SensorTrendQuerySchema.parse(request.query);
-    const sensor = findSensorById(id);
+    const sensor = await adapter.getSensorDetail(id);
 
     if (!sensor) {
       return reply.code(404).send(
@@ -246,9 +251,11 @@ export const buildApp = () => {
       );
     }
 
+    const { from, to } = getRangeWindow(range);
+
     return SensorTrendApiResponseSchema.parse({
       success: true,
-      data: buildSensorTrend(sensor, range),
+      data: await adapter.getSensorTrend(id, from, to),
     });
   });
 
@@ -257,7 +264,7 @@ export const buildApp = () => {
 
     return FaultCodeResultApiResponseSchema.parse({
       success: true,
-      data: findFaultCode(category, code),
+      data: await adapter.getFaultCodeResult(category, code),
     });
   });
 
@@ -266,7 +273,7 @@ export const buildApp = () => {
 
     return RankingsApiResponseSchema.parse({
       success: true,
-      data: createRankings({ start, end, system }),
+      data: await adapter.getRankings({ start, end, system }),
     });
   });
 
@@ -275,28 +282,28 @@ export const buildApp = () => {
 
     return CheckinsApiResponseSchema.parse({
       success: true,
-      data: createCheckinsSnapshot(),
+      data: await adapter.getCheckins(),
     });
   });
 
   app.post("/api/checkins", async (request) =>
     CheckinsApiResponseSchema.parse({
       success: true,
-      data: submitCheckins(CheckinsSubmitRequestSchema.parse(request.body)),
+      data: await adapter.saveCheckin(CheckinsSubmitRequestSchema.parse(request.body)),
     }),
   );
 
   app.get("/api/knowledge/assets", async () =>
     KnowledgeAssetsApiResponseSchema.parse({
       success: true,
-      data: createKnowledgeAssetsSnapshot(),
+      data: await adapter.getKnowledgeAssets(),
     }),
   );
 
   app.get("/api/run-cycle", async () =>
     RunCycleApiResponseSchema.parse({
       success: true,
-      data: createRunCycleSnapshot(),
+      data: await adapter.getRunCycle(),
     }),
   );
 
@@ -305,7 +312,7 @@ export const buildApp = () => {
 
     return PumpAnalysisApiResponseSchema.parse({
       success: true,
-      data: createPumpAnalysis(range),
+      data: await adapter.getPumpAnalysis(range),
     });
   });
 
@@ -314,7 +321,7 @@ export const buildApp = () => {
 
     return CuttingAnalysisApiResponseSchema.parse({
       success: true,
-      data: createCuttingAnalysis(range),
+      data: await adapter.getCuttingAnalysis(range),
     });
   });
 
@@ -323,35 +330,31 @@ export const buildApp = () => {
 
     return TractionAnalysisApiResponseSchema.parse({
       success: true,
-      data: createTractionAnalysis(range),
+      data: await adapter.getTractionAnalysis(range),
     });
   });
 
   app.get("/api/settings", async () =>
     SettingsSnapshotApiResponseSchema.parse({
       success: true,
-      data: createSettingsSnapshot(),
+      data: (await adapter.getLatestSnapshot()).settings,
     }),
   );
 
   app.get("/ws/live", { websocket: true }, (socket) => {
-    const sendMessage = () => {
+    const unsubscribe = adapter.subscribe((event) => {
       socket.send(
         JSON.stringify(
           LiveMessageSchema.parse({
-            type: "connection_status",
-            data: createConnectionStatus(),
+            type: event.type,
+            data: event.data,
           }),
         ),
       );
-    };
-
-    sendMessage();
-
-    const timer = setInterval(sendMessage, 2000);
+    });
 
     socket.on("close", () => {
-      clearInterval(timer);
+      unsubscribe();
     });
   });
 
