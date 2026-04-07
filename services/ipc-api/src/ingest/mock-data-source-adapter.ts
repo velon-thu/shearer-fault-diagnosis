@@ -14,11 +14,8 @@ import {
   createCuttingAnalysis,
   createHomeSummary,
   createPumpAnalysis,
-  createRankings,
   createRunCycleSnapshot,
-  createSettingsSnapshot,
   createTractionAnalysis,
-  findFaultCode,
   findSensorById,
   getSensorSummaries,
   weeklyEvents,
@@ -29,9 +26,18 @@ import {
   saveCheckinToSqlite,
 } from "../db/checkins";
 import {
+  initializeFaultStores,
+  readFaultCodeFromSqlite,
+  readRankingsFromSqlite,
+} from "../db/faults";
+import {
   initializeKnowledgeStore,
   readKnowledgeAssetsFromSqlite,
 } from "../db/knowledge";
+import {
+  initializeSettingsStore,
+  readSettingsFromSqlite,
+} from "../db/settings";
 import type {
   DataSourceAdapter,
   DataSourceEvent,
@@ -52,23 +58,26 @@ const buildBootstrapWithConnection = (connection: ConnectionStatus): BootstrapRe
 export class MockDataSourceAdapter implements DataSourceAdapter {
   constructor() {
     initializeCheckinStore();
+    initializeFaultStores();
     initializeKnowledgeStore();
+    initializeSettingsStore();
   }
 
   async getLatestSnapshot(): Promise<LatestSnapshot> {
     const connection = createConnectionStatus();
+    const settings = await this.getSettings();
 
     return {
       connection,
       bootstrap: buildBootstrapWithConnection(connection),
       homeSummary: createHomeSummary(),
       weeklyEvents: [...weeklyEvents],
-      settings: {
-        ...createSettingsSnapshot(),
-        connected: connection.tabletToIpc === "connected",
-        connection,
-      },
+      settings,
     };
+  }
+
+  async getSettings() {
+    return readSettingsFromSqlite();
   }
 
   async getSensorSummaries() {
@@ -90,7 +99,7 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
   }
 
   async getRankings(params: RankingsParams) {
-    return createRankings(params);
+    return readRankingsFromSqlite(params);
   }
 
   async getCheckins() {
@@ -110,7 +119,7 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
   }
 
   async getFaultCodeResult(category: FaultCategory, code: string) {
-    return findFaultCode(category, code);
+    return readFaultCodeFromSqlite(category, code);
   }
 
   async getPumpAnalysis(range: PumpAnalysisRange) {

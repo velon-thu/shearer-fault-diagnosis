@@ -44,6 +44,7 @@ export type DataSourceEvent = {
 
 export interface DataSourceAdapter {
   getLatestSnapshot(): Promise<LatestSnapshot>;
+  getSettings(): Promise<SettingsSnapshot>;
   getSensorSummaries(): Promise<SensorSummary[]>;
   getSensorDetail(sensorId: string): Promise<SensorDetail | null>;
   getSensorTrend(sensorId: string, from: Date, to: Date): Promise<SensorTrendPoint[]>;

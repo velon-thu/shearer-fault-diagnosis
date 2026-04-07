@@ -337,7 +337,7 @@ export const buildApp = ({
   app.get("/api/settings", async () =>
     SettingsSnapshotApiResponseSchema.parse({
       success: true,
-      data: (await adapter.getLatestSnapshot()).settings,
+      data: await adapter.getSettings(),
     }),
   );
 
