@@ -13,7 +13,6 @@ import {
   createConnectionStatus,
   createCuttingAnalysis,
   createHomeSummary,
-  createKnowledgeAssetsSnapshot,
   createPumpAnalysis,
   createRankings,
   createRunCycleSnapshot,
@@ -29,6 +28,10 @@ import {
   readCheckinsFromSqlite,
   saveCheckinToSqlite,
 } from "../db/checkins";
+import {
+  initializeKnowledgeStore,
+  readKnowledgeAssetsFromSqlite,
+} from "../db/knowledge";
 import type {
   DataSourceAdapter,
   DataSourceEvent,
@@ -49,6 +52,7 @@ const buildBootstrapWithConnection = (connection: ConnectionStatus): BootstrapRe
 export class MockDataSourceAdapter implements DataSourceAdapter {
   constructor() {
     initializeCheckinStore();
+    initializeKnowledgeStore();
   }
 
   async getLatestSnapshot(): Promise<LatestSnapshot> {
@@ -98,7 +102,7 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
   }
 
   async getKnowledgeAssets() {
-    return createKnowledgeAssetsSnapshot();
+    return readKnowledgeAssetsFromSqlite();
   }
 
   async getRunCycle() {
