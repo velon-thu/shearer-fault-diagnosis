@@ -569,9 +569,9 @@ export const sensorFaultRankings: RankingItem[] = monthlySensorFailures.map((ite
   lastOccurredAt: item.last,
 }));
 
-const checkinTodayDate = "2026-03-16";
+export const checkinTodayDate = "2026-03-16";
 
-const initialCheckinItems: CheckinItem[] = [
+export const initialCheckinItems: CheckinItem[] = [
   { id: "checkin-1", label: "检查主电缆损耗情况，确保无明显破损。", checked: true },
   { id: "checkin-2", label: "检查压力接点引出电缆，确保无明显破损。", checked: true },
   { id: "checkin-3", label: "检查压力接点上刻度，并作记录，确保没有松动变化。", checked: true },
@@ -582,7 +582,7 @@ const initialCheckinItems: CheckinItem[] = [
   },
 ];
 
-const initialCheckinHistoryData: CheckinHistoryEntry[] = [
+export const initialCheckinHistoryData: CheckinHistoryEntry[] = [
   { date: "2026-03-15", shift: "早班", person: "张工", result: "已完成", note: "4/4 项已确认" },
   {
     date: "2026-03-14",
@@ -594,7 +594,7 @@ const initialCheckinHistoryData: CheckinHistoryEntry[] = [
   { date: "2026-03-13", shift: "夜班", person: "李工", result: "已完成", note: "压力接点刻度正常" },
 ];
 
-const initialCheckinCalendarRecords: Record<string, CheckinCalendarRecord> = {
+export const initialCheckinCalendarRecords: Record<string, CheckinCalendarRecord> = {
   "2026-03-01": {
     status: "done",
     shift: "早班",
@@ -730,6 +730,9 @@ let checkinHistoryStore: CheckinHistoryEntry[] = initialCheckinHistoryData.map((
 let checkinCalendarStore: Record<string, CheckinCalendarRecord> = Object.fromEntries(
   Object.entries(initialCheckinCalendarRecords).map(([date, record]) => [date, { ...record }]),
 );
+
+export const getInitialCheckinItems = (): CheckinItem[] =>
+  initialCheckinItems.map((item) => ({ ...item }));
 
 const pumpStats: KeyValueField[] = toFields([
   ["平均带载功率", "298 kW"],

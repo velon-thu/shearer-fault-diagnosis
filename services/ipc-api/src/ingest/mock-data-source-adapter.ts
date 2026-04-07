@@ -10,7 +10,6 @@ import type {
 import {
   buildSensorTrend,
   createBootstrapPayload,
-  createCheckinsSnapshot,
   createConnectionStatus,
   createCuttingAnalysis,
   createHomeSummary,
@@ -23,9 +22,13 @@ import {
   findFaultCode,
   findSensorById,
   getSensorSummaries,
-  submitCheckins,
   weeklyEvents,
 } from "../mock";
+import {
+  initializeCheckinStore,
+  readCheckinsFromSqlite,
+  saveCheckinToSqlite,
+} from "../db/checkins";
 import type {
   DataSourceAdapter,
   DataSourceEvent,
@@ -44,6 +47,10 @@ const buildBootstrapWithConnection = (connection: ConnectionStatus): BootstrapRe
 };
 
 export class MockDataSourceAdapter implements DataSourceAdapter {
+  constructor() {
+    initializeCheckinStore();
+  }
+
   async getLatestSnapshot(): Promise<LatestSnapshot> {
     const connection = createConnectionStatus();
 
@@ -83,11 +90,11 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
   }
 
   async getCheckins() {
-    return createCheckinsSnapshot();
+    return readCheckinsFromSqlite();
   }
 
   async saveCheckin(payload: CheckinsSubmitRequest) {
-    return submitCheckins(payload);
+    return saveCheckinToSqlite(payload);
   }
 
   async getKnowledgeAssets() {

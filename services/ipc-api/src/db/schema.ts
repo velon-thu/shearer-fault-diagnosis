@@ -49,12 +49,14 @@ export const SQLITE_SCHEMA_STATEMENTS = [
     CREATE TABLE IF NOT EXISTS checkin_records (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       checkin_date TEXT NOT NULL,
+      status TEXT,
       shift TEXT,
       person TEXT,
       result TEXT,
       note TEXT,
       detail TEXT,
       checked_item_ids TEXT,
+      show_in_history INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `,
