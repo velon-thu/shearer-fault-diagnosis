@@ -1,5 +1,7 @@
 import type {
   BootstrapResponse,
+  DataWindow,
+  FaultRuleItem,
   CheckinsResponse,
   CheckinsSubmitRequest,
   ConnectionStatus,
@@ -35,6 +37,8 @@ export type RankingsParams = {
   start: string;
   end: string;
   system: RankingSystemFilter;
+  fromMs?: number;
+  toMs?: number;
 };
 
 export type DataSourceEvent = {
@@ -49,6 +53,8 @@ export interface DataSourceAdapter {
   getSensorDetail(sensorId: string): Promise<SensorDetail | null>;
   getSensorTrend(sensorId: string, from: Date, to: Date): Promise<SensorTrendPoint[]>;
   getRankings(params: RankingsParams): Promise<RankingsResponse>;
+  getDataWindow(): Promise<DataWindow>;
+  getFaultRules(): Promise<FaultRuleItem[]>;
   getCheckins(): Promise<CheckinsResponse>;
   saveCheckin(payload: CheckinsSubmitRequest): Promise<CheckinsResponse>;
   getKnowledgeAssets(): Promise<KnowledgeAssetsResponse>;

@@ -3,6 +3,8 @@ import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import {
   ApiErrorResponseSchema,
+  DataWindowSchema,
+  FaultRulesResponseSchema,
   AuthLoginRequestSchema,
   AuthLoginResponseSchema,
   AuthLogoutResponseSchema,
@@ -59,6 +61,8 @@ const SensorDetailApiResponseSchema = createApiSuccessResponseSchema(SensorDetai
 const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendPointSchema.array());
 const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
 const RankingsApiResponseSchema = createApiSuccessResponseSchema(RankingsResponseSchema);
+const DataWindowApiResponseSchema = createApiSuccessResponseSchema(DataWindowSchema);
+const FaultRulesApiResponseSchema = createApiSuccessResponseSchema(FaultRulesResponseSchema);
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
 const KnowledgeAssetsApiResponseSchema = createApiSuccessResponseSchema(KnowledgeAssetsResponseSchema);
 const RunCycleApiResponseSchema = createApiSuccessResponseSchema(RunCycleResponseSchema);
@@ -291,13 +295,27 @@ export const buildApp = ({
   });
 
   app.get("/api/rankings", async (request) => {
-    const { start, end, system } = RankingsQuerySchema.parse(request.query);
+    const { start, end, system, from, to } = RankingsQuerySchema.parse(request.query);
 
     return RankingsApiResponseSchema.parse({
       success: true,
-      data: await adapter.getRankings({ start, end, system }),
+      data: await adapter.getRankings({ start, end, system, fromMs: from, toMs: to }),
     });
   });
+
+  app.get("/api/data-window", async () =>
+    DataWindowApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getDataWindow(),
+    }),
+  );
+
+  app.get("/api/fault-rules", async () =>
+    FaultRulesApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getFaultRules(),
+    }),
+  );
 
   app.get("/api/checkins", async (request) => {
     CheckinsQuerySchema.parse(request.query);

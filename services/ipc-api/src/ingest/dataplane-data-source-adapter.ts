@@ -534,11 +534,35 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
     );
   }
 
+  async getDataWindow() {
+    return this.withDb(
+      (db) => {
+        const r = db
+          .prepare(`SELECT MIN(ts) AS lo, MAX(ts) AS hi FROM sensor_hyper`)
+          .get() as { lo: number | null; hi: number | null };
+        return { fromMs: r.lo, toMs: r.hi };
+      },
+      () => super.getDataWindow(),
+    );
+  }
+
+  async getFaultRules() {
+    return this.withDb(
+      (db) =>
+        (db
+          .prepare(`SELECT fault_code AS code, name, type, kind FROM fault_rule ORDER BY fault_code`)
+          .all() as unknown as Array<{ code: number; name: string; type: number; kind: number }>),
+      () => super.getFaultRules(),
+    );
+  }
+
   async getRankings(params: RankingsParams) {
     return this.withDb(
       (db) => {
-        const startMs = new Date(`${params.start}T00:00:00`).getTime();
-        const endMs = new Date(`${params.end}T23:59:59.999`).getTime();
+        // 时间滑块给出的毫秒窗口优先于日期串
+        const startMs =
+          params.fromMs ?? new Date(`${params.start}T00:00:00`).getTime();
+        const endMs = params.toMs ?? new Date(`${params.end}T23:59:59.999`).getTime();
         const rows = db
           .prepare(
             `SELECT fr.name AS name, fr.kind AS kind, COUNT(*) AS cnt, MAX(fn.occur_ts) AS last_ts

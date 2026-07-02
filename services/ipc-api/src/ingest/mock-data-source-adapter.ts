@@ -1,4 +1,6 @@
 import type {
+  DataWindow,
+  FaultRuleItem,
   BootstrapResponse,
   CheckinsSubmitRequest,
   ConnectionStatus,
@@ -96,6 +98,14 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
     }
 
     return buildSensorTrend(sensor, "24h");
+  }
+
+  async getDataWindow(): Promise<DataWindow> {
+    return { fromMs: null, toMs: null };
+  }
+
+  async getFaultRules(): Promise<FaultRuleItem[]> {
+    return [];
   }
 
   async getRankings(params: RankingsParams) {

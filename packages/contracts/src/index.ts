@@ -399,7 +399,25 @@ export const RankingsQuerySchema = z.object({
   start: z.string().default("2026-03-01"),
   end: z.string().default("2026-03-31"),
   system: RankingSystemFilterSchema.default("all"),
+  // 毫秒级窗口（时间滑块选择），给出时优先于 start/end 日期串
+  from: z.coerce.number().int().positive().optional(),
+  to: z.coerce.number().int().positive().optional(),
 });
+
+// 数据库现有数据的时间窗（时间选择滑块的可选边界）
+export const DataWindowSchema = z.object({
+  fromMs: z.number().nullable(),
+  toMs: z.number().nullable(),
+});
+
+// 故障目录条目（故障设置用）
+export const FaultRuleItemSchema = z.object({
+  code: z.number(),
+  name: z.string(),
+  type: z.number(), // 0提示 1警告 2停机
+  kind: z.number(),
+});
+export const FaultRulesResponseSchema = z.array(FaultRuleItemSchema);
 
 export const CheckinsQuerySchema = z.object({});
 
@@ -435,6 +453,8 @@ export type TractionAnalysisLogEntry = z.infer<typeof TractionAnalysisLogEntrySc
 export type TractionAnalysisResponse = z.infer<typeof TractionAnalysisResponseSchema>;
 export type FaultCodeResult = z.infer<typeof FaultCodeResultSchema>;
 export type RankingItem = z.infer<typeof RankingItemSchema>;
+export type DataWindow = z.infer<typeof DataWindowSchema>;
+export type FaultRuleItem = z.infer<typeof FaultRuleItemSchema>;
 export type RankingsResponse = z.infer<typeof RankingsResponseSchema>;
 export type CheckinStatus = z.infer<typeof CheckinStatusSchema>;
 export type CheckinItem = z.infer<typeof CheckinItemSchema>;
