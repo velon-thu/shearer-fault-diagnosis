@@ -9,7 +9,7 @@ import {
   type SensorSummary,
   type SensorTrendPoint,
 } from "@shearer/contracts";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
 import { SensorTrendChart } from "@/components/sensor-trend-chart";
 
@@ -35,321 +35,231 @@ const resolveHttpBase = () => {
   return `${protocol}//${window.location.host}`;
 };
 
-const getSensorBadge = (sensor: Pick<SensorSummary, "valid" | "state">) => {
+// 总览分组顺序（type 来自后端按单位推导；"数值"归入"其他"）
+const TYPE_ORDER = [
+  "温度", "电流", "负荷", "压力", "流量", "油位",
+  "速度", "位置", "角度", "距离", "电压", "频率", "其他",
+] as const;
+
+const typeGroup = (type: string) =>
+  (TYPE_ORDER as readonly string[]).includes(type) ? type : "其他";
+
+const badgeOf = (sensor: SensorSummary) => {
   if (!sensor.valid) {
     return { label: "失效", className: "error" };
   }
-
-  if (
-    sensor.state.includes("预警") ||
-    sensor.state.includes("关注") ||
-    sensor.state.includes("波动")
-  ) {
-    return { label: "预警", className: "warn" };
-  }
-
   return { label: "有效", className: "success" };
-};
-
-const getSensorPill = (sensor: Pick<SensorDetail, "valid" | "state"> | null) => {
-  if (!sensor) {
-    return { text: "当前状态", className: "blue" };
-  }
-
-  if (!sensor.valid) {
-    return { text: `当前状态：${sensor.state}`, className: "red" };
-  }
-
-  if (
-    sensor.state.includes("预警") ||
-    sensor.state.includes("关注") ||
-    sensor.state.includes("波动")
-  ) {
-    return { text: `当前状态：${sensor.state}`, className: "orange" };
-  }
-
-  return { text: `当前状态：${sensor.state}`, className: "green" };
 };
 
 export default function SensorsPage() {
   const shellState = useAppShellState();
-  const [sensorSummaries, setSensorSummaries] = useState<SensorSummary[]>([]);
-  const [selectedSensorId, setSelectedSensorId] = useState<string>("");
-  const [sensorDetail, setSensorDetail] = useState<SensorDetail | null>(null);
-  const [sensorTrend, setSensorTrend] = useState<SensorTrendPoint[]>([]);
-  const [listLoading, setListLoading] = useState(true);
+  const [summaries, setSummaries] = useState<SensorSummary[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<SensorDetail | null>(null);
+  const [trend, setTrend] = useState<SensorTrendPoint[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // 总览列表：进页面拉一次，30s 刷新（数据在直播）
   useEffect(() => {
     let cancelled = false;
-    const controller = new AbortController();
 
-    const loadSensorSummaries = async () => {
+    const load = async () => {
       try {
-        setListLoading(true);
-
-        const response = await fetch(`${resolveHttpBase()}/api/sensors`, {
-          signal: controller.signal,
-          cache: "no-store",
-        });
-        const json = await response.json();
-        const parsed = SensorSummariesApiResponseSchema.parse(json);
-
-        if (cancelled) {
-          return;
+        const response = await fetch(`${resolveHttpBase()}/api/sensors`, { cache: "no-store" });
+        const parsed = SensorSummariesApiResponseSchema.parse(await response.json());
+        if (!cancelled) {
+          setSummaries(parsed.data);
+          setErrorMessage(null);
         }
-
-        setSensorSummaries(parsed.data);
-        setSelectedSensorId((current) => {
-          if (current) {
-            return current;
-          }
-
-          const preferred = parsed.data.find((sensor) => sensor.id === "sensor-2");
-          return preferred?.id ?? parsed.data[0]?.id ?? "";
-        });
-        setErrorMessage(null);
       } catch {
         if (!cancelled) {
-          setErrorMessage("传感器列表加载失败，请先启动 IPC 服务。");
-        }
-      } finally {
-        if (!cancelled) {
-          setListLoading(false);
+          setErrorMessage("传感器列表加载失败，请确认服务已启动。");
         }
       }
     };
 
-    void loadSensorSummaries();
-
+    void load();
+    const timer = setInterval(() => void load(), 30_000);
     return () => {
       cancelled = true;
-      controller.abort();
+      clearInterval(timer);
     };
   }, []);
 
+  // 详情 + 趋势：选中后拉取，10s 刷新
   useEffect(() => {
-    if (!selectedSensorId) {
+    if (!selectedId) {
+      setDetail(null);
+      setTrend([]);
       return;
     }
 
     let cancelled = false;
-    const controller = new AbortController();
+    setDetailLoading(true);
 
-    const loadSensorDetail = async () => {
+    const load = async () => {
       try {
-        setDetailLoading(true);
-
-        const [detailResponse, trendResponse] = await Promise.all([
-          fetch(`${resolveHttpBase()}/api/sensors/${selectedSensorId}`, {
-            signal: controller.signal,
-            cache: "no-store",
-          }),
-          fetch(`${resolveHttpBase()}/api/sensors/${selectedSensorId}/trend?range=24h`, {
-            signal: controller.signal,
-            cache: "no-store",
-          }),
+        const [detailRes, trendRes] = await Promise.all([
+          fetch(`${resolveHttpBase()}/api/sensors/${selectedId}`, { cache: "no-store" }),
+          fetch(`${resolveHttpBase()}/api/sensors/${selectedId}/trend?range=24h`, { cache: "no-store" }),
         ]);
-
-        const [detailJson, trendJson] = await Promise.all([
-          detailResponse.json(),
-          trendResponse.json(),
-        ]);
-
-        const parsedDetail = SensorDetailApiResponseSchema.parse(detailJson);
-        const parsedTrend = SensorTrendApiResponseSchema.parse(trendJson);
-
-        if (cancelled) {
-          return;
+        const parsedDetail = SensorDetailApiResponseSchema.parse(await detailRes.json());
+        const parsedTrend = SensorTrendApiResponseSchema.parse(await trendRes.json());
+        if (!cancelled) {
+          setDetail(parsedDetail.data);
+          setTrend(parsedTrend.data);
+          setDetailLoading(false);
         }
-
-        setSensorDetail(parsedDetail.data);
-        setSensorTrend(parsedTrend.data);
-        setErrorMessage(null);
       } catch {
         if (!cancelled) {
-          setErrorMessage("传感器详情或趋势数据加载失败。");
-        }
-      } finally {
-        if (!cancelled) {
           setDetailLoading(false);
+          setErrorMessage("传感器详情加载失败。");
         }
       }
     };
 
-    void loadSensorDetail();
-
+    void load();
+    const timer = setInterval(() => void load(), 10_000);
     return () => {
       cancelled = true;
-      controller.abort();
+      clearInterval(timer);
     };
-  }, [selectedSensorId]);
+  }, [selectedId]);
 
-  const rankingData = [...sensorSummaries].sort((left, right) => right.failures30d - left.failures30d);
-  const activeSummary =
-    sensorSummaries.find((sensor) => sensor.id === selectedSensorId) ?? sensorSummaries[0] ?? null;
-  const sensorPill = getSensorPill(sensorDetail);
-  const detailSubtitle = sensorDetail
-    ? `${sensorDetail.location} · ${sensorDetail.name}`
-    : activeSummary
-      ? `${activeSummary.location} · ${activeSummary.name}`
-      : "点击左侧条目查看 24 小时数据曲线。";
+  const groups = useMemo(() => {
+    const text = searchText.trim().toLowerCase();
+    const filtered = text
+      ? summaries.filter(
+          (s) =>
+            s.name.toLowerCase().includes(text) ||
+            s.location.toLowerCase().includes(text) ||
+            s.type.toLowerCase().includes(text),
+        )
+      : summaries;
+
+    const byType = new Map<string, SensorSummary[]>();
+    for (const s of filtered) {
+      const key = typeGroup(s.type);
+      const list = byType.get(key) ?? [];
+      list.push(s);
+      byType.set(key, list);
+    }
+    return TYPE_ORDER.map((t) => [t, byType.get(t) ?? []] as const).filter(
+      ([, list]) => list.length > 0,
+    );
+  }, [summaries, searchText]);
+
+  const selectedSummary = useMemo(
+    () => summaries.find((s) => s.id === selectedId) ?? null,
+    [summaries, selectedId],
+  );
+
+  const activeInfo = detail ?? selectedSummary;
 
   return (
-    <AppShell
-      shellState={shellState}
-      subtitle="查看有效状态、失效排名与单个传感器 24 小时变化曲线"
-      tagText="24h 时序"
-      title="传感器"
-    >
-      {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
-
+    <AppShell shellState={shellState} title="传感器">
       <section className="page active">
-        <div className="split">
-          <div className="panel">
-            <div className="panel-head">
-              <div>
-                <h3 className="panel-title">
-                  <span className="accent-bar" />
-                  传感器总览
-                </h3>
-                <p className="panel-subtitle">
-                  展示有效状态、近 30 天失效次数、上次有数据时间。
-                </p>
-              </div>
-              <span className="pill green">支持点选详情</span>
-            </div>
-            <div className="panel-body">
-              <div className="list">
-                {listLoading ? (
-                  <div className="empty">正在加载传感器列表...</div>
-                ) : sensorSummaries.length === 0 ? (
-                  <div className="empty">当前没有可展示的传感器数据。</div>
-                ) : (
-                  sensorSummaries.map((sensor) => {
-                    const badge = getSensorBadge(sensor);
+        {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
-                    return (
-                      <div
-                        className={`sensor-item ${sensor.id === selectedSensorId ? "active" : ""}`}
-                        key={sensor.id}
-                      >
+        {selectedId === null ? (
+          /* ===== 总览：搜索 + 按类型分组 ===== */
+          <>
+            <input
+              className="sensor-search"
+              onChange={(event) => setSearchText(event.target.value)}
+              placeholder="搜索传感器名称 / 部件 / 类型"
+              type="search"
+              value={searchText}
+            />
+            {summaries.length === 0 ? (
+              <div className="empty">正在加载传感器列表...</div>
+            ) : (
+              groups.map(([type, list]) => (
+                <div key={type}>
+                  <h2 className="sensor-group-title">
+                    {type}
+                    <small>{list.length} 个</small>
+                  </h2>
+                  <div className="sensor-grid">
+                    {list.map((sensor) => {
+                      const badge = badgeOf(sensor);
+                      return (
                         <button
-                          className="sensor-btn"
-                          onClick={() => setSelectedSensorId(sensor.id)}
+                          className="sensor-cell"
+                          key={sensor.id}
+                          onClick={() => setSelectedId(sensor.id)}
                           type="button"
                         >
-                          <div className="sensor-main">
-                            <div className="meta-line">
-                              {sensor.location} · 上次数据 {sensor.lastSeen}
-                            </div>
-                            <div className="sensor-title">{sensor.name}</div>
-                            <div className="meta-line">
-                              近 30 天失效 {sensor.failures30d} 次 · 当前状态 {sensor.state}
+                          <div>
+                            <div className="sensor-cell-name">{sensor.name}</div>
+                            <div className="sensor-cell-meta">
+                              {sensor.location} · {sensor.state}
                             </div>
                           </div>
                           <span className={`badge ${badge.className}`}>{badge.label}</span>
                         </button>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="detail-stack">
-            <div className="panel">
-              <div className="panel-head">
-                <div>
-                  <h3 className="panel-title">
-                    <span className="accent-bar" />
-                    传感器详情
-                  </h3>
-                  <p className="panel-subtitle">{detailSubtitle}</p>
-                </div>
-                <span className={`pill ${sensorPill.className}`}>{sensorPill.text}</span>
-              </div>
-              <div className="panel-body">
-                <div className="kpi-row">
-                  <div className="kpi">
-                    <div className="kpi-name">当前状态</div>
-                    <div className="kpi-value">{sensorDetail?.state ?? "--"}</div>
-                  </div>
-                  <div className="kpi">
-                    <div className="kpi-name">近 30 天失效</div>
-                    <div className="kpi-value">
-                      {sensorDetail ? `${sensorDetail.failures30d} 次` : "--"}
-                    </div>
-                  </div>
-                  <div className="kpi">
-                    <div className="kpi-name">平均值</div>
-                    <div className="kpi-value">{sensorDetail?.averageDisplay ?? "--"}</div>
-                  </div>
-                  <div className="kpi">
-                    <div className="kpi-name">峰值</div>
-                    <div className="kpi-value">{sensorDetail?.peakDisplay ?? "--"}</div>
+                      );
+                    })}
                   </div>
                 </div>
-                <div className="section-spacer" />
-                <div className="chart-card">
-                  <div className="chart-head">
-                    <div>
-                      <h4 className="chart-title">
-                        {sensorDetail?.name ?? activeSummary?.name ?? "传感器"} · 24 小时数据曲线
-                      </h4>
-                      <div className="chart-meta">采样间隔：1 小时 · 数据仅为交互示意</div>
-                    </div>
-                    <span className="badge info">
-                      {sensorDetail?.type ?? activeSummary?.type ?? "传感器"}传感器
-                    </span>
-                  </div>
-                  <SensorTrendChart
-                    loading={detailLoading}
-                    points={sensorTrend}
-                    sensorName={sensorDetail?.name ?? activeSummary?.name ?? "传感器"}
-                    unit={sensorDetail?.unit ?? activeSummary?.unit ?? ""}
-                  />
+              ))
+            )}
+          </>
+        ) : (
+          /* ===== 全屏详情 ===== */
+          <>
+            <div className="sensor-detail-head">
+              <button className="sensor-back-btn" onClick={() => setSelectedId(null)} type="button">
+                ‹ 返回总览
+              </button>
+              <div>
+                <h1 className="sensor-detail-title">{activeInfo?.name ?? "传感器"}</h1>
+                <div className="sensor-detail-sub">
+                  {activeInfo?.location ?? ""} · {activeInfo?.type ?? ""}传感器 · 上次数据{" "}
+                  {activeInfo?.lastSeen ?? "--"}
                 </div>
               </div>
+              <span
+                className={`pill ${activeInfo?.valid ? "green" : "red"}`}
+                style={{ marginLeft: "auto" }}
+              >
+                {activeInfo?.state ?? "--"}
+              </span>
             </div>
 
-            <div className="panel">
-              <div className="panel-head">
-                <div>
-                  <h3 className="panel-title">
-                    <span className="accent-bar" />
-                    近一个月失效次数排名
-                  </h3>
-                  <p className="panel-subtitle">便于快速发现高频失效点位。</p>
-                </div>
+            <div className="kpi-row">
+              <div className="kpi">
+                <div className="kpi-name">当前状态</div>
+                <div className="kpi-value">{activeInfo?.state ?? "--"}</div>
               </div>
-              <div className="panel-body">
-                <div className="list">
-                  {rankingData.length === 0 ? (
-                    <div className="empty">当前没有可排序的传感器数据。</div>
-                  ) : (
-                    rankingData.map((sensor, index) => (
-                      <div className="rank-item" key={sensor.id}>
-                        <div className="rank-left">
-                          <div className="rank-top">
-                            <span className="rank-index">{index + 1}</span>
-                            <div className="rank-name">{sensor.name}</div>
-                          </div>
-                          <div className="meta-line">
-                            {sensor.location} · 最近一次 {sensor.lastSeen}
-                          </div>
-                        </div>
-                        <div className="rank-count">{sensor.failures30d} 次</div>
-                      </div>
-                    ))
-                  )}
+              <div className="kpi">
+                <div className="kpi-name">24h 平均值</div>
+                <div className="kpi-value">{detail?.averageDisplay ?? "--"}</div>
+              </div>
+              <div className="kpi">
+                <div className="kpi-name">24h 峰值</div>
+                <div className="kpi-value">{detail?.peakDisplay ?? "--"}</div>
+              </div>
+              <div className="kpi">
+                <div className="kpi-name">近 30 天失效</div>
+                <div className="kpi-value">
+                  {activeInfo ? `${activeInfo.failures30d} 次` : "--"}
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+            <div className="section-spacer" />
+            <div className="sensor-detail-chart">
+              <SensorTrendChart
+                loading={detailLoading}
+                points={trend}
+                sensorName={activeInfo?.name ?? "传感器"}
+                unit={activeInfo?.unit ?? ""}
+              />
+            </div>
+          </>
+        )}
       </section>
     </AppShell>
   );

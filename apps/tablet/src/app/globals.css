@@ -2319,3 +2319,167 @@ button.calendar-cell {
   user-select: none;
   white-space: nowrap;
 }
+
+/* ===== 悬浮返回主页面按钮（子页面通用，3s 无操作淡出为幽灵态） ===== */
+.float-home {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  height: 54px;
+  padding: 0 24px;
+  border-radius: 27px;
+  background: rgba(22, 30, 44, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.float-home.dimmed {
+  opacity: 0.14;
+  transform: translateX(-6px);
+}
+
+.float-home:active {
+  transform: scale(0.95);
+}
+
+/* ===== 传感器页：总览分组 + 全屏详情 ===== */
+.sensor-search {
+  width: 100%;
+  height: 60px;
+  padding: 0 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  outline: none;
+  margin-bottom: 20px;
+}
+
+.sensor-search:focus {
+  border-color: rgba(79, 140, 255, 0.4);
+}
+
+.sensor-group-title {
+  margin: 22px 0 12px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.sensor-group-title small {
+  margin-left: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.sensor-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 18px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.sensor-cell:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(79, 140, 255, 0.3);
+}
+
+.sensor-cell:active {
+  transform: scale(0.97);
+}
+
+.sensor-cell-name {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.sensor-cell-meta {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+/* 全屏详情 */
+.sensor-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.sensor-back-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 58px;
+  padding: 0 26px;
+  border-radius: 29px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font: inherit;
+  font-size: 19px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.sensor-back-btn:hover {
+  background: rgba(79, 140, 255, 0.14);
+}
+
+.sensor-back-btn:active {
+  transform: scale(0.95);
+}
+
+.sensor-detail-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.sensor-detail-sub {
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--text-2);
+}
+
+.sensor-detail-chart {
+  height: calc(100dvh - 320px);
+  min-height: 380px;
+}
+
+.sensor-detail-chart .chart-wrap,
+.sensor-detail-chart .chart-canvas {
+  height: 100%;
+}

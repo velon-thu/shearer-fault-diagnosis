@@ -408,6 +408,23 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
         const stale = !lv || now - lv.ts > 5 * 60_000;
         const sentinel = lv ? isSentinel(def.unit, lv.value) : false;
 
+        // 近 30 天哨兵值次数（与总览口径一致）
+        let failures30d = 0;
+        const sentinelCond =
+          def.unit === "℃"
+            ? "(value <= -39.9 OR value >= 199.9)"
+            : def.unit === "m/min"
+              ? "(value >= 600 OR value < 0)"
+              : null;
+        if (sentinelCond) {
+          const r = db
+            .prepare(
+              `SELECT COUNT(*) AS n FROM sensor_hyper WHERE std_tag = ? AND ts >= ? AND ${sentinelCond}`,
+            )
+            .get(sensorId, now - 30 * DAY) as { n: number };
+          failures30d = r.n;
+        }
+
         const avg = stats.avg_v === null ? 0 : Number(stats.avg_v.toFixed(2));
         const peak = stats.max_v === null ? 0 : Number(stats.max_v.toFixed(2));
         return {
@@ -417,7 +434,7 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           location: def.category,
           state: !lv ? "无数据" : sentinel ? "传感器无效" : stale ? "数据中断" : "正常",
           valid: Boolean(lv) && !sentinel && !stale,
-          failures30d: 0,
+          failures30d,
           lastSeen: lv ? fmtTs(lv.ts) : "--",
           unit: def.unit,
           averageValue: avg,

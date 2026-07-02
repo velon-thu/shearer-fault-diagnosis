@@ -221,22 +221,17 @@ type AppShellProps = {
 };
 
 export function AppShell({
-  title,
-  subtitle,
   children,
   shellState,
-  disableHomeButton = false,
-  tagText,
-  tagTone = "blue",
   minimalHeader = false,
 }: AppShellProps) {
-  const { connection, now } = shellState;
+  const { connection } = shellState;
   const pathname = usePathname();
   const router = useRouter();
   const [authStatus, setAuthStatus] = useState<"checking" | "authenticated" | "redirecting">(
     "checking",
   );
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [, setCurrentUser] = useState<AuthUser | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const statusChips = useMemo(() => {
@@ -357,73 +352,80 @@ export function AppShell({
   return (
     <main className="app-shell">
       <section className="workspace">
-        <header className="toolbar">
-          <div className="toolbar-inner">
-            <div className="toolbar-left">
-              {minimalHeader ? (
+        {minimalHeader ? (
+          <header className="toolbar">
+            <div className="toolbar-inner">
+              <div className="toolbar-left">
                 <span className="toolbar-brand">上海天地</span>
-              ) : (
-                <>
-                  {disableHomeButton ? (
-                    <span aria-current="page" className="home-btn is-current">
-                      主页面
-                    </span>
-                  ) : (
-                    <Link className="home-btn" href="/">
-                      返回主页面
-                    </Link>
-                  )}
-                  <div className="page-heading">
-                    <div className="page-title-row">
-                      <h1 className="page-title">{title}</h1>
-                      {tagText ? <span className={`pill ${tagTone}`}>{tagText}</span> : null}
-                    </div>
-                    {subtitle ? <p className="page-subtitle">{subtitle}</p> : null}
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="toolbar-right">
-              <div className="toolbar-session">
-                {!minimalHeader && currentUser ? (
-                  <div className="status-chip user">
-                    <span className="status-dot" />
-                    <span>{currentUser.employeeNo} · {currentUser.displayName}</span>
-                  </div>
-                ) : null}
-                <button
-                  className="toolbar-ghost"
-                  disabled={loggingOut}
-                  onClick={() => void handleLogout()}
-                  type="button"
-                >
-                  {loggingOut ? "退出中..." : "退出登录"}
-                </button>
               </div>
-              <div className="status-cluster">
-                {statusChips.map((chip) => (
-                  <div className={`status-chip ${chip.tone}`} key={chip.label}>
-                    <span className="status-dot" />
-                    <span>
-                      {minimalHeader ? chip.label : `${chip.label} ${chip.value}`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              {minimalHeader ? null : (
-                <div className="clock-box">
-                  <div className="clock-time">{formatTime(now)}</div>
-                  <div className="clock-date">{formatDate(now, true)}</div>
+              <div className="toolbar-right">
+                <div className="toolbar-session">
+                  <button
+                    className="toolbar-ghost"
+                    disabled={loggingOut}
+                    onClick={() => void handleLogout()}
+                    type="button"
+                  >
+                    {loggingOut ? "退出中..." : "退出登录"}
+                  </button>
                 </div>
-              )}
+                <div className="status-cluster">
+                  {statusChips.map((chip) => (
+                    <div className={`status-chip ${chip.tone}`} key={chip.label}>
+                      <span className="status-dot" />
+                      <span>{chip.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
+        ) : (
+          // 子页面：顶栏不放任何东西，只有一个自动隐身的悬浮返回按钮
+          <FloatingHomeLink />
+        )}
 
         <div className="content">
           <div className="content-inner">{children}</div>
         </div>
       </section>
     </main>
+  );
+}
+
+/**
+ * 悬浮「返回主页面」按钮：3 秒无操作自动淡出成幽灵态（仍可点击），
+ * 任何触摸/滚动/按键立即恢复完全可见。
+ */
+function FloatingHomeLink() {
+  const [dimmed, setDimmed] = useState(false);
+
+  useEffect(() => {
+    let timer = 0;
+
+    const wake = () => {
+      setDimmed(false);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setDimmed(true), 3000);
+    };
+
+    wake();
+    const events = ["pointerdown", "touchstart", "scroll", "keydown", "wheel"] as const;
+    events.forEach((name) =>
+      window.addEventListener(name, wake, { passive: true, capture: true }),
+    );
+
+    return () => {
+      window.clearTimeout(timer);
+      events.forEach((name) =>
+        window.removeEventListener(name, wake, { capture: true }),
+      );
+    };
+  }, []);
+
+  return (
+    <Link className={`float-home${dimmed ? " dimmed" : ""}`} href="/">
+      ‹ 主页面
+    </Link>
   );
 }
