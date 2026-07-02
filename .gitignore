@@ -62,3 +62,6 @@ Thumbs.db
 
 # windows alternate data stream files
 *:Zone.Identifier
+
+# go build outputs
+services/dataplane/bin/
