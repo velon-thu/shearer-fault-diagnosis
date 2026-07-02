@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { AppShell, formatDate, formatTime, useAppShellState } from "@/components/app-shell";
 
-// 主页面 = 大时钟 + 功能导航（Launchpad 风格：大图标、无说明文字）
+// 主页面 = 时钟 + 功能导航（Launchpad 风格：大图标、无说明文字、单屏不滚动）
 const homeNavItems = [
   { label: "传感器", href: "/sensors", icon: "传", from: "#54a5ff", to: "#2e6be6" },
   { label: "故障代码查询", href: "/fault-codes", icon: "码", from: "#ffb03a", to: "#f07b22" },
@@ -14,7 +15,6 @@ const homeNavItems = [
   { label: "日常检修打卡", href: "/checkins", icon: "检", from: "#5ee0b8", to: "#2bb88c" },
   { label: "知识库", href: "/knowledge", icon: "知", from: "#7b9bff", to: "#4b63e6" },
   { label: "运行循环图", href: "/run-cycle", icon: "循", from: "#ffd35c", to: "#f0a81e" },
-  { label: "共享内存监视", href: "/shm-monitor", icon: "存", from: "#8fa3bf", to: "#5e738f" },
   { label: "系统设置", href: "/settings", icon: "设", from: "#b3b9c6", to: "#7c8494" },
 ] as const;
 
@@ -22,8 +22,17 @@ export default function HomePage() {
   const shellState = useAppShellState();
   const { now } = shellState;
 
+  // 主页面单屏固定，禁用页面滚动
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
   return (
-    <AppShell disableHomeButton shellState={shellState} title="主页面">
+    <AppShell disableHomeButton minimalHeader shellState={shellState} title="主页面">
       <section className="page active">
         <div className="home-launchpad">
           <div className="home-clock">

@@ -211,6 +211,8 @@ type AppShellProps = {
   disableHomeButton?: boolean;
   tagText?: string;
   tagTone?: "blue" | "green" | "orange" | "red";
+  /** 精简顶栏（主页面用）：只保留退出登录 + HPC/MOC/BOC 状态灯 */
+  minimalHeader?: boolean;
 };
 
 export function AppShell({
@@ -221,6 +223,7 @@ export function AppShell({
   disableHomeButton = false,
   tagText,
   tagTone = "blue",
+  minimalHeader = false,
 }: AppShellProps) {
   const { connection, now } = shellState;
   const pathname = usePathname();
@@ -330,26 +333,30 @@ export function AppShell({
         <header className="toolbar">
           <div className="toolbar-inner">
             <div className="toolbar-left">
-              {disableHomeButton ? (
-                <span aria-current="page" className="home-btn is-current">
-                  主页面
-                </span>
-              ) : (
-                <Link className="home-btn" href="/">
-                  返回主页面
-                </Link>
+              {minimalHeader ? null : (
+                <>
+                  {disableHomeButton ? (
+                    <span aria-current="page" className="home-btn is-current">
+                      主页面
+                    </span>
+                  ) : (
+                    <Link className="home-btn" href="/">
+                      返回主页面
+                    </Link>
+                  )}
+                  <div className="page-heading">
+                    <div className="page-title-row">
+                      <h1 className="page-title">{title}</h1>
+                      {tagText ? <span className={`pill ${tagTone}`}>{tagText}</span> : null}
+                    </div>
+                    {subtitle ? <p className="page-subtitle">{subtitle}</p> : null}
+                  </div>
+                </>
               )}
-              <div className="page-heading">
-                <div className="page-title-row">
-                  <h1 className="page-title">{title}</h1>
-                  {tagText ? <span className={`pill ${tagTone}`}>{tagText}</span> : null}
-                </div>
-                {subtitle ? <p className="page-subtitle">{subtitle}</p> : null}
-              </div>
             </div>
             <div className="toolbar-right">
               <div className="toolbar-session">
-                {currentUser ? (
+                {!minimalHeader && currentUser ? (
                   <div className="status-chip user">
                     <span className="status-dot" />
                     <span>{currentUser.employeeNo} · {currentUser.displayName}</span>
@@ -365,7 +372,10 @@ export function AppShell({
                 </button>
               </div>
               <div className="status-cluster">
-                {statusChips.map((chip) => (
+                {(minimalHeader
+                  ? statusChips.filter((chip) => chip.label !== "平板↔工控机")
+                  : statusChips
+                ).map((chip) => (
                   <div className={`status-chip ${chip.tone}`} key={chip.label}>
                     <span className="status-dot" />
                     <span>
@@ -374,10 +384,12 @@ export function AppShell({
                   </div>
                 ))}
               </div>
-              <div className="clock-box">
-                <div className="clock-time">{formatTime(now)}</div>
-                <div className="clock-date">{formatDate(now, true)}</div>
-              </div>
+              {minimalHeader ? null : (
+                <div className="clock-box">
+                  <div className="clock-time">{formatTime(now)}</div>
+                  <div className="clock-date">{formatDate(now, true)}</div>
+                </div>
+              )}
             </div>
           </div>
         </header>

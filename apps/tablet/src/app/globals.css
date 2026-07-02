@@ -2215,13 +2215,15 @@ button.calendar-cell {
 
 /* ===== 主页面（Launchpad 风格：大时钟 + 图标宫格） ===== */
 .home-launchpad {
-  min-height: calc(100dvh - 240px);
+  /* 单屏固定：顶栏约 90px + content 上下留白，剩余全部给时钟和导航 */
+  height: calc(100dvh - 150px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: clamp(40px, 7vh, 84px);
-  padding: 24px 0 48px;
+  justify-content: space-evenly;
+  gap: clamp(16px, 3vh, 40px);
+  padding: 8px 0 16px;
+  overflow: hidden;
 }
 
 .home-clock {
@@ -2230,7 +2232,7 @@ button.calendar-cell {
 }
 
 .home-clock-time {
-  font-size: clamp(64px, 10vw, 116px);
+  font-size: clamp(44px, 6.5vw, 76px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: 2px;
@@ -2238,25 +2240,31 @@ button.calendar-cell {
 }
 
 .home-clock-date {
-  margin-top: 16px;
-  font-size: clamp(18px, 2.4vw, 26px);
+  margin-top: 12px;
+  font-size: clamp(16px, 2vw, 22px);
   color: var(--text-2);
   letter-spacing: 3px;
 }
 
 .launchpad-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
-  gap: clamp(18px, 2.4vw, 30px);
-  width: min(1200px, 100%);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(20px, 2.6vw, 36px);
+  width: min(1280px, 100%);
+}
+
+@media (max-width: 900px) {
+  .launchpad-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .launchpad-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 24px 10px 20px;
+  gap: 18px;
+  padding: 28px 12px 24px;
   border-radius: 26px;
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.028);
@@ -2276,13 +2284,13 @@ button.calendar-cell {
 }
 
 .launchpad-icon {
-  width: 88px;
-  height: 88px;
-  border-radius: 24px;
+  width: clamp(96px, 9vw, 116px);
+  height: clamp(96px, 9vw, 116px);
+  border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36px;
+  font-size: clamp(40px, 3.6vw, 48px);
   font-weight: 800;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
@@ -2292,7 +2300,7 @@ button.calendar-cell {
 }
 
 .launchpad-name {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: 1px;
   text-align: center;
