@@ -205,7 +205,7 @@ export const useAppShellState = (): AppShellState => {
 
 type AppShellProps = {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   children: ReactNode;
   shellState: AppShellState;
   disableHomeButton?: boolean;
@@ -344,7 +344,7 @@ export function AppShell({
                   <h1 className="page-title">{title}</h1>
                   {tagText ? <span className={`pill ${tagTone}`}>{tagText}</span> : null}
                 </div>
-                <p className="page-subtitle">{subtitle}</p>
+                {subtitle ? <p className="page-subtitle">{subtitle}</p> : null}
               </div>
             </div>
             <div className="toolbar-right">
