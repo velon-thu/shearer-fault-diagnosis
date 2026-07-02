@@ -96,8 +96,12 @@ export default function LoginPage() {
       >
         <div className="login-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="中煤科工集团" className="login-brand-logo" src="/ccteg-logo.svg" />
-          <h1 className="login-brand-title">中煤科工上海故障诊断点检仪</h1>
+          <img alt="中煤科工集团 CCTEG" className="login-brand-logo" src="/ccteg-logo.png" />
+          <h1 className="login-brand-title">
+            上海天地
+            <br />
+            采煤机故障诊断点检仪
+          </h1>
         </div>
 
         <label className="login-field">
