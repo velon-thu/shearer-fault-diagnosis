@@ -445,6 +445,7 @@ export type SettingsVersionHistoryItem = z.infer<typeof SettingsVersionHistoryIt
 export type SettingsSnapshot = z.infer<typeof SettingsSnapshotSchema>;
 export type KeyValueField = z.infer<typeof KeyValueFieldSchema>;
 export type FaultCategory = z.infer<typeof FaultCategorySchema>;
+export type DeviceStatus = z.infer<typeof DeviceStatusSchema>;
 export type RankingSystemFilter = z.infer<typeof RankingSystemFilterSchema>;
 export type PumpAnalysisRange = z.infer<typeof PumpAnalysisRangeSchema>;
 export type CuttingAnalysisRange = z.infer<typeof CuttingAnalysisRangeSchema>;

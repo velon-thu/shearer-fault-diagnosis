@@ -44,7 +44,7 @@ import {
 import { initializeSqlite } from "./db/sqlite";
 import { readShmLive } from "./shm/live";
 import {
-  MockDataSourceAdapter,
+  DataplaneDataSourceAdapter,
   type DataSourceAdapter,
 } from "./ingest";
 
@@ -95,7 +95,7 @@ const getRangeWindow = (range: string) => {
 };
 
 export const buildApp = ({
-  adapter = new MockDataSourceAdapter(),
+  adapter = new DataplaneDataSourceAdapter(),
 }: {
   adapter?: DataSourceAdapter;
 } = {}) => {
