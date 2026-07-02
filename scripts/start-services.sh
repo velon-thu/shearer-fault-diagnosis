@@ -1,19 +1,37 @@
 #!/usr/bin/env bash
 # 一键启动数据侧全部服务：org回放器 + 共享内存采集器 + ipc-api
 # 用法: pnpm services   （或 bash scripts/start-services.sh）
-# Ctrl+C 一次性停掉三个服务。
+# 残留的旧进程会被自动清理后再启动；Ctrl+C 一次性停掉三个服务。
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 export PATH="$HOME/.local/go/bin:$PATH"
 
-# 防止重复启动（两个回放器抢共享内存 / 两个采集器抢数据库都会出问题）
-for name in "bin/replayer" "bin/collector"; do
-  if pgrep -f "$name" > /dev/null 2>&1; then
-    echo "错误: 检测到 $name 已在运行，请先停掉旧进程（pkill -f $name）"
-    exit 1
+# ---- 自愈：清理残留旧进程（上次异常退出/重复启动都不用手动 pkill）----
+stop_stale() {
+  local pattern="$1" name="$2"
+  if pgrep -f "$pattern" > /dev/null 2>&1; then
+    echo "发现残留的${name}，自动停止…"
+    pkill -f "$pattern" 2> /dev/null || true
+    sleep 1
+    pkill -9 -f "$pattern" 2> /dev/null || true
   fi
-done
+}
+
+kill_port() {
+  local port="$1" name="$2" pids
+  pids=$(ss -tlnp 2> /dev/null | grep ":${port} " | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u | tr '\n' ' ' || true)
+  if [ -n "${pids// /}" ]; then
+    echo "端口 ${port} 被残留的${name}占用（PID: ${pids}），自动清理…"
+    kill ${pids} 2> /dev/null || true
+    sleep 1
+    kill -9 ${pids} 2> /dev/null || true
+  fi
+}
+
+stop_stale "bin/replayer" "回放器"
+stop_stale "bin/collector" "采集器"
+kill_port 18080 "ipc-api"
 
 DATAPLANE=services/dataplane
 BIN=$DATAPLANE/bin

@@ -5,11 +5,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# 3000 端口被占（多半是残留的旧 dev server）时给出明确提示
-if ss -tln 2> /dev/null | grep -q ":3000 "; then
-  echo "错误: 3000 端口已被占用，请先清理旧进程："
-  echo "  pkill -f 'next dev'"
-  exit 1
+# 3000 端口被残留的旧 dev server 占用时自动清理
+pids=$(ss -tlnp 2> /dev/null | grep ":3000 " | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u | tr '\n' ' ' || true)
+if [ -n "${pids// /}" ]; then
+  echo "端口 3000 被残留的旧 dev server 占用（PID: ${pids}），自动清理…"
+  kill ${pids} 2> /dev/null || true
+  sleep 1
+  kill -9 ${pids} 2> /dev/null || true
 fi
 
 pnpm --filter @shearer/contracts build > /dev/null
