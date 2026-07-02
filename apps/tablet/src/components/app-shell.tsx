@@ -361,8 +361,7 @@ export function AppShell({
           <div className="toolbar-inner">
             <div className="toolbar-left">
               {minimalHeader ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img alt="中煤科工集团 CCTEG" className="toolbar-logo" src="/ccteg-logo.png" />
+                <span className="toolbar-brand">上海天地</span>
               ) : (
                 <>
                   {disableHomeButton ? (

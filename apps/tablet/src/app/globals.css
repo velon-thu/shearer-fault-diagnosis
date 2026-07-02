@@ -2306,10 +2306,16 @@ button.calendar-cell {
   text-align: center;
 }
 
-/* 主页面顶栏左上角 LOGO */
-.toolbar-logo {
-  height: 54px;
-  width: auto;
-  border-radius: 12px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+/* 主页面顶栏左上角品牌字（色调融入深色背景） */
+.toolbar-brand {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  line-height: 1;
+  background: linear-gradient(180deg, rgba(178, 199, 230, 0.95), rgba(104, 130, 168, 0.75));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  user-select: none;
+  white-space: nowrap;
 }

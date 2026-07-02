@@ -237,7 +237,8 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
       tabletToIpc: "connected",
       hpc: toStatus(stateOf("hpc_comm_ok")),
       moc: toStatus(stateOf("moc_comm_ok")),
-      boc: bocRow ? (bocRow.value >= 2 ? "ok" : "error") : "offline",
+      // BOC 通讯状态取地址 2000（boc_comm_value），值 != 0 即正常
+      boc: bocRow ? (bocRow.value !== 0 ? "ok" : "error") : "offline",
       axi: toStatus(stateOf("axi_comm_ok")),
       wcr: toStatus(stateOf("wcr_comm_ok")),
       sgc: toStatus(stateOf("sgc_comm_ok")),
