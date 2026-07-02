@@ -33,20 +33,37 @@ const resolveHttpBase = () => {
   return `${protocol}//${window.location.host}`;
 };
 
-const HIDDEN_FAULTS_KEY = "shearer.faults.hidden";
+const FAULT_PREFS_KEY = "shearer.faults.prefs";
 
-const loadHiddenFaults = (): Set<number> => {
+// 状态类信息（非故障）默认隐藏：type=0 提示类，或名称明显是运行状态
+const STATUS_NAME_RE = /运行中|输出转矩|连接OK|接通。|已就绪/;
+
+type FaultPrefs = { hidden: Set<number>; shown: Set<number> };
+
+const loadFaultPrefs = (): FaultPrefs => {
   try {
-    const raw = window.localStorage.getItem(HIDDEN_FAULTS_KEY);
-    return raw ? new Set(JSON.parse(raw) as number[]) : new Set();
+    const raw = window.localStorage.getItem(FAULT_PREFS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { hidden?: number[]; shown?: number[] };
+      return { hidden: new Set(parsed.hidden ?? []), shown: new Set(parsed.shown ?? []) };
+    }
+    // 兼容旧格式（纯隐藏数组）
+    const legacy = window.localStorage.getItem("shearer.faults.hidden");
+    if (legacy) {
+      return { hidden: new Set(JSON.parse(legacy) as number[]), shown: new Set() };
+    }
   } catch {
-    return new Set();
+    // 解析失败当作无配置
   }
+  return { hidden: new Set(), shown: new Set() };
 };
 
-const saveHiddenFaults = (hidden: Set<number>) => {
+const saveFaultPrefs = (prefs: FaultPrefs) => {
   try {
-    window.localStorage.setItem(HIDDEN_FAULTS_KEY, JSON.stringify([...hidden]));
+    window.localStorage.setItem(
+      FAULT_PREFS_KEY,
+      JSON.stringify({ hidden: [...prefs.hidden], shown: [...prefs.shown] }),
+    );
   } catch {
     // 存储不可用时本次会话内仍生效
   }
@@ -159,13 +176,14 @@ export default function RankingsPage() {
   const [rankings, setRankings] = useState<RankingsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [faultRules, setFaultRules] = useState<FaultRuleItem[]>([]);
-  const [hiddenFaults, setHiddenFaults] = useState<Set<number>>(new Set());
+  const [faultPrefs, setFaultPrefs] = useState<FaultPrefs>({ hidden: new Set(), shown: new Set() });
   const [faultSearch, setFaultSearch] = useState("");
+  const [page, setPage] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 数据窗口 + 故障目录 + 本机隐藏配置
   useEffect(() => {
-    setHiddenFaults(loadHiddenFaults());
+    setFaultPrefs(loadFaultPrefs());
 
     let cancelled = false;
     const init = async () => {
@@ -216,16 +234,32 @@ export default function RankingsPage() {
     }
   };
 
-  // 隐藏配置：按故障名过滤排名条目
+  // 生效的隐藏集合：状态类默认隐藏 + 手动隐藏 − 手动重新打开
+  const effectiveHidden = useMemo(() => {
+    const result = new Set<number>();
+    for (const rule of faultRules) {
+      if (rule.type === 0 || STATUS_NAME_RE.test(rule.name)) {
+        result.add(rule.code);
+      }
+    }
+    for (const code of faultPrefs.hidden) {
+      result.add(code);
+    }
+    for (const code of faultPrefs.shown) {
+      result.delete(code);
+    }
+    return result;
+  }, [faultRules, faultPrefs]);
+
   const hiddenNames = useMemo(() => {
     const names = new Set<string>();
     for (const rule of faultRules) {
-      if (hiddenFaults.has(rule.code)) {
+      if (effectiveHidden.has(rule.code)) {
         names.add(rule.name);
       }
     }
     return names;
-  }, [faultRules, hiddenFaults]);
+  }, [faultRules, effectiveHidden]);
 
   // 过滤隐藏故障后计算占比（分母 = 剩余故障的发生总次数）
   const shownRankings = useMemo(() => {
@@ -237,15 +271,22 @@ export default function RankingsPage() {
     }));
   }, [rankings, hiddenNames]);
 
+  const PAGE_SIZE = 5;
+  const totalPages = Math.max(1, Math.ceil(shownRankings.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const pagedRankings = shownRankings.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
   const toggleFault = (code: number) => {
-    setHiddenFaults((current) => {
-      const next = new Set(current);
-      if (next.has(code)) {
-        next.delete(code);
+    setFaultPrefs((current) => {
+      const next: FaultPrefs = { hidden: new Set(current.hidden), shown: new Set(current.shown) };
+      if (effectiveHidden.has(code)) {
+        next.shown.add(code);
+        next.hidden.delete(code);
       } else {
-        next.add(code);
+        next.hidden.add(code);
+        next.shown.delete(code);
       }
-      saveHiddenFaults(next);
+      saveFaultPrefs(next);
       return next;
     });
   };
@@ -327,7 +368,7 @@ export default function RankingsPage() {
               <div className="empty">没有匹配的故障条目。</div>
             ) : (
               shownRules.map((rule) => {
-                const isShown = !hiddenFaults.has(rule.code);
+                const isShown = !effectiveHidden.has(rule.code);
                 return (
                   <div className="sensor-toggle-row" key={rule.code}>
                     <div>
@@ -366,19 +407,22 @@ export default function RankingsPage() {
                     故障总排名
                   </h3>
                 </div>
+                <span className="rank-page-info">
+                  {safePage + 1} / {totalPages}
+                </span>
               </div>
               <div className="panel-body">
                 <div className="list">
                   {loading ? (
                     <div className="empty">正在加载排名数据...</div>
-                  ) : shownRankings.length === 0 ? (
+                  ) : pagedRankings.length === 0 ? (
                     <div className="empty">该时间段内暂无故障记录。</div>
                   ) : (
-                    shownRankings.map((item, index) => (
+                    pagedRankings.map((item, index) => (
                       <div className="rank-item" key={item.name}>
                         <div className="rank-left">
                           <div className="rank-top">
-                            <span className="rank-index">{index + 1}</span>
+                            <span className="rank-index">{safePage * PAGE_SIZE + index + 1}</span>
                             <div className="rank-name">{item.name}</div>
                           </div>
                         </div>
@@ -390,13 +434,25 @@ export default function RankingsPage() {
               </div>
             </div>
 
-            <div className="sensor-pager" style={{ justifyContent: "center" }}>
+            <div className="sensor-pager">
+              <button
+                onClick={() => setPage(Math.max(0, safePage - 1))}
+                type="button"
+              >
+                ‹ 上一页
+              </button>
               <button
                 className="sensor-settings-btn"
                 onClick={() => setView("settings")}
                 type="button"
               >
                 故障设置
+              </button>
+              <button
+                onClick={() => setPage(Math.min(totalPages - 1, safePage + 1))}
+                type="button"
+              >
+                下一页 ›
               </button>
             </div>
           </>

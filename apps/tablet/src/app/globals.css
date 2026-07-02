@@ -2776,8 +2776,40 @@ button.calendar-cell {
   font-variant-numeric: tabular-nums;
 }
 
-/* 故障总排名单列面板 */
+/* 故障总排名：全宽大条目（每页 5 条铺满屏幕） */
 .rank-total-panel {
-  width: min(920px, 100%);
-  margin: 0 auto;
+  width: 100%;
+}
+
+.rank-total-panel .list {
+  gap: 16px;
+}
+
+.rank-total-panel .rank-item {
+  min-height: clamp(88px, calc((100dvh - 420px) / 5), 132px);
+  padding: 0 30px;
+  border-radius: 22px;
+}
+
+.rank-total-panel .rank-index {
+  width: 46px;
+  height: 46px;
+  font-size: 21px;
+}
+
+.rank-total-panel .rank-name {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.rank-total-panel .rank-count {
+  font-size: 38px;
+  font-weight: 800;
+}
+
+.rank-page-info {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
 }
