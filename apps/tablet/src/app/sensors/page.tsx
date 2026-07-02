@@ -35,14 +35,25 @@ const resolveHttpBase = () => {
   return `${protocol}//${window.location.host}`;
 };
 
-// 类型页顺序（type 来自后端按单位推导；"数值"归入"其他"）
+// 类型页顺序（合并分组：压力/流量/油位、速度/位置；其余归"其他"）
 const TYPE_ORDER = [
-  "温度", "电流", "负荷", "压力", "流量", "油位",
-  "速度", "位置", "角度", "距离", "电压", "频率", "其他",
+  "温度", "电流", "负荷", "压力/流量/油位", "速度/位置", "角度", "其他",
 ] as const;
 
-const typeGroup = (type: string) =>
-  (TYPE_ORDER as readonly string[]).includes(type) ? type : "其他";
+const typeGroup = (sensor: { type: string; name: string }) => {
+  const t = sensor.type;
+  if (t === "温度" || t === "电流" || t === "负荷" || t === "角度") {
+    return t;
+  }
+  if (t === "压力" || t === "流量" || t === "油位") {
+    return "压力/流量/油位";
+  }
+  // 采高按需求归入 速度/位置
+  if (t === "速度" || t === "位置" || sensor.name.includes("采高")) {
+    return "速度/位置";
+  }
+  return "其他";
+};
 
 const HIDDEN_KEY = "shearer.sensors.hidden";
 
@@ -168,7 +179,7 @@ export default function SensorsPage() {
 
   // 存在数据的类型页列表
   const availableTypes = useMemo(() => {
-    const present = new Set(visible.map((s) => typeGroup(s.type)));
+    const present = new Set(visible.map((s) => typeGroup(s)));
     return TYPE_ORDER.filter((t) => present.has(t));
   }, [visible]);
 
@@ -191,7 +202,7 @@ export default function SensorsPage() {
             s.type.toLowerCase().includes(text)
           );
         })
-      : visible.filter((s) => typeGroup(s.type) === activeType);
+      : visible.filter((s) => typeGroup(s) === activeType);
     // 有效的排前面，失效的排后面（组内保持原顺序）
     return [...list].sort((a, b) => Number(b.valid) - Number(a.valid));
   }, [visible, searching, searchText, activeType]);
@@ -229,7 +240,7 @@ export default function SensorsPage() {
   const settingsGroups = useMemo(() => {
     const byType = new Map<string, SensorSummary[]>();
     for (const s of summaries) {
-      const key = typeGroup(s.type);
+      const key = typeGroup(s);
       const list = byType.get(key) ?? [];
       list.push(s);
       byType.set(key, list);
