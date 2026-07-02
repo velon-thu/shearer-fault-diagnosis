@@ -2775,3 +2775,9 @@ button.calendar-cell {
   color: var(--text-2);
   font-variant-numeric: tabular-nums;
 }
+
+/* 故障总排名单列面板 */
+.rank-total-panel {
+  width: min(920px, 100%);
+  margin: 0 auto;
+}

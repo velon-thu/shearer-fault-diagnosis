@@ -6,9 +6,7 @@ import {
   RankingsResponseSchema,
   createApiSuccessResponseSchema,
   type FaultRuleItem,
-  type RankingItem,
   type RankingsResponse,
-  type RankingSystemFilter,
 } from "@shearer/contracts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
@@ -34,13 +32,6 @@ const resolveHttpBase = () => {
 
   return `${protocol}//${window.location.host}`;
 };
-
-const systemOptions: Array<{ label: string; value: RankingSystemFilter }> = [
-  { label: "全部", value: "all" },
-  { label: "液压", value: "hydraulic" },
-  { label: "截割", value: "cutting" },
-  { label: "牵引", value: "traction" },
-];
 
 const HIDDEN_FAULTS_KEY = "shearer.faults.hidden";
 
@@ -157,49 +148,6 @@ function DualRangeSlider({ minMs, maxMs, fromMs, toMs, onChange }: DualRangeSlid
   );
 }
 
-type RankingPanelProps = {
-  items: RankingItem[];
-  loading: boolean;
-  title: string;
-};
-
-function RankingPanel({ items, loading, title }: RankingPanelProps) {
-  return (
-    <div className="panel">
-      <div className="panel-head">
-        <div>
-          <h3 className="panel-title">
-            <span className="accent-bar" />
-            {title}
-          </h3>
-        </div>
-      </div>
-      <div className="panel-body">
-        <div className="list">
-          {loading ? (
-            <div className="empty">正在加载排名数据...</div>
-          ) : items.length === 0 ? (
-            <div className="empty">该时间段内暂无记录。</div>
-          ) : (
-            items.map((item, index) => (
-              <div className="rank-item" key={`${item.name}-${item.lastOccurredAt}`}>
-                <div className="rank-left">
-                  <div className="rank-top">
-                    <span className="rank-index">{index + 1}</span>
-                    <div className="rank-name">{item.name}</div>
-                  </div>
-                  <div className="meta-line">最近一次 {item.lastOccurredAt}</div>
-                </div>
-                <div className="rank-count">{item.count} 次</div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 type ViewMode = "range" | "list" | "settings";
 
 export default function RankingsPage() {
@@ -208,7 +156,6 @@ export default function RankingsPage() {
   const [dataWindow, setDataWindow] = useState<{ min: number; max: number } | null>(null);
   const [fromMs, setFromMs] = useState(0);
   const [toMs, setToMs] = useState(0);
-  const [system, setSystem] = useState<RankingSystemFilter>("all");
   const [rankings, setRankings] = useState<RankingsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [faultRules, setFaultRules] = useState<FaultRuleItem[]>([]);
@@ -252,14 +199,10 @@ export default function RankingsPage() {
     };
   }, []);
 
-  const loadRankings = async (
-    nextFrom: number,
-    nextTo: number,
-    nextSystem: RankingSystemFilter,
-  ) => {
+  const loadRankings = async (nextFrom: number, nextTo: number) => {
     try {
       setLoading(true);
-      const query = `start=${fmtDate(nextFrom)}&end=${fmtDate(nextTo)}&system=${nextSystem}&from=${nextFrom}&to=${nextTo}`;
+      const query = `start=${fmtDate(nextFrom)}&end=${fmtDate(nextTo)}&system=all&from=${nextFrom}&to=${nextTo}`;
       const response = await fetch(`${resolveHttpBase()}/api/rankings?${query}`, {
         cache: "no-store",
       });
@@ -284,7 +227,15 @@ export default function RankingsPage() {
     return names;
   }, [faultRules, hiddenFaults]);
 
-  const filterItems = (items: RankingItem[]) => items.filter((i) => !hiddenNames.has(i.name));
+  // 过滤隐藏故障后计算占比（分母 = 剩余故障的发生总次数）
+  const shownRankings = useMemo(() => {
+    const items = (rankings?.systemFaultRankings ?? []).filter((i) => !hiddenNames.has(i.name));
+    const total = items.reduce((sum, i) => sum + i.count, 0);
+    return items.map((i) => ({
+      name: i.name,
+      sharePct: total > 0 ? Number(((i.count / total) * 100).toFixed(1)) : 0,
+    }));
+  }, [rankings, hiddenNames]);
 
   const toggleFault = (code: number) => {
     setHiddenFaults((current) => {
@@ -345,7 +296,7 @@ export default function RankingsPage() {
                   className="range-picker-confirm"
                   onClick={() => {
                     setView("list");
-                    void loadRankings(fromMs, toMs, system);
+                    void loadRankings(fromMs, toMs);
                   }}
                   type="button"
                 >
@@ -396,7 +347,7 @@ export default function RankingsPage() {
             )}
           </>
         ) : (
-          /* ===== 排名列表 ===== */
+          /* ===== 排名列表：普通故障总排名（按占比） ===== */
           <>
             <div className="sensor-topbar">
               <button className="sensor-back-btn" onClick={() => setView("range")} type="button">
@@ -405,39 +356,38 @@ export default function RankingsPage() {
               <span className="range-picker-current">
                 {fmtDateTime(fromMs)} → {fmtDateTime(toMs)}
               </span>
-              <div className="sensor-type-bar" style={{ margin: 0, marginLeft: "auto" }}>
-                {systemOptions.map((option) => (
-                  <button
-                    className={`sensor-type-chip${system === option.value ? " active" : ""}`}
-                    key={option.value}
-                    onClick={() => {
-                      setSystem(option.value);
-                      void loadRankings(fromMs, toMs, option.value);
-                    }}
-                    type="button"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
             </div>
 
-            <div className="grid-3">
-              <RankingPanel
-                items={filterItems(rankings?.systemFaultRankings ?? [])}
-                loading={loading}
-                title="系统故障排名"
-              />
-              <RankingPanel
-                items={filterItems(rankings?.inverterFaultRankings ?? [])}
-                loading={loading}
-                title="变频器故障排名"
-              />
-              <RankingPanel
-                items={filterItems(rankings?.sensorFaultRankings ?? [])}
-                loading={loading}
-                title="传感器故障排名"
-              />
+            <div className="panel rank-total-panel">
+              <div className="panel-head">
+                <div>
+                  <h3 className="panel-title">
+                    <span className="accent-bar" />
+                    故障总排名
+                  </h3>
+                </div>
+              </div>
+              <div className="panel-body">
+                <div className="list">
+                  {loading ? (
+                    <div className="empty">正在加载排名数据...</div>
+                  ) : shownRankings.length === 0 ? (
+                    <div className="empty">该时间段内暂无故障记录。</div>
+                  ) : (
+                    shownRankings.map((item, index) => (
+                      <div className="rank-item" key={item.name}>
+                        <div className="rank-left">
+                          <div className="rank-top">
+                            <span className="rank-index">{index + 1}</span>
+                            <div className="rank-name">{item.name}</div>
+                          </div>
+                        </div>
+                        <div className="rank-count">{item.sharePct}%</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="sensor-pager" style={{ justifyContent: "center" }}>

@@ -565,39 +565,29 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
         const endMs = params.toMs ?? new Date(`${params.end}T23:59:59.999`).getTime();
         const rows = db
           .prepare(
-            `SELECT fr.name AS name, fr.kind AS kind, COUNT(*) AS cnt, MAX(fn.occur_ts) AS last_ts
+            `SELECT fr.name AS name, COUNT(*) AS cnt, MAX(fn.occur_ts) AS last_ts
              FROM fault_normal fn JOIN fault_rule fr ON fr.fault_code = fn.fault_code
              WHERE fn.occur_ts BETWEEN ? AND ?
              GROUP BY fn.fault_code ORDER BY cnt DESC`,
           )
           .all(startMs, endMs) as unknown as Array<{
           name: string;
-          kind: number;
           cnt: number;
           last_ts: number;
         }>;
 
-        const inSystemFilter = (name: string) =>
-          params.system === "all" || faultKeywordSystem(name) === params.system;
-
-        const toItem = (r: { name: string; cnt: number; last_ts: number }) => ({
-          name: r.name,
-          count: r.cnt,
-          lastOccurredAt: fmtTs(r.last_ts),
-        });
-
-        const filtered = rows.filter((r) => inSystemFilter(r.name));
+        // 普通故障总排名（完整列表，占比由前端按显示配置过滤后计算）
         return {
           start: params.start,
           end: params.end,
           system: params.system,
-          // kind: 1变频器 4传感器，其余归系统故障
-          systemFaultRankings: filtered
-            .filter((r) => r.kind !== 1 && r.kind !== 4)
-            .slice(0, 10)
-            .map(toItem),
-          inverterFaultRankings: filtered.filter((r) => r.kind === 1).slice(0, 10).map(toItem),
-          sensorFaultRankings: filtered.filter((r) => r.kind === 4).slice(0, 10).map(toItem),
+          systemFaultRankings: rows.map((r) => ({
+            name: r.name,
+            count: r.cnt,
+            lastOccurredAt: fmtTs(r.last_ts),
+          })),
+          inverterFaultRankings: [],
+          sensorFaultRankings: [],
         };
       },
       () => super.getRankings(params),
