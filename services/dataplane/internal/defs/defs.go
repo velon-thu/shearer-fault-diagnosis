@@ -66,10 +66,16 @@ func (e OrgExpr) Eval(r *orgfile.Record) uint16 {
 	case "bitrange":
 		width := e.BitHi - e.BitLo + 1
 		return (r.Col(e.Col) >> e.BitLo) & uint16((1<<width)-1)
+	case "const": // 固定值（展示性覆盖用）
+		return uint16(e.Col)
 	default: // none
 		return 0
 	}
 }
+
+// DefaultSyncOrgTsMs 回放同步点：org 时间 2026-06-30 00:00:00 (+08:00)。
+// 该点之前 24h 由 collector 预载入库，之后由 replayer 直播灌入。
+const DefaultSyncOrgTsMs int64 = 1782748800000
 
 // SensorDef 值型变量定义（sensor_data_defi）。
 type SensorDef struct {
@@ -185,6 +191,10 @@ func (d *Defs) WritePlan() []WriteInstr {
 		plan = append(plan, WriteInstr{g.AddrHi, OrgExpr{Kind: "val", Col: g.OrgHi}})
 		plan = append(plan, WriteInstr{g.AddrLo, OrgExpr{Kind: "val", Col: g.OrgLo}})
 	}
+	// 展示性覆盖（追加在最后，覆盖前面的映射写入）：
+	// 现有 org 数据源第 285 列（BOC 通讯值，地址 2000）几乎全程为 0，
+	// 为满足"启动即 BOC 正常"的演示需求，固定写 1。接入真实数据源后删除。
+	plan = append(plan, WriteInstr{2000, OrgExpr{Kind: "const", Col: 1}})
 	return plan
 }
 

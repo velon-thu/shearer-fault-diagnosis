@@ -29,6 +29,7 @@ func main() {
 		dir      = flag.String("dir", "testdata", "org 文件目录")
 		interval = flag.Duration("interval", 100*time.Millisecond, "每条记录写入间隔")
 		loop     = flag.Bool("loop", false, "播完后从头循环")
+		startTs  = flag.Int64("start-org-ts", defs.DefaultSyncOrgTsMs, "起播 org 毫秒时间戳（之前的记录跳过，由 collector 预载）")
 	)
 	flag.Parse()
 
@@ -71,6 +72,19 @@ replay:
 				log.Fatalf("解析 %s: %v", path, err)
 			}
 			records = orgfile.Clean(records)
+			if *startTs > 0 {
+				kept := records[:0]
+				for _, r := range records {
+					if r.TimestampMs >= *startTs {
+						kept = append(kept, r)
+					}
+				}
+				records = kept
+			}
+			if len(records) == 0 {
+				log.Printf("[%d/%d] %s：全部早于起播点，跳过", fi+1, len(files), filepath.Base(path))
+				continue
+			}
 			mem.Set(shm.MetaFileIndex, uint16(fi+1))
 			log.Printf("[%d/%d] %s：%d 条记录（约 %s 播完）",
 				fi+1, len(files), filepath.Base(path), len(records),

@@ -405,7 +405,7 @@ export function AppShell({
                   <div className={`status-chip ${chip.tone}`} key={chip.label}>
                     <span className="status-dot" />
                     <span>
-                      {chip.label} {chip.value}
+                      {minimalHeader ? chip.label : `${chip.label} ${chip.value}`}
                     </span>
                   </div>
                 ))}

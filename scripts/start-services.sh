@@ -25,11 +25,25 @@ echo "[1/4] 编译数据面程序…"
 echo "[2/4] 构建 contracts…"
 pnpm --filter @shearer/contracts build > /dev/null
 
-echo "[3/4] 启动 replayer + collector（日志在 logs/ 下）…"
+echo "[3/4] 启动 collector（清库+预载历史数据）…"
+"$BIN/collector" -db "$DATAPLANE/data/shearer.db" -dir testdata > logs/collector.log 2>&1 &
+COLLECTOR_PID=$!
+
+# 等预载完成再起回放器，保证"历史→直播"无缝衔接
+for _ in $(seq 1 90); do
+  if grep -q "预载完成" logs/collector.log 2> /dev/null; then
+    break
+  fi
+  if ! kill -0 "$COLLECTOR_PID" 2> /dev/null; then
+    echo "错误: collector 提前退出，见 logs/collector.log"
+    exit 1
+  fi
+  sleep 1
+done
+
+echo "      预载完成，启动 replayer（从同步点直播续灌）…"
 "$BIN/replayer" -dir testdata -interval 100ms > logs/replayer.log 2>&1 &
 REPLAYER_PID=$!
-"$BIN/collector" -db "$DATAPLANE/data/shearer.db" > logs/collector.log 2>&1 &
-COLLECTOR_PID=$!
 
 cleanup() {
   echo ""
