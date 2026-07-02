@@ -2305,3 +2305,11 @@ button.calendar-cell {
   letter-spacing: 1px;
   text-align: center;
 }
+
+/* 主页面顶栏左上角 LOGO */
+.toolbar-logo {
+  height: 54px;
+  width: auto;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+}

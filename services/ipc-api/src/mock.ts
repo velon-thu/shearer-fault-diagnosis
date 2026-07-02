@@ -141,6 +141,11 @@ export const createConnectionStatus = (): ConnectionStatus => ({
   hpc: "ok",
   moc: "ok",
   boc: Math.random() > 0.65 ? "warn" : "ok",
+  axi: "ok",
+  wcr: "ok",
+  sgc: "ok",
+  bp1: "ok",
+  bp2: "ok",
   syncAt: new Date().toISOString(),
 });
 

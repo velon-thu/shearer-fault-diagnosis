@@ -26,6 +26,11 @@ const fallbackConnection: ConnectionStatus = {
   hpc: "offline",
   moc: "offline",
   boc: "offline",
+  axi: "offline",
+  wcr: "offline",
+  sgc: "offline",
+  bp1: "offline",
+  bp2: "offline",
   syncAt: "",
 };
 
@@ -234,31 +239,32 @@ export function AppShell({
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const statusChips = useMemo(
-    () => [
-      {
-        label: "平板↔工控机",
-        value: formatStatusText(connection.tabletToIpc),
-        tone: connection.tabletToIpc === "connected" ? "success" : "offline",
-      },
-      {
-        label: "HPC",
-        value: formatStatusText(connection.hpc),
-        tone: connection.hpc === "ok" ? "success" : connection.hpc,
-      },
-      {
-        label: "MOC",
-        value: formatStatusText(connection.moc),
-        tone: connection.moc === "ok" ? "success" : connection.moc,
-      },
-      {
-        label: "BOC",
-        value: formatStatusText(connection.boc),
-        tone: connection.boc === "ok" ? "success" : connection.boc,
-      },
-    ],
-    [connection],
-  );
+  const statusChips = useMemo(() => {
+    const device = (label: string, value: ConnectionStatus["hpc"]) => ({
+      label,
+      value: formatStatusText(value),
+      tone: value === "ok" ? "success" : value,
+    });
+    const link = {
+      label: "平板↔工控机",
+      value: formatStatusText(connection.tabletToIpc),
+      tone: connection.tabletToIpc === "connected" ? "success" : "offline",
+    };
+    // 精简顶栏（主页面）：8 个模块通讯状态；普通页面：链路 + 三大主控
+    if (minimalHeader) {
+      return [
+        device("HPC", connection.hpc),
+        device("MOC", connection.moc),
+        device("BOC", connection.boc),
+        device("AXI", connection.axi),
+        device("WCR", connection.wcr),
+        device("SGC", connection.sgc),
+        device("BP1", connection.bp1),
+        device("BP2", connection.bp2),
+      ];
+    }
+    return [link, device("HPC", connection.hpc), device("MOC", connection.moc), device("BOC", connection.boc)];
+  }, [connection, minimalHeader]);
 
   useEffect(() => {
     let cancelled = false;
@@ -274,6 +280,18 @@ export function AppShell({
       };
     }
 
+    // 乐观放行：本地有 token 先直接渲染页面，后台异步校验，
+    // 失败才跳登录——避免每次导航都被"正在验证登录状态"卡一拍。
+    setAuthStatus("authenticated");
+    try {
+      const cachedUser = window.sessionStorage.getItem("shearer.auth.user");
+      if (cachedUser) {
+        setCurrentUser(JSON.parse(cachedUser) as AuthUser);
+      }
+    } catch {
+      // sessionStorage 不可用时忽略，仅影响用户名展示
+    }
+
     const verifySession = async () => {
       try {
         const session = await fetchAuthMe(accessToken);
@@ -283,13 +301,22 @@ export function AppShell({
         }
 
         setCurrentUser(session.user);
-        setAuthStatus("authenticated");
+        try {
+          window.sessionStorage.setItem("shearer.auth.user", JSON.stringify(session.user));
+        } catch {
+          // 忽略存储失败
+        }
       } catch {
         if (cancelled) {
           return;
         }
 
         clearStoredAuthSession();
+        try {
+          window.sessionStorage.removeItem("shearer.auth.user");
+        } catch {
+          // 忽略
+        }
         setCurrentUser(null);
         setAuthStatus("redirecting");
         router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
@@ -333,7 +360,10 @@ export function AppShell({
         <header className="toolbar">
           <div className="toolbar-inner">
             <div className="toolbar-left">
-              {minimalHeader ? null : (
+              {minimalHeader ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img alt="中煤科工集团 CCTEG" className="toolbar-logo" src="/ccteg-logo.png" />
+              ) : (
                 <>
                   {disableHomeButton ? (
                     <span aria-current="page" className="home-btn is-current">
@@ -372,10 +402,7 @@ export function AppShell({
                 </button>
               </div>
               <div className="status-cluster">
-                {(minimalHeader
-                  ? statusChips.filter((chip) => chip.label !== "平板↔工控机")
-                  : statusChips
-                ).map((chip) => (
+                {statusChips.map((chip) => (
                   <div className={`status-chip ${chip.tone}`} key={chip.label}>
                     <span className="status-dot" />
                     <span>

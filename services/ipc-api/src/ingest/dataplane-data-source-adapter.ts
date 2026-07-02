@@ -238,6 +238,11 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
       hpc: toStatus(stateOf("hpc_comm_ok")),
       moc: toStatus(stateOf("moc_comm_ok")),
       boc: bocRow ? (bocRow.value >= 2 ? "ok" : "error") : "offline",
+      axi: toStatus(stateOf("axi_comm_ok")),
+      wcr: toStatus(stateOf("wcr_comm_ok")),
+      sgc: toStatus(stateOf("sgc_comm_ok")),
+      bp1: toStatus(stateOf("bp1_comm_ok")),
+      bp2: toStatus(stateOf("bp2_comm_ok")),
       syncAt: new Date().toISOString(),
     };
   }

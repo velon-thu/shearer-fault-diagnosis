@@ -13,6 +13,11 @@ export const ConnectionStatusSchema = z.object({
   hpc: DeviceStatusSchema,
   moc: DeviceStatusSchema,
   boc: DeviceStatusSchema,
+  axi: DeviceStatusSchema,
+  wcr: DeviceStatusSchema,
+  sgc: DeviceStatusSchema,
+  bp1: DeviceStatusSchema,
+  bp2: DeviceStatusSchema,
   syncAt: z.string().datetime(),
 });
 
