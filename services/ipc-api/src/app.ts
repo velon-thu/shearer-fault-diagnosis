@@ -30,6 +30,7 @@ import {
   SensorTrendPointSchema,
   SensorTrendQuerySchema,
   SettingsSnapshotSchema,
+  ShmLiveResponseSchema,
   TractionAnalysisQuerySchema,
   TractionAnalysisResponseSchema,
   WeeklyEventSchema,
@@ -41,6 +42,7 @@ import {
   logoutMockAuth,
 } from "./mock";
 import { initializeSqlite } from "./db/sqlite";
+import { readShmLive } from "./shm/live";
 import {
   MockDataSourceAdapter,
   type DataSourceAdapter,
@@ -65,6 +67,7 @@ const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysi
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
 const TractionAnalysisApiResponseSchema = createApiSuccessResponseSchema(TractionAnalysisResponseSchema);
 const HealthApiResponseSchema = createApiSuccessResponseSchema(HealthResponseSchema);
+const ShmLiveApiResponseSchema = createApiSuccessResponseSchema(ShmLiveResponseSchema);
 
 const getBearerToken = (authorizationHeader?: string) => {
   if (!authorizationHeader) {
@@ -115,6 +118,13 @@ export const buildApp = ({
         status: "ok",
         timestamp: new Date().toISOString(),
       },
+    }),
+  );
+
+  app.get("/api/shm/live", async () =>
+    ShmLiveApiResponseSchema.parse({
+      success: true,
+      data: readShmLive(),
     }),
   );
 

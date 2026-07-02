@@ -31,6 +31,7 @@ const homeNavItems = [
   { label: "日常检修打卡", href: null, icon: "检" },
   { label: "知识库", href: "/knowledge", icon: "知" },
   { label: "运行循环图", href: "/run-cycle", icon: "循" },
+  { label: "共享内存监视", href: "/shm-monitor", icon: "存" },
   { label: "系统设置", href: "/settings", icon: "设" },
 ] as const;
 

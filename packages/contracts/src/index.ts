@@ -289,6 +289,60 @@ export const SettingsSnapshotSchema = z.object({
   networkInfoData: z.array(KeyValueFieldSchema),
 });
 
+// ===== 共享内存监视（/api/shm/live） =====
+export const ShmVariableSchema = z.object({
+  add: z.number(),
+  kind: z.enum(["sensor", "status"]),
+  category: z.string(),
+  name: z.string(),
+  stdTag: z.string(),
+  org: z.string(), // ORG 映射表达式，空串=未映射（恒 0）
+  raw: z.number(), // 共享内存原始 uint16
+  value: z.number(), // sensor=工程值(原始×accuracy)，status=0/1
+  unit: z.string(),
+  sheet: z.string(),
+});
+
+export const ShmOpsGroupSchema = z.object({
+  groupNo: z.number(),
+  sourceName: z.string(),
+  sourceType: z.string(), // 输入/输出
+  hex: z.string(), // 32 位操作码，如 0x00000200
+  activeOps: z.array(z.string()), // 当前为 1 的指令名
+});
+
+export const ShmFaultSchema = z.object({
+  code: z.number(),
+  name: z.string(),
+  trigger: z.string(), // bit / bit_inv / eq:N / neq:N
+  raw: z.number(),
+  active: z.boolean(),
+});
+
+export const ShmFifoSchema = z.object({
+  module: z.string(), // BOC/HPC/MOC
+  words: z.array(z.number()).length(4),
+});
+
+export const ShmLiveMetaSchema = z.object({
+  heartbeat: z.number(),
+  records: z.number(), // 回放器已写记录总数
+  fileIndex: z.number(),
+  fileTotal: z.number(),
+  intervalMs: z.number(),
+  replayerAlive: z.boolean(), // 心跳近 3 秒内有变化
+});
+
+export const ShmLiveResponseSchema = z.object({
+  available: z.boolean(), // 共享内存是否存在
+  shmName: z.string(),
+  meta: ShmLiveMetaSchema.nullable(),
+  variables: ShmVariableSchema.array(),
+  ops: ShmOpsGroupSchema.array(),
+  faults: ShmFaultSchema.array(),
+  fifos: ShmFifoSchema.array(),
+});
+
 export const ApiSuccessResponseSchema = z.object({
   success: z.literal(true),
   data: z.unknown(),
@@ -397,6 +451,12 @@ export type CuttingAnalysisRange = z.infer<typeof CuttingAnalysisRangeSchema>;
 export type TractionAnalysisRange = z.infer<typeof TractionAnalysisRangeSchema>;
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
 export type LiveMessage = z.infer<typeof LiveMessageSchema>;
+export type ShmVariable = z.infer<typeof ShmVariableSchema>;
+export type ShmOpsGroup = z.infer<typeof ShmOpsGroupSchema>;
+export type ShmFault = z.infer<typeof ShmFaultSchema>;
+export type ShmFifo = z.infer<typeof ShmFifoSchema>;
+export type ShmLiveMeta = z.infer<typeof ShmLiveMetaSchema>;
+export type ShmLiveResponse = z.infer<typeof ShmLiveResponseSchema>;
 export type ApiSuccessResponse<T> = {
   success: true;
   data: T;
