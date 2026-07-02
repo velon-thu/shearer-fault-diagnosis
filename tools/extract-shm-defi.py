@@ -33,14 +33,11 @@ REMOTE_OPS_CSV = "/mnt/c/Users/wu_ve/Desktop/shearer-remote-ops/server/backend/i
 # ---------------------------------------------------------------------------
 ADDR_TAGS = {
     # ===== 电机 sheet =====
-    0: "left_cutter_a_current_u", 1: "left_cutter_a_current_v", 2: "left_cutter_a_current_w",
-    3: "left_cutter_a_load_pct", 4: "left_cutter_a_temp",
-    5: "left_cutter_b_current_u", 6: "left_cutter_b_current_v", 7: "left_cutter_b_current_w",
-    8: "left_cutter_b_load_pct", 9: "left_cutter_b_temp",
-    10: "right_cutter_a_current_u", 11: "right_cutter_a_current_v", 12: "right_cutter_a_current_w",
-    13: "right_cutter_a_load_pct", 14: "right_cutter_a_temp",
-    15: "right_cutter_b_current_u", 16: "right_cutter_b_current_v", 17: "right_cutter_b_current_w",
-    18: "right_cutter_b_load_pct", 19: "right_cutter_b_temp",
+    0: "left_cutter_current_u", 1: "left_cutter_current_v", 2: "left_cutter_current_w",
+    3: "left_cutter_load_pct", 4: "left_cutter_temp",
+    # 5~9 左截割电机B、15~19 右截割电机B：按需求剔除（矿方无 B 电机配置）
+    10: "right_cutter_current_u", 11: "right_cutter_current_v", 12: "right_cutter_current_w",
+    13: "right_cutter_load_pct", 14: "right_cutter_temp",
     20: "left_haul_current_u", 21: "left_haul_current_v", 22: "left_haul_current_w",
     23: "left_haul_load_pct", 24: "left_haul_temp",
     25: "right_haul_current_u", 26: "right_haul_current_v", 27: "right_haul_current_w",
@@ -202,6 +199,11 @@ def main():
         for d in sheets[sheet_name]:
             addr, name = d["地址"], d["名称"]
             category = str(d.get("部件") or d.get("位置") or "系统").strip()
+            # 按需求剔除 B 系列电机测点，A 系列去掉后缀（左截割A温度→左截割温度）
+            if category in ("左截割电机B", "右截割电机B"):
+                continue
+            category = category.replace("电机A", "电机")
+            name = name.replace("截割A", "截割")
             kind, col, blo, bhi, inv = parse_org(d.get("ORG"))
             tag = ADDR_TAGS.get(addr)
             if tag is None:

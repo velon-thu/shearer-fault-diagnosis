@@ -528,12 +528,12 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           // [展示名, std_tag, 颜色]
           ["采煤机速度", "left_speed_measured", "#48c7ff"],
           ["采煤机位置", "left_position", "#8ad3ff"],
-          ["左截割电机温度", "left_cutter_a_temp", "#ffb14a"],
-          ["右截割电机温度", "right_cutter_a_temp", "#f7d65c"],
-          ["左截割电机电流", "left_cutter_a_current_u", "#4f8cff"],
-          ["右截割电机电流", "right_cutter_a_current_u", "#7fa8ff"],
-          ["左截割负荷", "left_cutter_a_load_pct", "#ff8a5c"],
-          ["右截割负荷", "right_cutter_a_load_pct", "#ffad85"],
+          ["左截割电机温度", "left_cutter_temp", "#ffb14a"],
+          ["右截割电机温度", "right_cutter_temp", "#f7d65c"],
+          ["左截割电机电流", "left_cutter_current_u", "#4f8cff"],
+          ["右截割电机电流", "right_cutter_current_u", "#7fa8ff"],
+          ["左截割负荷", "left_cutter_load_pct", "#ff8a5c"],
+          ["右截割负荷", "right_cutter_load_pct", "#ffad85"],
           ["左牵引电机电流", "left_haul_current_u", "#38d889"],
           ["右牵引电机电流", "right_haul_current_u", "#6fe3a8"],
           ["泵电机温度", "left_pump_temp", "#9f86ff"],
@@ -775,10 +775,10 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
         const buckets = 24;
         const step = (now - from) / buckets;
         const motor: Array<[string, string, string]> = [
-          ["左截割A负荷", "left_cutter_a_load_pct", "#4f8cff"],
-          ["右截割A负荷", "right_cutter_a_load_pct", "#48c7ff"],
-          ["左截割A温度", "left_cutter_a_temp", "#ffb14a"],
-          ["右截割A温度", "right_cutter_a_temp", "#f7d65c"],
+          ["左截割负荷", "left_cutter_load_pct", "#4f8cff"],
+          ["右截割负荷", "right_cutter_load_pct", "#48c7ff"],
+          ["左截割温度", "left_cutter_temp", "#ffb14a"],
+          ["右截割温度", "right_cutter_temp", "#f7d65c"],
         ];
         const arm: Array<[string, string, string]> = [
           ["左摇臂温度", "left_arm_temp", "#ff8a5c"],
@@ -798,10 +798,8 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           motorSeries: motor.map(mk),
           armSeries: arm.map(mk),
           stats: [
-            this.partStats(db, "左截割电机A", "left_cutter_a_load_pct", "left_cutter_a_temp", from, now),
-            this.partStats(db, "左截割电机B", "left_cutter_b_load_pct", "left_cutter_b_temp", from, now),
-            this.partStats(db, "右截割电机A", "right_cutter_a_load_pct", "right_cutter_a_temp", from, now),
-            this.partStats(db, "右截割电机B", "right_cutter_b_load_pct", "right_cutter_b_temp", from, now),
+            this.partStats(db, "左截割电机", "left_cutter_load_pct", "left_cutter_temp", from, now),
+            this.partStats(db, "右截割电机", "right_cutter_load_pct", "right_cutter_temp", from, now),
           ],
           logs: this.actionLogs(db, ["左截启", "左截停", "右截启", "右截停"], from),
           alerts: faults.map(({ time, text }) => ({ time, text })),

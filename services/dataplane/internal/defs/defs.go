@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -91,12 +92,13 @@ type SensorDef struct {
 	Sheet    string
 }
 
-// Engineering 原始字 → 工程值。
+// Engineering 原始字 → 工程值（入库统一保留两位小数）。
 func (d *SensorDef) Engineering(raw uint16) float64 {
+	v := float64(raw)
 	if d.Signed {
-		return float64(int16(raw)) * d.Accuracy
+		v = float64(int16(raw))
 	}
-	return float64(raw) * d.Accuracy
+	return math.Round(v*d.Accuracy*100) / 100
 }
 
 // StatusDef 布尔变量定义（status_data_defi）。
