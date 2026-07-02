@@ -318,9 +318,6 @@ export default function RankingsPage() {
           /* ===== 第一步：大号时间范围选择 ===== */
           <div className="range-picker">
             <h1 className="range-picker-title">选择时间范围</h1>
-            <p className="range-picker-sub">
-              拖动两端滑块选择统计时间段（仅限数据库中有数据的范围）
-            </p>
             {dataWindow ? (
               <>
                 <div className="range-picker-values">
