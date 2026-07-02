@@ -15,11 +15,6 @@ const AuthLogoutApiResponseSchema = createApiSuccessResponseSchema(AuthLogoutRes
 
 const AUTH_SESSION_KEY = "cmTablet.auth.session";
 
-export const mockLoginHint = {
-  employeeNo: "CM10001",
-  password: "Coal2026!",
-};
-
 type StoredAuthSession = {
   accessToken: string;
   expiresAt: string;

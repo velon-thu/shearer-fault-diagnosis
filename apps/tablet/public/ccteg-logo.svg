@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="中煤科工集团">
+  <!-- 占位 LOGO：拿到中煤科工集团官方 LOGO 文件后，同名替换本文件即可 -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f7bd6"/>
+      <stop offset="1" stop-color="#1a4f9c"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="url(#g)"/>
+  <circle cx="60" cy="60" r="56" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+  <!-- 球形经纬线 -->
+  <ellipse cx="60" cy="60" rx="52" ry="20" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="3" transform="rotate(-18 60 60)"/>
+  <ellipse cx="60" cy="60" rx="52" ry="34" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2" transform="rotate(-18 60 60)"/>
+  <circle cx="60" cy="60" r="17" fill="#ffffff"/>
+  <circle cx="60" cy="60" r="17" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1"/>
+  <text x="60" y="69" text-anchor="middle" font-family="'Noto Sans SC','Microsoft YaHei',sans-serif" font-size="24" font-weight="700" fill="#1a4f9c">煤</text>
+</svg>

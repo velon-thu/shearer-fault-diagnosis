@@ -60,14 +60,14 @@ type FaultDictionaryEntry = {
 type FaultDictionary = Record<FaultCategory, Record<string, FaultDictionaryEntry>>;
 
 const mockAuthUser: AuthUser = {
-  employeeNo: "CM10001",
-  displayName: "张工",
+  employeeNo: "tiandi",
+  displayName: "点检员",
   role: "operator",
 };
 
 const mockAuthCredentials: AuthLoginRequest = {
-  employeeNo: "CM10001",
-  password: "Coal2026!",
+  employeeNo: "tiandi",
+  password: "tiandi",
 };
 
 const authSessions = new Map<
