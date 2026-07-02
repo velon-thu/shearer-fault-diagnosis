@@ -83,15 +83,23 @@ const getBearerToken = (authorizationHeader?: string) => {
   return token;
 };
 
+const RANGE_MS: Record<string, number> = {
+  "10m": 10 * 60 * 1000,
+  "1h": 60 * 60 * 1000,
+  "6h": 6 * 60 * 60 * 1000,
+  "24h": 24 * 60 * 60 * 1000,
+};
+
 const getRangeWindow = (range: string) => {
   const to = new Date();
-  const hours = range === "24h" ? 24 : 24;
-  const from = new Date(to.getTime() - hours * 60 * 60 * 1000);
 
-  return {
-    from,
-    to,
-  };
+  if (range === "all") {
+    // from=0 表示"数据库里该测点的全部数据"，由适配器按实际最早数据收窄
+    return { from: new Date(0), to };
+  }
+
+  const spanMs = RANGE_MS[range] ?? RANGE_MS["24h"];
+  return { from: new Date(to.getTime() - spanMs), to };
 };
 
 export const buildApp = ({

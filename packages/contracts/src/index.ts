@@ -380,8 +380,10 @@ export const SensorIdParamsSchema = z.object({
   id: z.string().min(1),
 });
 
+export const SensorTrendRangeSchema = z.enum(["10m", "1h", "6h", "24h", "all"]);
+
 export const SensorTrendQuerySchema = z.object({
-  range: z.enum(["24h"]).default("24h"),
+  range: SensorTrendRangeSchema.default("all"),
 });
 
 export const FaultCodeSearchQuerySchema = z.object({

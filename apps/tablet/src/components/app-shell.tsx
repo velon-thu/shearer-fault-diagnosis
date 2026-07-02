@@ -218,12 +218,15 @@ type AppShellProps = {
   tagTone?: "blue" | "green" | "orange" | "red";
   /** 精简顶栏（主页面用）：只保留退出登录 + HPC/MOC/BOC 状态灯 */
   minimalHeader?: boolean;
+  /** 子页面进入全屏子视图时隐藏悬浮"主页面"按钮 */
+  hideFloatingHome?: boolean;
 };
 
 export function AppShell({
   children,
   shellState,
   minimalHeader = false,
+  hideFloatingHome = false,
 }: AppShellProps) {
   const { connection } = shellState;
   const pathname = usePathname();
@@ -380,7 +383,7 @@ export function AppShell({
               </div>
             </div>
           </header>
-        ) : (
+        ) : hideFloatingHome ? null : (
           // 子页面：顶栏不放任何东西，只有一个自动隐身的悬浮返回按钮
           <FloatingHomeLink />
         )}

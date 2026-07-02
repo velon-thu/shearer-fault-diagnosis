@@ -456,13 +456,40 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
         if (!def) {
           return [];
         }
-        const fromMs = from.getTime();
+        let fromMs = from.getTime();
         const toMs = to.getTime();
-        const buckets = 48;
+        // from=0 表示"全部数据"：收窄到该测点实际最早的数据点
+        if (fromMs <= 0) {
+          const first = db
+            .prepare(`SELECT MIN(ts) AS t FROM sensor_hyper WHERE std_tag = ?`)
+            .get(sensorId) as { t: number | null };
+          if (first.t === null) {
+            return [];
+          }
+          fromMs = first.t;
+        }
+        if (toMs - fromMs < 1_000) {
+          return [];
+        }
+
+        const buckets = 300;
+        const spanMs = toMs - fromMs;
+        // 标签粒度随跨度自适应：<2h 到秒，<=26h 到分，更长带日期
+        const label = (ms: number) => {
+          const d = new Date(ms);
+          if (spanMs < 2 * HOUR) {
+            return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+          }
+          if (spanMs <= 26 * HOUR) {
+            return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          }
+          return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        };
+
         const values = this.bucketSeries(db, sensorId, fromMs, toMs, buckets);
-        const step = (toMs - fromMs) / buckets;
+        const step = spanMs / buckets;
         return values.map((v, i) => ({
-          time: fmtHm(fromMs + i * step),
+          time: label(fromMs + i * step),
           value: v,
           unit: def.unit,
         }));

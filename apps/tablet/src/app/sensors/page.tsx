@@ -44,6 +44,15 @@ const TYPE_ORDER = [
 const typeGroup = (type: string) =>
   (TYPE_ORDER as readonly string[]).includes(type) ? type : "其他";
 
+// 详情页时间段选项（all=数据库内该测点全部数据）
+const TREND_RANGES: Array<[string, string]> = [
+  ["all", "全部"],
+  ["24h", "24小时"],
+  ["6h", "6小时"],
+  ["1h", "1小时"],
+  ["10m", "10分钟"],
+];
+
 const HIDDEN_KEY = "shearer.sensors.hidden";
 
 const loadHidden = (): Set<string> => {
@@ -73,6 +82,7 @@ export default function SensorsPage() {
   const [detail, setDetail] = useState<SensorDetail | null>(null);
   const [trend, setTrend] = useState<SensorTrendPoint[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [trendRange, setTrendRange] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [activeType, setActiveType] = useState<string>("温度");
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -124,7 +134,9 @@ export default function SensorsPage() {
       try {
         const [detailRes, trendRes] = await Promise.all([
           fetch(`${resolveHttpBase()}/api/sensors/${selectedId}`, { cache: "no-store" }),
-          fetch(`${resolveHttpBase()}/api/sensors/${selectedId}/trend?range=24h`, { cache: "no-store" }),
+          fetch(`${resolveHttpBase()}/api/sensors/${selectedId}/trend?range=${trendRange}`, {
+            cache: "no-store",
+          }),
         ]);
         const parsedDetail = SensorDetailApiResponseSchema.parse(await detailRes.json());
         const parsedTrend = SensorTrendApiResponseSchema.parse(await trendRes.json());
@@ -147,7 +159,7 @@ export default function SensorsPage() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [view, selectedId]);
+  }, [view, selectedId, trendRange]);
 
   // 可见传感器（设置里隐藏的不出现在总览）
   const visible = useMemo(
@@ -227,7 +239,7 @@ export default function SensorsPage() {
   }, [summaries]);
 
   return (
-    <AppShell shellState={shellState} title="传感器">
+    <AppShell hideFloatingHome={view === "detail"} shellState={shellState} title="传感器">
       <section className="page active">
         {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
@@ -242,13 +254,6 @@ export default function SensorsPage() {
                 type="search"
                 value={searchText}
               />
-              <button
-                className="sensor-settings-btn"
-                onClick={() => setView("settings")}
-                type="button"
-              >
-                传感器设置
-              </button>
             </div>
 
             {!searching ? (
@@ -298,12 +303,18 @@ export default function SensorsPage() {
               </div>
             )}
 
-            {!searching && availableTypes.length > 1 ? (
+            {!searching ? (
               <div className="sensor-pager">
                 <button onClick={() => gotoPage(-1)} type="button">
                   ‹ 上一页
                 </button>
-                <span className="sensor-pager-info">{activeType}</span>
+                <button
+                  className="sensor-settings-btn"
+                  onClick={() => setView("settings")}
+                  type="button"
+                >
+                  传感器设置
+                </button>
                 <button onClick={() => gotoPage(1)} type="button">
                   下一页 ›
                 </button>
@@ -387,7 +398,7 @@ export default function SensorsPage() {
                 <div className="kpi-value">{activeInfo?.state ?? "--"}</div>
               </div>
               <div className="kpi">
-                <div className="kpi-name">24h 平均值</div>
+                <div className="kpi-name">24h 平均</div>
                 <div className="kpi-value">{detail?.averageDisplay ?? "--"}</div>
               </div>
               <div className="kpi">
@@ -402,6 +413,18 @@ export default function SensorsPage() {
               </div>
             </div>
             <div className="section-spacer" />
+            <div className="sensor-type-bar">
+              {TREND_RANGES.map(([key, label]) => (
+                <button
+                  className={`sensor-type-chip${trendRange === key ? " active" : ""}`}
+                  key={key}
+                  onClick={() => setTrendRange(key)}
+                  type="button"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <div className="sensor-detail-chart">
               <SensorTrendChart
                 loading={detailLoading}
