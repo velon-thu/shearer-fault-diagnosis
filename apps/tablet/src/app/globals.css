@@ -2475,8 +2475,8 @@ button.calendar-cell {
 }
 
 .sensor-detail-chart {
-  height: calc(100dvh - 320px);
-  min-height: 380px;
+  height: calc(100dvh - 190px);
+  min-height: 420px;
 }
 
 .sensor-detail-chart .chart-wrap,

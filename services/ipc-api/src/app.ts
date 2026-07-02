@@ -254,7 +254,7 @@ export const buildApp = ({
 
   app.get("/api/sensors/:id/trend", async (request, reply) => {
     const { id } = SensorIdParamsSchema.parse(request.params);
-    const { range } = SensorTrendQuerySchema.parse(request.query);
+    const { range, from: fromMs, to: toMs } = SensorTrendQuerySchema.parse(request.query);
     const sensor = await adapter.getSensorDetail(id);
 
     if (!sensor) {
@@ -269,7 +269,11 @@ export const buildApp = ({
       );
     }
 
-    const { from, to } = getRangeWindow(range);
+    // 显式 from/to（图表缩放细化）优先于 range 预设
+    const { from, to } =
+      fromMs !== undefined && toMs !== undefined && toMs > fromMs
+        ? { from: new Date(fromMs), to: new Date(toMs) }
+        : getRangeWindow(range);
 
     return SensorTrendApiResponseSchema.parse({
       success: true,

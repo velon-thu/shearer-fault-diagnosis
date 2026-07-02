@@ -181,13 +181,14 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
     return new Map(rows.map((r) => [r.std_tag, { value: r.value, ts: r.ts }]));
   }
 
-  /** 把某 tag 在 [from,to) 的数据按 buckets 段取均值；空段沿用上一段。 */
+  /** 把某 tag 在 [from,to) 的数据按 buckets 段取均值；空段沿用上一段（seed=窗口前最后值）。 */
   private bucketSeries(
     db: DatabaseSync,
     tag: string,
     fromMs: number,
     toMs: number,
     buckets: number,
+    seed = 0,
   ): number[] {
     const span = toMs - fromMs;
     const rows = db
@@ -202,7 +203,7 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
     }>;
     const byBucket = new Map(rows.map((r) => [r.bucket, r.avg_value]));
     const out: number[] = [];
-    let prev = 0;
+    let prev = seed;
     for (let i = 0; i < buckets; i += 1) {
       const v = byBucket.get(i);
       if (v !== undefined) {
@@ -472,8 +473,10 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           return [];
         }
 
-        const buckets = 300;
         const spanMs = toMs - fromMs;
+        // 分桶粒度下限 1 秒（"尽可能秒级"），上限 1500 点保证渲染流畅；
+        // 跨度大时缩放图表会按窗口重新请求，从而逐级细化到 1s。
+        const buckets = Math.min(1500, Math.max(1, Math.floor(spanMs / 1000)));
         // 标签粒度随跨度自适应：<2h 到秒，<=26h 到分，更长带日期
         const label = (ms: number) => {
           const d = new Date(ms);
@@ -486,12 +489,20 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
         };
 
-        const values = this.bucketSeries(db, sensorId, fromMs, toMs, buckets);
+        // 窗口起点之前的最后一个值作为填充种子，避免窗口开头出现虚假的 0
+        const seedRow = db
+          .prepare(
+            `SELECT value FROM sensor_hyper WHERE std_tag = ? AND ts < ? ORDER BY ts DESC LIMIT 1`,
+          )
+          .get(sensorId, fromMs) as { value: number } | undefined;
+
+        const values = this.bucketSeries(db, sensorId, fromMs, toMs, buckets, seedRow?.value ?? 0);
         const step = spanMs / buckets;
         return values.map((v, i) => ({
           time: label(fromMs + i * step),
           value: v,
           unit: def.unit,
+          ts: Math.round(fromMs + i * step),
         }));
       },
       () => super.getSensorTrend(sensorId, from, to),

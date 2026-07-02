@@ -72,6 +72,7 @@ export const SensorTrendPointSchema = z.object({
   time: z.string(),
   value: z.number(),
   unit: z.string(),
+  ts: z.number().optional(), // Unix 毫秒（时间轴缩放用；mock 数据可缺省）
 });
 
 export const PumpAnalysisRangeSchema = z.enum(["24h"]);
@@ -384,6 +385,9 @@ export const SensorTrendRangeSchema = z.enum(["10m", "1h", "6h", "24h", "all"]);
 
 export const SensorTrendQuerySchema = z.object({
   range: SensorTrendRangeSchema.default("all"),
+  // 自定义窗口（毫秒时间戳），二者同时给出时优先于 range
+  from: z.coerce.number().int().positive().optional(),
+  to: z.coerce.number().int().positive().optional(),
 });
 
 export const FaultCodeSearchQuerySchema = z.object({

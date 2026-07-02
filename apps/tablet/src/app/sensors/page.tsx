@@ -44,15 +44,6 @@ const TYPE_ORDER = [
 const typeGroup = (type: string) =>
   (TYPE_ORDER as readonly string[]).includes(type) ? type : "其他";
 
-// 详情页时间段选项（all=数据库内该测点全部数据）
-const TREND_RANGES: Array<[string, string]> = [
-  ["all", "全部"],
-  ["24h", "24小时"],
-  ["6h", "6小时"],
-  ["1h", "1小时"],
-  ["10m", "10分钟"],
-];
-
 const HIDDEN_KEY = "shearer.sensors.hidden";
 
 const loadHidden = (): Set<string> => {
@@ -82,7 +73,8 @@ export default function SensorsPage() {
   const [detail, setDetail] = useState<SensorDetail | null>(null);
   const [trend, setTrend] = useState<SensorTrendPoint[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [trendRange, setTrendRange] = useState("all");
+  // 用户在图上缩放选出的时间窗口；null=全部数据
+  const [trendWindow, setTrendWindow] = useState<{ from: number; to: number } | null>(null);
   const [searchText, setSearchText] = useState("");
   const [activeType, setActiveType] = useState<string>("温度");
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -130,11 +122,15 @@ export default function SensorsPage() {
     let cancelled = false;
     setDetailLoading(true);
 
+    const trendQuery = trendWindow
+      ? `from=${trendWindow.from}&to=${trendWindow.to}`
+      : "range=all";
+
     const load = async () => {
       try {
         const [detailRes, trendRes] = await Promise.all([
           fetch(`${resolveHttpBase()}/api/sensors/${selectedId}`, { cache: "no-store" }),
-          fetch(`${resolveHttpBase()}/api/sensors/${selectedId}/trend?range=${trendRange}`, {
+          fetch(`${resolveHttpBase()}/api/sensors/${selectedId}/trend?${trendQuery}`, {
             cache: "no-store",
           }),
         ]);
@@ -154,12 +150,15 @@ export default function SensorsPage() {
     };
 
     void load();
-    const timer = setInterval(() => void load(), 10_000);
+    // 用户框选窗口时暂停自动刷新，避免刷掉正在查看的区段
+    const timer = trendWindow ? 0 : window.setInterval(() => void load(), 10_000);
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      if (timer) {
+        window.clearInterval(timer);
+      }
     };
-  }, [view, selectedId, trendRange]);
+  }, [view, selectedId, trendWindow]);
 
   // 可见传感器（设置里隐藏的不出现在总览）
   const visible = useMemo(
@@ -285,6 +284,7 @@ export default function SensorsPage() {
                     key={sensor.id}
                     onClick={() => {
                       setSelectedId(sensor.id);
+                      setTrendWindow(null);
                       setView("detail");
                     }}
                     type="button"
@@ -372,62 +372,33 @@ export default function SensorsPage() {
                 onClick={() => {
                   setView("overview");
                   setSelectedId(null);
+                  setTrendWindow(null);
                 }}
                 type="button"
               >
                 ‹ 返回总览
               </button>
-              <div>
-                <h1 className="sensor-detail-title">{activeInfo?.name ?? "传感器"}</h1>
-                <div className="sensor-detail-sub">
-                  {activeInfo?.location ?? ""} · {activeInfo?.type ?? ""}传感器 · 上次数据{" "}
-                  {activeInfo?.lastSeen ?? "--"}
-                </div>
+              <h1 className="sensor-detail-title">{activeInfo?.name ?? "传感器"}</h1>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 14, alignItems: "center" }}>
+                {trendWindow ? (
+                  <button
+                    className="sensor-back-btn"
+                    onClick={() => setTrendWindow(null)}
+                    type="button"
+                  >
+                    恢复全览
+                  </button>
+                ) : null}
+                <span className={`pill ${activeInfo?.valid ? "green" : "red"}`}>
+                  {activeInfo?.state ?? "--"}
+                </span>
               </div>
-              <span
-                className={`pill ${activeInfo?.valid ? "green" : "red"}`}
-                style={{ marginLeft: "auto" }}
-              >
-                {activeInfo?.state ?? "--"}
-              </span>
             </div>
 
-            <div className="kpi-row">
-              <div className="kpi">
-                <div className="kpi-name">当前状态</div>
-                <div className="kpi-value">{activeInfo?.state ?? "--"}</div>
-              </div>
-              <div className="kpi">
-                <div className="kpi-name">24h 平均</div>
-                <div className="kpi-value">{detail?.averageDisplay ?? "--"}</div>
-              </div>
-              <div className="kpi">
-                <div className="kpi-name">24h 峰值</div>
-                <div className="kpi-value">{detail?.peakDisplay ?? "--"}</div>
-              </div>
-              <div className="kpi">
-                <div className="kpi-name">近 30 天失效</div>
-                <div className="kpi-value">
-                  {activeInfo ? `${activeInfo.failures30d} 次` : "--"}
-                </div>
-              </div>
-            </div>
-            <div className="section-spacer" />
-            <div className="sensor-type-bar">
-              {TREND_RANGES.map(([key, label]) => (
-                <button
-                  className={`sensor-type-chip${trendRange === key ? " active" : ""}`}
-                  key={key}
-                  onClick={() => setTrendRange(key)}
-                  type="button"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
             <div className="sensor-detail-chart">
               <SensorTrendChart
                 loading={detailLoading}
+                onWindowSelect={(fromMs, toMs) => setTrendWindow({ from: fromMs, to: toMs })}
                 points={trend}
                 sensorName={activeInfo?.name ?? "传感器"}
                 unit={activeInfo?.unit ?? ""}
