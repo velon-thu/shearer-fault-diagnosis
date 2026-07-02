@@ -182,16 +182,18 @@ export default function SensorsPage() {
   const searching = searchText.trim().length > 0;
 
   const shownSensors = useMemo(() => {
-    if (searching) {
-      const text = searchText.trim().toLowerCase();
-      return visible.filter(
-        (s) =>
-          s.name.toLowerCase().includes(text) ||
-          s.location.toLowerCase().includes(text) ||
-          s.type.toLowerCase().includes(text),
-      );
-    }
-    return visible.filter((s) => typeGroup(s.type) === activeType);
+    const list = searching
+      ? visible.filter((s) => {
+          const text = searchText.trim().toLowerCase();
+          return (
+            s.name.toLowerCase().includes(text) ||
+            s.location.toLowerCase().includes(text) ||
+            s.type.toLowerCase().includes(text)
+          );
+        })
+      : visible.filter((s) => typeGroup(s.type) === activeType);
+    // 有效的排前面，失效的排后面（组内保持原顺序）
+    return [...list].sort((a, b) => Number(b.valid) - Number(a.valid));
   }, [visible, searching, searchText, activeType]);
 
   const typeIndex = availableTypes.indexOf(activeType as never);

@@ -58,8 +58,25 @@ export function SensorTrendChart({
       chart.setOption(
         {
           animationDuration: 300,
+          // 框选缩放：默认激活 dataZoomSelect，在图上直接拖出想看的时间段
+          toolbox: hasTs
+            ? {
+                show: true,
+                right: 12,
+                top: 2,
+                itemSize: 22,
+                iconStyle: { borderColor: "rgba(245,247,251,.55)" },
+                emphasis: { iconStyle: { borderColor: "#48c7ff" } },
+                feature: {
+                  dataZoom: {
+                    yAxisIndex: "none",
+                    title: { zoom: "框选时间段", back: "撤销框选" },
+                  },
+                },
+              }
+            : undefined,
           grid: {
-            top: 28,
+            top: 40,
             left: 56,
             right: 20,
             bottom: hasTs ? 84 : 34,
@@ -153,6 +170,15 @@ export function SensorTrendChart({
         },
         { notMerge: true },
       );
+
+      // 默认进入"框选时间段"光标模式：一指在图上拖出矩形即可选择观察窗口
+      if (hasTs) {
+        chart.dispatchAction({
+          type: "takeGlobalCursor",
+          key: "dataZoomSelect",
+          dataZoomSelectActive: true,
+        });
+      }
 
       // 缩放停止 500ms 后，把选中的时间窗口回调给父组件做数据细化
       if (hasTs && onWindowSelectRef.current) {

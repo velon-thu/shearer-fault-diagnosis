@@ -334,6 +334,16 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
         const latest = this.latestValues(db);
         const now = Date.now();
 
+        // 全程恒为 0 的测点视为未配备（无效）
+        const allZero = new Set<string>();
+        for (const r of db
+          .prepare(`SELECT std_tag, MAX(ABS(value)) AS mx FROM sensor_hyper GROUP BY std_tag`)
+          .all() as unknown as Array<{ std_tag: string; mx: number }>) {
+          if (r.mx === 0) {
+            allZero.add(r.std_tag);
+          }
+        }
+
         // 近 30 天哨兵值次数（分单位类型两批查，避免逐 tag 查询）
         const since30d = now - 30 * DAY;
         const sentinelCounts = new Map<string, number>();
@@ -359,20 +369,23 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           const lv = latest.get(d.std_tag);
           const stale = !lv || now - lv.ts > 5 * 60_000;
           const sentinel = lv ? isSentinel(d.unit, lv.value) : false;
+          const zero = allZero.has(d.std_tag);
           const state = !lv
             ? "无数据"
-            : sentinel
-              ? "传感器无效"
-              : stale
-                ? "数据中断"
-                : `正常 · ${lv.value}${d.unit}`;
+            : zero
+              ? "恒为0 · 视为未配备"
+              : sentinel
+                ? "传感器无效"
+                : stale
+                  ? "数据中断"
+                  : `正常 · ${lv.value}${d.unit}`;
           return {
             id: d.std_tag,
             name: d.name,
             type: unitToType(d.unit, d.name),
             location: d.category,
             state,
-            valid: Boolean(lv) && !sentinel && !stale,
+            valid: Boolean(lv) && !sentinel && !stale && !zero,
             failures30d: sentinelCounts.get(d.std_tag) ?? 0,
             lastSeen: lv ? fmtTs(lv.ts) : "--",
             unit: d.unit,
@@ -408,6 +421,10 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           .get(sensorId) as { value: number; ts: number } | undefined;
         const stale = !lv || now - lv.ts > 5 * 60_000;
         const sentinel = lv ? isSentinel(def.unit, lv.value) : false;
+        const zeroRow = db
+          .prepare(`SELECT MAX(ABS(value)) AS mx FROM sensor_hyper WHERE std_tag = ?`)
+          .get(sensorId) as { mx: number | null };
+        const zero = zeroRow.mx === 0;
 
         // 近 30 天哨兵值次数（与总览口径一致）
         let failures30d = 0;
@@ -433,8 +450,16 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           name: def.name,
           type: unitToType(def.unit, def.name),
           location: def.category,
-          state: !lv ? "无数据" : sentinel ? "传感器无效" : stale ? "数据中断" : "正常",
-          valid: Boolean(lv) && !sentinel && !stale,
+          state: !lv
+            ? "无数据"
+            : zero
+              ? "恒为0 · 视为未配备"
+              : sentinel
+                ? "传感器无效"
+                : stale
+                  ? "数据中断"
+                  : "正常",
+          valid: Boolean(lv) && !sentinel && !stale && !zero,
           failures30d,
           lastSeen: lv ? fmtTs(lv.ts) : "--",
           unit: def.unit,
