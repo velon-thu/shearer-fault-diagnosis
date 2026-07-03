@@ -89,29 +89,29 @@ export default function HomePage() {
     <AppShell disableHomeButton minimalHeader shellState={shellState} title="主页面">
       <section className="page active">
         <div className="home-launchpad">
+          {machine ? (
+            <div
+              className="home-machine"
+              style={{ borderColor: `${MACHINE_STYLE[machine.state].color}55` }}
+            >
+              <span
+                className="home-machine-dot"
+                style={{
+                  background: MACHINE_STYLE[machine.state].color,
+                  boxShadow: `0 0 0 0 ${MACHINE_STYLE[machine.state].color}88`,
+                }}
+              />
+              <strong style={{ color: MACHINE_STYLE[machine.state].color }}>
+                {MACHINE_STYLE[machine.state].label}
+              </strong>
+              <span className="home-machine-sep" />
+              <strong className="home-machine-speed">{machine.speedMmin.toFixed(2)}</strong>
+              <span className="home-machine-unit">m/min</span>
+            </div>
+          ) : null}
           <div className="home-clock">
             <div className="home-clock-time">{formatTime(now)}</div>
             <div className="home-clock-date">{formatDate(now, true)}</div>
-            {machine ? (
-              <div
-                className="home-machine"
-                style={{ borderColor: `${MACHINE_STYLE[machine.state].color}55` }}
-              >
-                <span
-                  className="home-machine-dot"
-                  style={{
-                    background: MACHINE_STYLE[machine.state].color,
-                    boxShadow: `0 0 0 0 ${MACHINE_STYLE[machine.state].color}88`,
-                  }}
-                />
-                <strong style={{ color: MACHINE_STYLE[machine.state].color }}>
-                  {MACHINE_STYLE[machine.state].label}
-                </strong>
-                <span className="home-machine-sep" />
-                <strong className="home-machine-speed">{machine.speedMmin.toFixed(2)}</strong>
-                <span className="home-machine-unit">m/min</span>
-              </div>
-            ) : null}
           </div>
 
           <div className="launchpad-grid">

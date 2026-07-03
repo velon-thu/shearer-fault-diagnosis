@@ -3557,12 +3557,18 @@ button.calendar-cell {
   border-radius: 4px;
 }
 
-/* 主页机况胶囊：割煤状态 + 速度 */
+/* 主页机况胶囊：左上角绝对定位，不挤占宫格空间 */
+.home-launchpad {
+  position: relative;
+}
+
 .home-machine {
+  position: absolute;
+  left: clamp(6px, 1.5vw, 28px);
+  top: clamp(10px, 5vh, 48px);
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  margin-top: clamp(16px, 2.6vh, 26px);
   padding: 12px 30px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.12);
