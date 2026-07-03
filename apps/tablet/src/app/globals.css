@@ -2213,6 +2213,47 @@ button.calendar-cell {
   text-align: center;
 }
 
+/* ===== 登录页屏幕软键盘（Ubuntu 平板不易唤起系统键盘，点账号/密码弹出） ===== */
+.login-shell--kb {
+  padding-bottom: 400px;
+}
+
+.login-osk {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  padding: 14px clamp(16px, 3vw, 40px) 18px;
+  background: linear-gradient(180deg, rgba(14, 19, 27, 0.97), rgba(9, 13, 19, 0.99));
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.45);
+}
+
+.login-osk .fc-keyboard {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  gap: 10px;
+}
+
+.login-osk .fc-key-row {
+  gap: 10px;
+}
+
+.login-osk .fc-key {
+  height: 62px;
+  font-size: 26px;
+}
+
+.login-osk .fc-key-wide {
+  font-size: 20px;
+}
+
+.login-osk .fc-key.login-osk-shift-on {
+  background: rgba(79, 140, 255, 0.3);
+  border-color: rgba(79, 140, 255, 0.6);
+}
+
 /* ===== 主页面（Launchpad 风格：大时钟 + 图标宫格） ===== */
 .home-launchpad {
   /* 单屏固定：顶栏约 90px + content 上下留白，剩余全部给时钟和导航 */

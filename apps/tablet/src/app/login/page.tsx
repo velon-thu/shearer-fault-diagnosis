@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   clearStoredAuthSession,
@@ -10,6 +10,16 @@ import {
   loginWithPassword,
 } from "@/lib/auth";
 
+/* 平板为 Ubuntu 系统，不易唤起系统键盘：点账号/密码时在页面底部弹出屏幕软键盘 */
+const KEY_ROWS: string[][] = [
+  ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+  ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+  ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+  ["z", "x", "c", "v", "b", "n", "m"],
+];
+
+type OskField = "account" | "password";
+
 export default function LoginPage() {
   const router = useRouter();
   const [nextPath, setNextPath] = useState("/");
@@ -18,6 +28,11 @@ export default function LoginPage() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [activeField, setActiveField] = useState<OskField | null>(null);
+  const [upperCase, setUpperCase] = useState(false);
+  const accountRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const oskRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const queryNext = getSafeNextPath(new URLSearchParams(window.location.search).get("next"));
@@ -56,6 +71,53 @@ export default function LoginPage() {
     };
   }, [router]);
 
+  useEffect(() => {
+    if (!activeField) {
+      return;
+    }
+
+    const field = activeField === "account" ? accountRef.current : passwordRef.current;
+    const osk = oskRef.current;
+
+    if (!field || !osk) {
+      return;
+    }
+
+    /* 键盘固定在底部，若输入框被盖住则把它滚到键盘上方 */
+    const visibleBottom = window.innerHeight - osk.offsetHeight - 24;
+    const fieldBottom = field.getBoundingClientRect().bottom;
+
+    if (fieldBottom > visibleBottom) {
+      window.scrollBy({ top: fieldBottom - visibleBottom, behavior: "smooth" });
+    }
+  }, [activeField]);
+
+  const appendChar = (char: string) => {
+    if (!activeField) {
+      return;
+    }
+
+    const setValue = activeField === "account" ? setAccount : setPassword;
+    setValue((value) => (value.length < 32 ? value + char : value));
+  };
+
+  const deleteChar = () => {
+    if (!activeField) {
+      return;
+    }
+
+    const setValue = activeField === "account" ? setAccount : setPassword;
+    setValue((value) => value.slice(0, -1));
+  };
+
+  const hideKeyboard = () => {
+    setActiveField(null);
+
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -65,6 +127,7 @@ export default function LoginPage() {
       return;
     }
 
+    hideKeyboard();
     setSubmitting(true);
     setErrorMessage("");
 
@@ -88,7 +151,7 @@ export default function LoginPage() {
   const submitDisabled = checkingSession || submitting || !account.trim() || !password;
 
   return (
-    <main className="login-shell">
+    <main className={`login-shell${activeField ? " login-shell--kb" : ""}`}>
       <form
         autoComplete="on"
         className="login-card login-simple"
@@ -109,8 +172,12 @@ export default function LoginPage() {
           <input
             autoComplete="username"
             className="login-input"
+            inputMode="none"
             onChange={(event) => setAccount(event.target.value)}
+            onClick={() => setActiveField("account")}
+            onFocus={() => setActiveField("account")}
             placeholder="请输入账号"
+            ref={accountRef}
             type="text"
             value={account}
           />
@@ -121,8 +188,12 @@ export default function LoginPage() {
           <input
             autoComplete="current-password"
             className="login-input"
+            inputMode="none"
             onChange={(event) => setPassword(event.target.value)}
+            onClick={() => setActiveField("password")}
+            onFocus={() => setActiveField("password")}
             placeholder="请输入密码"
+            ref={passwordRef}
             type="password"
             value={password}
           />
@@ -134,6 +205,47 @@ export default function LoginPage() {
           {checkingSession ? "正在验证登录状态..." : submitting ? "登录中..." : "登 录"}
         </button>
       </form>
+
+      {activeField ? (
+        /* onPointerDown preventDefault：点按键不夺走输入框焦点 */
+        <div className="login-osk" onPointerDown={(event) => event.preventDefault()} ref={oskRef}>
+          <div className="fc-keyboard">
+            {KEY_ROWS.map((row, rowIndex) => (
+              <div className="fc-key-row" key={rowIndex}>
+                {row.map((key) => {
+                  const label = upperCase ? key.toUpperCase() : key;
+
+                  return (
+                    <button
+                      className="fc-key"
+                      key={key}
+                      onClick={() => appendChar(label)}
+                      type="button"
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+            <div className="fc-key-row">
+              <button
+                className={`fc-key fc-key-wide${upperCase ? " login-osk-shift-on" : ""}`}
+                onClick={() => setUpperCase((value) => !value)}
+                type="button"
+              >
+                ⇧ 大小写
+              </button>
+              <button className="fc-key fc-key-wide" onClick={deleteChar} type="button">
+                ⌫ 删除
+              </button>
+              <button className="fc-key fc-key-wide" onClick={hideKeyboard} type="button">
+                收起键盘
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
