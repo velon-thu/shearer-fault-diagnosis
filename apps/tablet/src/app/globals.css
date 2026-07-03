@@ -298,7 +298,7 @@ input {
 }
 
 .content-inner {
-  width: min(100%, var(--content-max));
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -2429,7 +2429,7 @@ button.calendar-cell {
 
 .sensor-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 18px;
 }
 
@@ -2679,13 +2679,13 @@ button.calendar-cell {
 
 /* ===== 故障排名：时间范围选择 ===== */
 .range-picker {
-  min-height: calc(100dvh - 220px);
+  min-height: calc(100dvh - 160px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 26px;
-  width: min(980px, 100%);
+  gap: clamp(26px, 4.5vh, 48px);
+  width: min(1440px, 100%);
   margin: 0 auto;
 }
 
@@ -2725,7 +2725,7 @@ button.calendar-cell {
 }
 
 .range-picker-value strong {
-  font-size: 28px;
+  font-size: clamp(28px, 5vh, 44px);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -2857,21 +2857,23 @@ button.calendar-cell {
 
 /* ===== 故障代码查询 ===== */
 .fc-menu {
-  min-height: calc(100dvh - 220px);
+  height: calc(100dvh - 130px);
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: clamp(28px, 4vw, 60px);
+  padding: clamp(8px, 2vh, 24px) 0;
 }
 
 .fc-menu-card {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 26px;
-  width: min(420px, 42vw);
-  padding: 60px 30px;
-  border-radius: 32px;
+  justify-content: center;
+  gap: clamp(26px, 5vh, 48px);
+  padding: 30px;
+  border-radius: 36px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
@@ -2891,20 +2893,20 @@ button.calendar-cell {
 }
 
 .fc-menu-icon {
-  width: 120px;
-  height: 120px;
-  border-radius: 30px;
+  width: clamp(120px, 22vh, 200px);
+  height: clamp(120px, 22vh, 200px);
+  border-radius: clamp(30px, 5vh, 48px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 52px;
+  font-size: clamp(52px, 10vh, 88px);
   font-weight: 800;
   color: #fff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 12px 28px rgba(0, 0, 0, 0.4);
 }
 
 .fc-menu-title {
-  font-size: 26px;
+  font-size: clamp(26px, 4.2vh, 38px);
   font-weight: 800;
   letter-spacing: 2px;
 }
@@ -2913,8 +2915,9 @@ button.calendar-cell {
 .fc-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 16px;
-  min-height: calc(100dvh - 320px);
+  min-height: calc(100dvh - 330px);
 }
 
 @media (max-width: 1000px) {
@@ -3063,8 +3066,8 @@ button.calendar-cell {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 26px;
-  width: min(1080px, 100%);
+  gap: clamp(20px, 3vh, 34px);
+  width: min(1500px, 100%);
   margin: 0 auto;
 }
 
@@ -3098,8 +3101,8 @@ button.calendar-cell {
 
 .fc-key {
   flex: 1;
-  max-width: 108px;
-  height: 76px;
+  max-width: 136px;
+  height: clamp(70px, 9.5vh, 92px);
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
@@ -3121,12 +3124,12 @@ button.calendar-cell {
 }
 
 .fc-key-wide {
-  max-width: 220px;
+  max-width: 280px;
   font-size: 24px;
 }
 
 .fc-key-confirm {
-  max-width: 320px;
+  max-width: 400px;
   background: linear-gradient(180deg, #4f8cff, #2e5fdd);
   border: none;
   color: #fff;
