@@ -185,7 +185,6 @@ export default function FaultCodesPage() {
                     type="button"
                   >
                     <span className="fc-tile-code">{toHex(rule.code)}</span>
-                    <span className="fc-tile-name">{rule.name}</span>
                   </button>
                 ))}
               </div>
@@ -220,7 +219,6 @@ export default function FaultCodesPage() {
                     type="button"
                   >
                     <span className="fc-tile-code fc-tile-code-orange">{fault.code}</span>
-                    <span className="fc-tile-name">{fault.title}</span>
                   </button>
                 ))}
               </div>

@@ -2949,7 +2949,7 @@ button.calendar-cell {
 }
 
 .fc-tile-code {
-  font-size: 30px;
+  font-size: 38px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: #48c7ff;
@@ -3173,7 +3173,7 @@ button.calendar-cell {
 /* ACS880 变频器故障全量目录（方块卡片） */
 .fc-grid-flow {
   min-height: 0; /* 全量卡片自然滚动，不强制撑满一屏 */
-  grid-auto-rows: minmax(150px, auto);
+  grid-auto-rows: minmax(110px, auto);
 }
 
 .fc-tile-code-orange {
