@@ -2273,7 +2273,7 @@ button.calendar-cell {
 }
 
 .home-clock-time {
-  font-size: clamp(44px, 6.5vw, 76px);
+  font-size: clamp(48px, 9vh, 88px);
   font-weight: 800;
   line-height: 1;
   letter-spacing: 2px;
@@ -2282,7 +2282,7 @@ button.calendar-cell {
 
 .home-clock-date {
   margin-top: 12px;
-  font-size: clamp(16px, 2vw, 22px);
+  font-size: clamp(17px, 2.6vh, 26px);
   color: var(--text-2);
   letter-spacing: 3px;
 }
@@ -2290,8 +2290,8 @@ button.calendar-cell {
 .launchpad-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(22px, 3vw, 44px);
-  width: min(1120px, 100%);
+  gap: clamp(24px, 3.4vw, 60px);
+  width: 100%;
 }
 
 @media (max-width: 760px) {
@@ -2304,8 +2304,8 @@ button.calendar-cell {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
-  padding: 28px 12px 24px;
+  gap: clamp(16px, 2.6vh, 26px);
+  padding: clamp(24px, 4vh, 40px) 12px clamp(20px, 3.4vh, 34px);
   border-radius: 26px;
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.028);
@@ -2325,13 +2325,13 @@ button.calendar-cell {
 }
 
 .launchpad-icon {
-  width: clamp(96px, 9vw, 116px);
-  height: clamp(96px, 9vw, 116px);
-  border-radius: 28px;
+  width: clamp(100px, 15vh, 152px);
+  height: clamp(100px, 15vh, 152px);
+  border-radius: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(40px, 3.6vw, 48px);
+  font-size: clamp(42px, 6.5vh, 64px);
   font-weight: 800;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
@@ -2341,7 +2341,7 @@ button.calendar-cell {
 }
 
 .launchpad-name {
-  font-size: 20px;
+  font-size: clamp(20px, 2.8vh, 26px);
   font-weight: 700;
   letter-spacing: 1px;
   text-align: center;
