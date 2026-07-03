@@ -3169,3 +3169,70 @@ button.calendar-cell {
   font-size: 20px;
   color: #48c7ff;
 }
+
+/* ACS880 变频器故障全量目录（方块卡片） */
+.fc-grid-flow {
+  min-height: 0; /* 全量卡片自然滚动，不强制撑满一屏 */
+  grid-auto-rows: minmax(150px, auto);
+}
+
+.fc-tile-code-orange {
+  color: #ffb03a;
+}
+
+.fc-acs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fc-acs-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 76px;
+  padding: 14px 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.fc-acs-row:hover {
+  background: rgba(255, 176, 58, 0.08);
+  border-color: rgba(255, 176, 58, 0.35);
+}
+
+.fc-acs-row:active {
+  transform: scale(0.98);
+}
+
+.fc-acs-code {
+  flex-shrink: 0;
+  min-width: 108px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  text-align: center;
+  background: rgba(255, 176, 58, 0.14);
+  border: 1px solid rgba(255, 176, 58, 0.4);
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffb03a;
+  font-variant-numeric: tabular-nums;
+}
+
+.fc-acs-title {
+  flex: 1;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.fc-acs-chevron {
+  font-size: 30px;
+  color: var(--text-2);
+}

@@ -211,17 +211,16 @@ export default function FaultCodesPage() {
                 </button>
                 <h1 className="sensor-detail-title">变频器故障代码查询（ACS880）</h1>
               </div>
-              <div className="fc-acs-list">
+              <div className="fc-grid fc-grid-flow">
                 {ACS880_FAULTS.map((fault) => (
                   <button
-                    className="fc-acs-row"
+                    className="fc-tile"
                     key={`${fault.code}-${fault.title}`}
                     onClick={() => openAcs880(fault)}
                     type="button"
                   >
-                    <span className="fc-acs-code">{fault.code}</span>
-                    <span className="fc-acs-title">{fault.title}</span>
-                    <span className="fc-acs-chevron">›</span>
+                    <span className="fc-tile-code fc-tile-code-orange">{fault.code}</span>
+                    <span className="fc-tile-name">{fault.title}</span>
                   </button>
                 ))}
               </div>
