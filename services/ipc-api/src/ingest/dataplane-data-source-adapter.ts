@@ -18,7 +18,6 @@ import type {
   FaultCodeResult,
   DowntimeResponse,
   DowntimeSegment,
-  FaultRecurrence,
   FreezeFrame,
   HealthReport,
   HomeSummary,
@@ -1056,40 +1055,6 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
         return { fromMs, toMs, events: events.slice(0, 400) };
       },
       () => super.getEventTimeline(fromMs, toMs),
-    );
-  }
-
-  /** 故障复发统计：某故障码在全库范围内的次数/平均间隔/平均持续。 */
-  async getFaultRecurrence(code: number): Promise<FaultRecurrence> {
-    return this.withDb(
-      (db) => {
-        const rows = db
-          .prepare(
-            `SELECT occur_ts, clear_ts FROM fault_normal WHERE fault_code = ? ORDER BY occur_ts`,
-          )
-          .all(code) as unknown as Array<{ occur_ts: number; clear_ts: number | null }>;
-        if (rows.length === 0) {
-          return { count: 0, avgIntervalSec: null, avgDurationSec: null, maxDurationSec: null, lastOccurTs: null };
-        }
-        const durations = rows
-          .filter((r) => r.clear_ts !== null)
-          .map((r) => (r.clear_ts as number) - r.occur_ts);
-        const intervals: number[] = [];
-        for (let i = 1; i < rows.length; i += 1) {
-          intervals.push(rows[i].occur_ts - rows[i - 1].occur_ts);
-        }
-        const avg = (a: number[]) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
-        const avgInterval = avg(intervals);
-        const avgDuration = avg(durations);
-        return {
-          count: rows.length,
-          avgIntervalSec: avgInterval === null ? null : Math.round(avgInterval / 1000),
-          avgDurationSec: avgDuration === null ? null : Math.round(avgDuration / 1000),
-          maxDurationSec: durations.length ? Math.round(Math.max(...durations) / 1000) : null,
-          lastOccurTs: rows[rows.length - 1].occur_ts,
-        };
-      },
-      () => super.getFaultRecurrence(),
     );
   }
 

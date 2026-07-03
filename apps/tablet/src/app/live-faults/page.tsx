@@ -1,11 +1,9 @@
 "use client";
 
 import {
-  FaultRecurrenceSchema,
   FreezeFrameSchema,
   LiveFaultsResponseSchema,
   createApiSuccessResponseSchema,
-  type FaultRecurrence,
   type FreezeFrame,
   type LiveFault,
 } from "@shearer/contracts";
@@ -13,7 +11,6 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
 import { MiniChart } from "@/components/mini-chart";
 
-const FaultRecurrenceApiResponseSchema = createApiSuccessResponseSchema(FaultRecurrenceSchema);
 const FreezeFrameApiResponseSchema = createApiSuccessResponseSchema(FreezeFrameSchema);
 
 const LiveFaultsApiResponseSchema = createApiSuccessResponseSchema(LiveFaultsResponseSchema);
@@ -88,37 +85,9 @@ export default function LiveFaultsPage() {
   const [loaded, setLoaded] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [detail, setDetail] = useState<LiveFault | null>(null);
-  const [recurrence, setRecurrence] = useState<FaultRecurrence | null>(null);
   const [frame, setFrame] = useState<FreezeFrame | null>(null);
   const [frameLoading, setFrameLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // 打开详情时拉复发统计（仅普通故障）
-  useEffect(() => {
-    setRecurrence(null);
-    if (!detail || detail.source !== "normal") {
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const response = await fetch(
-          `${resolveHttpBase()}/api/fault-recurrence?code=${detail.code}`,
-          { cache: "no-store" },
-        );
-        const parsed = FaultRecurrenceApiResponseSchema.parse(await response.json());
-        if (!cancelled) {
-          setRecurrence(parsed.data);
-        }
-      } catch {
-        // 复发统计失败不阻塞详情
-      }
-    };
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [detail]);
 
   const openFreezeFrame = async (ts: number) => {
     try {
@@ -286,17 +255,6 @@ export default function LiveFaultsPage() {
                   ` · 结束：${fmtClock(detail.clearTs)} · 持续 ${fmtDuration(detail.clearTs - detail.occurTs)}`
                 )}
               </p>
-              {detail.source === "normal" && recurrence && recurrence.count > 1 ? (
-                <p className="fc-modal-desc">
-                  复发画像：共 <strong style={{ color: "#ffb03a" }}>{recurrence.count}</strong> 次
-                  {recurrence.avgIntervalSec !== null
-                    ? ` · 平均间隔 ${fmtDuration(recurrence.avgIntervalSec * 1000)}`
-                    : ""}
-                  {recurrence.avgDurationSec !== null
-                    ? ` · 平均持续 ${fmtDuration(recurrence.avgDurationSec * 1000)}`
-                    : ""}
-                </p>
-              ) : null}
               {detail.handle ? (
                 splitHandle(detail.handle).length > 1 ? (
                   <>

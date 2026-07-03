@@ -1,7 +1,6 @@
 import type {
   DataWindow,
   DowntimeResponse,
-  FaultRecurrence,
   FaultRuleItem,
   FreezeFrame,
   HealthReport,
@@ -142,10 +141,6 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
 
   async getEventTimeline(fromMs: number, toMs: number): Promise<TimelineResponse> {
     return { fromMs, toMs, events: [] };
-  }
-
-  async getFaultRecurrence(_code?: number): Promise<FaultRecurrence> {
-    return { count: 0, avgIntervalSec: null, avgDurationSec: null, maxDurationSec: null, lastOccurTs: null };
   }
 
   async getLiveFaults(): Promise<LiveFault[]> {

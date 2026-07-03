@@ -472,15 +472,6 @@ export const TimelineQuerySchema = z.object({
   to: z.coerce.number().int().positive(),
 });
 
-// ===== 故障复发统计 =====
-export const FaultRecurrenceSchema = z.object({
-  count: z.number(),
-  avgIntervalSec: z.number().nullable(),
-  avgDurationSec: z.number().nullable(),
-  maxDurationSec: z.number().nullable(),
-  lastOccurTs: z.number().nullable(),
-});
-
 // 采煤机当前机况（主页状态胶囊）
 export const MachineStatusSchema = z.object({
   state: z.enum(["cutting", "dispatch", "stopped", "offline"]),
@@ -588,7 +579,6 @@ export type FreezeFrame = z.infer<typeof FreezeFrameSchema>;
 export type HealthReport = z.infer<typeof HealthReportSchema>;
 export type TimelineEvent = z.infer<typeof TimelineEventSchema>;
 export type TimelineResponse = z.infer<typeof TimelineResponseSchema>;
-export type FaultRecurrence = z.infer<typeof FaultRecurrenceSchema>;
 export type DowntimeSegment = z.infer<typeof DowntimeSegmentSchema>;
 export type DowntimeResponse = z.infer<typeof DowntimeResponseSchema>;
 export type RankingsResponse = z.infer<typeof RankingsResponseSchema>;

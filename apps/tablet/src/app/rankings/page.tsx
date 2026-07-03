@@ -2,11 +2,9 @@
 
 import {
   DataWindowSchema,
-  FaultRecurrenceSchema,
   FaultRulesResponseSchema,
   RankingsResponseSchema,
   createApiSuccessResponseSchema,
-  type FaultRecurrence,
   type FaultRuleItem,
   type RankingsResponse,
 } from "@shearer/contracts";
@@ -17,7 +15,6 @@ import { DualRangeSlider } from "@/components/dual-range-slider";
 const RankingsApiResponseSchema = createApiSuccessResponseSchema(RankingsResponseSchema);
 const DataWindowApiResponseSchema = createApiSuccessResponseSchema(DataWindowSchema);
 const FaultRulesApiResponseSchema = createApiSuccessResponseSchema(FaultRulesResponseSchema);
-const FaultRecurrenceApiResponseSchema = createApiSuccessResponseSchema(FaultRecurrenceSchema);
 
 const resolveHttpBase = () => {
   if (typeof window === "undefined") {
@@ -112,34 +109,6 @@ export default function RankingsPage() {
   const [faultSearch, setFaultSearch] = useState("");
   const [page, setPage] = useState(0);
   const [detailRule, setDetailRule] = useState<FaultRuleItem | null>(null);
-  const [recurrence, setRecurrence] = useState<FaultRecurrence | null>(null);
-
-  // 打开故障详情时拉复发统计
-  useEffect(() => {
-    setRecurrence(null);
-    if (!detailRule) {
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const response = await fetch(
-          `${resolveHttpBase()}/api/fault-recurrence?code=${detailRule.code}`,
-          { cache: "no-store" },
-        );
-        const parsed = FaultRecurrenceApiResponseSchema.parse(await response.json());
-        if (!cancelled) {
-          setRecurrence(parsed.data);
-        }
-      } catch {
-        // 失败不阻塞详情
-      }
-    };
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [detailRule]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 数据窗口 + 故障目录 + 本机隐藏配置
@@ -448,17 +417,6 @@ export default function RankingsPage() {
                 类型：{TYPE_TEXT[detailRule.type] ?? detailRule.type} · 类别：
                 {KIND_TEXT[detailRule.kind] ?? detailRule.kind}
               </p>
-              {recurrence && recurrence.count > 0 ? (
-                <p className="fc-modal-desc">
-                  复发画像：共 <strong style={{ color: "#ffb03a" }}>{recurrence.count}</strong> 次
-                  {recurrence.avgIntervalSec !== null
-                    ? ` · 平均间隔 ${Math.round(recurrence.avgIntervalSec / 60)} 分钟`
-                    : ""}
-                  {recurrence.avgDurationSec !== null
-                    ? ` · 平均持续 ${recurrence.avgDurationSec} 秒`
-                    : ""}
-                </p>
-              ) : null}
               {splitHandle(detailRule.handle).length > 0 ? (
                 <>
                   <div className="fc-modal-sub">处理建议</div>

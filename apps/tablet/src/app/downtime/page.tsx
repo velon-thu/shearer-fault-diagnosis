@@ -55,7 +55,7 @@ const fmtHours = (ms: number) => `${(ms / 3_600_000).toFixed(1)} 小时`;
 // 状态段展示配置
 const SEG_STYLE: Record<string, { label: string; color: string }> = {
   cutting: { label: "割煤", color: "#38d889" },
-  dispatch: { label: "调度移机", color: "#48c7ff" },
+  dispatch: { label: "调机", color: "#48c7ff" },
   "stopped-fault": { label: "故障停机", color: "#ff5c5c" },
   "stopped-manual": { label: "人工停机", color: "#ffb03a" },
   "stopped-idle": { label: "待机", color: "#8fa3bf" },

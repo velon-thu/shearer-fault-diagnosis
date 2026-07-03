@@ -14,7 +14,6 @@ import {
   HealthReportSchema,
   TimelineQuerySchema,
   TimelineResponseSchema,
-  FaultRecurrenceSchema,
   AuthLoginRequestSchema,
   AuthLoginResponseSchema,
   AuthLogoutResponseSchema,
@@ -80,7 +79,6 @@ const MachineStatusApiResponseSchema = createApiSuccessResponseSchema(MachineSta
 const FreezeFrameApiResponseSchema = createApiSuccessResponseSchema(FreezeFrameSchema);
 const HealthReportApiResponseSchema = createApiSuccessResponseSchema(HealthReportSchema);
 const TimelineApiResponseSchema = createApiSuccessResponseSchema(TimelineResponseSchema);
-const FaultRecurrenceApiResponseSchema = createApiSuccessResponseSchema(FaultRecurrenceSchema);
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
 const KnowledgeAssetsApiResponseSchema = createApiSuccessResponseSchema(KnowledgeAssetsResponseSchema);
 const RunCycleApiResponseSchema = createApiSuccessResponseSchema(RunCycleResponseSchema);
@@ -357,15 +355,6 @@ export const buildApp = ({
     return TimelineApiResponseSchema.parse({
       success: true,
       data: await adapter.getEventTimeline(from, to),
-    });
-  });
-
-  app.get("/api/fault-recurrence", async (request) => {
-    const code = Number((request.query as Record<string, string>).code);
-
-    return FaultRecurrenceApiResponseSchema.parse({
-      success: true,
-      data: await adapter.getFaultRecurrence(Number.isFinite(code) ? code : -1),
     });
   });
 
