@@ -129,6 +129,11 @@ const MOC_STOP_BITS: Array<[number, string]> = [
 export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
   private db: DatabaseSync | null = null;
 
+  // 传感器汇总缓存：慢统计（恒零/30天哨兵计数）60s，整表汇总 3s
+  private slowStats: { at: number; allZero: Set<string>; sentinel: Map<string, number> } | null =
+    null;
+  private summariesCache: { at: number; data: SensorSummary[] } | null = null;
+
   private openDb(): DatabaseSync | null {
     if (this.db) {
       return this.db;
@@ -172,14 +177,22 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
       .all() as unknown as SensorDefRow[];
   }
 
-  private latestValues(db: DatabaseSync): Map<string, { value: number; ts: number }> {
-    const rows = db
-      .prepare(
-        `SELECT std_tag, value, ts FROM sensor_hyper
-         WHERE id IN (SELECT MAX(id) FROM sensor_hyper GROUP BY std_tag)`,
-      )
-      .all() as unknown as Array<{ std_tag: string; value: number; ts: number }>;
-    return new Map(rows.map((r) => [r.std_tag, { value: r.value, ts: r.ts }]));
+  /** 每个测点的最新值：逐测点走 (std_tag, ts) 索引，远快于全表 GROUP BY。 */
+  private latestValues(
+    db: DatabaseSync,
+    tags: string[],
+  ): Map<string, { value: number; ts: number }> {
+    const stmt = db.prepare(
+      `SELECT value, ts FROM sensor_hyper WHERE std_tag = ? ORDER BY ts DESC LIMIT 1`,
+    );
+    const map = new Map<string, { value: number; ts: number }>();
+    for (const tag of tags) {
+      const row = stmt.get(tag) as { value: number; ts: number } | undefined;
+      if (row) {
+        map.set(tag, row);
+      }
+    }
+    return map;
   }
 
   /** 把某 tag 在 [from,to) 的数据按 buckets 段取均值；空段沿用上一段（seed=窗口前最后值）。 */
@@ -328,45 +341,59 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
     );
   }
 
+  /** 恒零判定 + 30 天哨兵计数：开销大，60s 缓存一次。 */
+  private computeSlowStats(db: DatabaseSync, defs: SensorDefRow[]): NonNullable<typeof this.slowStats> {
+    const now = Date.now();
+    if (this.slowStats && now - this.slowStats.at < 60_000) {
+      return this.slowStats;
+    }
+
+    // 全程恒为 0 的测点视为未配备：逐测点 EXISTS（有非零值即刻返回）
+    const allZero = new Set<string>();
+    const nonZeroStmt = db.prepare(
+      `SELECT 1 FROM sensor_hyper WHERE std_tag = ? AND value != 0 LIMIT 1`,
+    );
+    const anyStmt = db.prepare(`SELECT 1 FROM sensor_hyper WHERE std_tag = ? LIMIT 1`);
+    for (const d of defs) {
+      if (!nonZeroStmt.get(d.std_tag) && anyStmt.get(d.std_tag)) {
+        allZero.add(d.std_tag);
+      }
+    }
+
+    // 近 30 天哨兵值次数（仅温度/速度类，走 (std_tag, ts) 索引）
+    const since30d = now - 30 * DAY;
+    const sentinel = new Map<string, number>();
+    for (const [cond, tags] of [
+      ["(value <= -39.9 OR value >= 199.9)", defs.filter((d) => d.unit === "℃").map((d) => d.std_tag)],
+      ["(value >= 600 OR value < 0)", defs.filter((d) => d.unit === "m/min").map((d) => d.std_tag)],
+    ] as Array<[string, string[]]>) {
+      const stmt = db.prepare(
+        `SELECT COUNT(*) AS cnt FROM sensor_hyper WHERE std_tag = ? AND ts >= ? AND ${cond}`,
+      );
+      for (const tag of tags) {
+        const r = stmt.get(tag, since30d) as { cnt: number };
+        if (r.cnt > 0) {
+          sentinel.set(tag, r.cnt);
+        }
+      }
+    }
+
+    this.slowStats = { at: now, allZero, sentinel };
+    return this.slowStats;
+  }
+
   async getSensorSummaries(): Promise<SensorSummary[]> {
+    if (this.summariesCache && Date.now() - this.summariesCache.at < 3_000) {
+      return this.summariesCache.data;
+    }
     return this.withDb(
       (db) => {
         const defs = this.sensorDefs(db);
-        const latest = this.latestValues(db);
         const now = Date.now();
+        const latest = this.latestValues(db, defs.map((d) => d.std_tag));
+        const { allZero, sentinel: sentinelCounts } = this.computeSlowStats(db, defs);
 
-        // 全程恒为 0 的测点视为未配备（无效）
-        const allZero = new Set<string>();
-        for (const r of db
-          .prepare(`SELECT std_tag, MAX(ABS(value)) AS mx FROM sensor_hyper GROUP BY std_tag`)
-          .all() as unknown as Array<{ std_tag: string; mx: number }>) {
-          if (r.mx === 0) {
-            allZero.add(r.std_tag);
-          }
-        }
-
-        // 近 30 天哨兵值次数（分单位类型两批查，避免逐 tag 查询）
-        const since30d = now - 30 * DAY;
-        const sentinelCounts = new Map<string, number>();
-        for (const [cond, tags] of [
-          ["(value <= -39.9 OR value >= 199.9)", defs.filter((d) => d.unit === "℃").map((d) => d.std_tag)],
-          ["(value >= 600 OR value < 0)", defs.filter((d) => d.unit === "m/min").map((d) => d.std_tag)],
-        ] as Array<[string, string[]]>) {
-          if (tags.length === 0) continue;
-          const placeholders = tags.map(() => "?").join(",");
-          const rows = db
-            .prepare(
-              `SELECT std_tag, COUNT(*) AS cnt FROM sensor_hyper
-               WHERE ts >= ? AND std_tag IN (${placeholders}) AND ${cond}
-               GROUP BY std_tag`,
-            )
-            .all(since30d, ...tags) as unknown as Array<{ std_tag: string; cnt: number }>;
-          for (const r of rows) {
-            sentinelCounts.set(r.std_tag, r.cnt);
-          }
-        }
-
-        return defs.map((d) => {
+        const result = defs.map((d) => {
           const lv = latest.get(d.std_tag);
           const stale = !lv || now - lv.ts > 5 * 60_000;
           const sentinel = lv ? isSentinel(d.unit, lv.value) : false;
@@ -392,6 +419,8 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
             unit: d.unit,
           };
         });
+        this.summariesCache = { at: Date.now(), data: result };
+        return result;
       },
       () => super.getSensorSummaries(),
     );
@@ -422,10 +451,9 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           .get(sensorId) as { value: number; ts: number } | undefined;
         const stale = !lv || now - lv.ts > 5 * 60_000;
         const sentinel = lv ? isSentinel(def.unit, lv.value) : false;
-        const zeroRow = db
-          .prepare(`SELECT MAX(ABS(value)) AS mx FROM sensor_hyper WHERE std_tag = ?`)
-          .get(sensorId) as { mx: number | null };
-        const zero = zeroRow.mx === 0;
+        const zero =
+          !db.prepare(`SELECT 1 FROM sensor_hyper WHERE std_tag = ? AND value != 0 LIMIT 1`).get(sensorId) &&
+          Boolean(db.prepare(`SELECT 1 FROM sensor_hyper WHERE std_tag = ? LIMIT 1`).get(sensorId));
 
         // 近 30 天哨兵值次数（与总览口径一致）
         let failures30d = 0;

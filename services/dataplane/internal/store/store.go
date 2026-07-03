@@ -88,6 +88,13 @@ CREATE TABLE IF NOT EXISTS sensor_hyper (
 );
 CREATE INDEX IF NOT EXISTS idx_sensor_hyper_tag_ts ON sensor_hyper(std_tag, ts);
 CREATE INDEX IF NOT EXISTS idx_sensor_hyper_ts ON sensor_hyper(ts);
+-- 部分索引：加速传感器汇总页的哨兵计数与恒零判定（谓词与查询端保持一致）
+CREATE INDEX IF NOT EXISTS idx_sensor_sentinel_temp ON sensor_hyper(std_tag, ts)
+  WHERE value <= -39.9 OR value >= 199.9;
+CREATE INDEX IF NOT EXISTS idx_sensor_sentinel_speed ON sensor_hyper(std_tag, ts)
+  WHERE value >= 600 OR value < 0;
+CREATE INDEX IF NOT EXISTS idx_sensor_nonzero ON sensor_hyper(std_tag)
+  WHERE value != 0;
 
 CREATE TABLE IF NOT EXISTS state_hyper (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
