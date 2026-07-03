@@ -420,6 +420,67 @@ export const FaultRuleItemSchema = z.object({
 });
 export const FaultRulesResponseSchema = z.array(FaultRuleItemSchema);
 
+// ===== 故障冻结帧 =====
+export const FreezeFrameSignalSchema = z.object({
+  name: z.string(),
+  unit: z.string(),
+  points: z.array(z.object({ ts: z.number(), value: z.number() })),
+});
+export const FreezeFrameSchema = z.object({
+  ts: z.number(), // 故障时刻
+  signals: z.array(FreezeFrameSignalSchema),
+});
+
+// ===== 一键体检 =====
+export const HealthSymmetrySchema = z.object({
+  item: z.string(),
+  left: z.number(),
+  right: z.number(),
+  unit: z.string(),
+  diffText: z.string(),
+  judge: z.enum(["normal", "attention", "invalid"]),
+});
+export const HealthReportSchema = z.object({
+  scannedAt: z.number(),
+  score: z.number(),
+  grade: z.enum(["优", "良", "注意", "异常"]),
+  modules: z.array(z.object({ name: z.string(), ok: z.boolean() })),
+  sensors: z.object({
+    total: z.number(),
+    valid: z.number(),
+    notInstalled: z.number(),
+    invalid: z.array(z.object({ name: z.string(), state: z.string() })),
+  }),
+  activeFaults: z.array(z.object({ name: z.string(), type: z.number(), occurTs: z.number() })),
+  symmetry: z.array(HealthSymmetrySchema),
+});
+
+// ===== 事件关联时间线 =====
+export const TimelineEventSchema = z.object({
+  ts: z.number(),
+  kind: z.enum(["fault", "clear", "op", "state"]),
+  text: z.string(),
+  tone: z.enum(["stop", "warn", "ok", "op", "state"]),
+});
+export const TimelineResponseSchema = z.object({
+  fromMs: z.number(),
+  toMs: z.number(),
+  events: z.array(TimelineEventSchema),
+});
+export const TimelineQuerySchema = z.object({
+  from: z.coerce.number().int().positive(),
+  to: z.coerce.number().int().positive(),
+});
+
+// ===== 故障复发统计 =====
+export const FaultRecurrenceSchema = z.object({
+  count: z.number(),
+  avgIntervalSec: z.number().nullable(),
+  avgDurationSec: z.number().nullable(),
+  maxDurationSec: z.number().nullable(),
+  lastOccurTs: z.number().nullable(),
+});
+
 // 采煤机当前机况（主页状态胶囊）
 export const MachineStatusSchema = z.object({
   state: z.enum(["cutting", "dispatch", "stopped", "offline"]),
@@ -523,6 +584,11 @@ export type FaultRuleItem = z.infer<typeof FaultRuleItemSchema>;
 export type InternalFaultRules = z.infer<typeof InternalFaultRulesSchema>;
 export type LiveFault = z.infer<typeof LiveFaultSchema>;
 export type MachineStatus = z.infer<typeof MachineStatusSchema>;
+export type FreezeFrame = z.infer<typeof FreezeFrameSchema>;
+export type HealthReport = z.infer<typeof HealthReportSchema>;
+export type TimelineEvent = z.infer<typeof TimelineEventSchema>;
+export type TimelineResponse = z.infer<typeof TimelineResponseSchema>;
+export type FaultRecurrence = z.infer<typeof FaultRecurrenceSchema>;
 export type DowntimeSegment = z.infer<typeof DowntimeSegmentSchema>;
 export type DowntimeResponse = z.infer<typeof DowntimeResponseSchema>;
 export type RankingsResponse = z.infer<typeof RankingsResponseSchema>;

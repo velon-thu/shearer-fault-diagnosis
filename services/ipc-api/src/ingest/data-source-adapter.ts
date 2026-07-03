@@ -2,8 +2,12 @@ import type {
   BootstrapResponse,
   DataWindow,
   DowntimeResponse,
+  FaultRecurrence,
   FaultRuleItem,
+  FreezeFrame,
+  HealthReport,
   MachineStatus,
+  TimelineResponse,
   InternalFaultRules,
   LiveFault,
   CheckinsResponse,
@@ -63,6 +67,10 @@ export interface DataSourceAdapter {
   getLiveFaults(limit?: number): Promise<LiveFault[]>;
   getDowntime(fromMs?: number, toMs?: number): Promise<DowntimeResponse>;
   getMachineStatus(): Promise<MachineStatus>;
+  getFreezeFrame(tsMs: number): Promise<FreezeFrame>;
+  getHealthReport(): Promise<HealthReport>;
+  getEventTimeline(fromMs: number, toMs: number): Promise<TimelineResponse>;
+  getFaultRecurrence(code: number): Promise<FaultRecurrence>;
   getCheckins(): Promise<CheckinsResponse>;
   saveCheckin(payload: CheckinsSubmitRequest): Promise<CheckinsResponse>;
   getKnowledgeAssets(): Promise<KnowledgeAssetsResponse>;

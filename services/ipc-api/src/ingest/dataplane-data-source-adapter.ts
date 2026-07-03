@@ -18,8 +18,12 @@ import type {
   FaultCodeResult,
   DowntimeResponse,
   DowntimeSegment,
+  FaultRecurrence,
+  FreezeFrame,
+  HealthReport,
   HomeSummary,
   LiveFault,
+  TimelineResponse,
   PumpAnalysisRange,
   PumpAnalysisResponse,
   RunCycleResponse,
@@ -849,6 +853,243 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
         return items.slice(0, limit);
       },
       () => super.getLiveFaults(),
+    );
+  }
+
+  /** 故障冻结帧：故障时刻前后 ±60s 的关键信号（秒级），复刻汽车诊断仪 Freeze Frame。 */
+  async getFreezeFrame(tsMs: number): Promise<FreezeFrame> {
+    return this.withDb(
+      (db) => {
+        const SIGNALS: Array<[string, string, string]> = [
+          ["牵引速度", "left_speed_measured", "m/min"],
+          ["左截割负荷", "left_cutter_load_pct", "%"],
+          ["右截割负荷", "right_cutter_load_pct", "%"],
+          ["左截割电流", "left_cutter_current_u", "A"],
+          ["右截割电流", "right_cutter_current_u", "A"],
+          ["左牵引电流", "left_haul_current_u", "A"],
+          ["右牵引电流", "right_haul_current_u", "A"],
+          ["左截割温度", "left_cutter_temp", "℃"],
+          ["右截割温度", "right_cutter_temp", "℃"],
+          ["左泵电流", "left_pump_current_u", "A"],
+          ["左水路压力", "left_water_pressure", "MPa"],
+        ];
+        const lo = tsMs - 60_000;
+        const hi = tsMs + 60_000;
+        const buckets = 120;
+        const step = (hi - lo) / buckets;
+        const signals = SIGNALS.map(([name, tag, unit]) => {
+          const seed = (
+            db
+              .prepare(`SELECT value AS v FROM sensor_hyper WHERE std_tag=? AND ts<? ORDER BY ts DESC LIMIT 1`)
+              .get(tag, lo) as { v: number } | undefined
+          )?.v;
+          const values = this.bucketSeries(db, tag, lo, hi, buckets, seed ?? 0);
+          return {
+            name,
+            unit,
+            points: values.map((v, i) => ({ ts: Math.round(lo + i * step), value: v })),
+          };
+        });
+        return { ts: tsMs, signals };
+      },
+      () => super.getFreezeFrame(tsMs),
+    );
+  }
+
+  /** 一键体检：模块通讯 + 传感器有效性 + 激活故障 + 左右对称性诊断 + 总分。 */
+  async getHealthReport(): Promise<HealthReport> {
+    const summaries = await this.getSensorSummaries();
+    return this.withDb(
+      (db) => {
+        const now = Date.now();
+
+        // 模块通讯
+        const conn = this.connectionFromDb(db);
+        const modules = [
+          { name: "HPC", ok: conn.hpc === "ok" },
+          { name: "MOC", ok: conn.moc === "ok" },
+          { name: "BOC", ok: conn.boc === "ok" },
+          { name: "AXI", ok: conn.axi === "ok" },
+          { name: "WCR", ok: conn.wcr === "ok" },
+          { name: "SGC", ok: conn.sgc === "ok" },
+          { name: "BP1", ok: conn.bp1 === "ok" },
+          { name: "BP2", ok: conn.bp2 === "ok" },
+        ];
+
+        // 传感器有效性（恒零=未配备单列，不扣分）
+        const notInstalled = summaries.filter((x) => x.state.includes("恒为0")).length;
+        const invalid = summaries
+          .filter((x) => !x.valid && !x.state.includes("恒为0"))
+          .map((x) => ({ name: x.name, state: x.state }));
+        const sensors = {
+          total: summaries.length,
+          valid: summaries.filter((x) => x.valid).length,
+          notInstalled,
+          invalid,
+        };
+
+        // 当前激活故障（警告/停机）
+        const activeFaults = (
+          db
+            .prepare(
+              `SELECT fr.name, fr.type, fn.occur_ts FROM fault_normal fn
+               JOIN fault_rule fr ON fr.fault_code = fn.fault_code
+               WHERE fn.status = 1 AND fr.type IN (1, 2)
+               ORDER BY fr.type DESC, fn.occur_ts DESC LIMIT 30`,
+            )
+            .all() as unknown as Array<{ name: string; type: number; occur_ts: number }>
+        ).map((f) => ({ name: f.name, type: f.type, occurTs: f.occur_ts }));
+
+        // 左右对称性（近10分钟均值对比）
+        const PAIRS: Array<[string, string, string, string, number, boolean]> = [
+          // [名称, 左tag, 右tag, 单位, 阈值, 相对差?]
+          ["截割电机温度", "left_cutter_temp", "right_cutter_temp", "℃", 8, false],
+          ["牵引电机温度", "left_haul_temp", "right_haul_temp", "℃", 8, false],
+          ["泵电机温度", "left_pump_temp", "right_pump_temp", "℃", 8, false],
+          ["摇臂温度", "left_arm_temp", "right_arm_temp", "℃", 8, false],
+          ["截割电流", "left_cutter_current_u", "right_cutter_current_u", "A", 0.2, true],
+          ["牵引电流", "left_haul_current_u", "right_haul_current_u", "A", 0.2, true],
+          ["泵电流", "left_pump_current_u", "right_pump_current_u", "A", 0.2, true],
+          ["截割负荷", "left_cutter_load_pct", "right_cutter_load_pct", "%", 0.2, true],
+          ["水路压力", "left_water_pressure", "right_water_pressure", "MPa", 0.25, true],
+          ["水路流量", "left_water_flow1", "right_water_flow1", "L/Min", 0.25, true],
+        ];
+        const avgStmt = db.prepare(
+          `SELECT AVG(value) AS a FROM sensor_hyper WHERE std_tag = ? AND ts >= ?`,
+        );
+        const since = now - 10 * 60_000;
+        const symmetry = PAIRS.map(([item, lTag, rTag, unit, thr, rel]) => {
+          const l = (avgStmt.get(lTag, since) as { a: number | null }).a;
+          const r = (avgStmt.get(rTag, since) as { a: number | null }).a;
+          if (l === null || r === null || isSentinel(unit, l) || isSentinel(unit, r)) {
+            return { item, left: l ?? 0, right: r ?? 0, unit, diffText: "--", judge: "invalid" as const };
+          }
+          const left = Number(l.toFixed(1));
+          const right = Number(r.toFixed(1));
+          const diff = Math.abs(left - right);
+          const base = Math.max(Math.abs(left), Math.abs(right));
+          const attention = rel
+            ? base > 1 && diff / base > thr // 双侧接近0视为停机中，正常
+            : diff > thr;
+          const diffText = rel
+            ? base > 1
+              ? `${((diff / base) * 100).toFixed(0)}%`
+              : "—"
+            : `${diff.toFixed(1)}${unit}`;
+          return { item, left, right, unit, diffText, judge: attention ? ("attention" as const) : ("normal" as const) };
+        });
+
+        // 总分
+        let score = 100;
+        const stopFaults = activeFaults.filter((f) => f.type === 2).length;
+        const warnFaults = activeFaults.filter((f) => f.type === 1).length;
+        score -= Math.min(30, stopFaults * 10);
+        score -= Math.min(15, warnFaults * 3);
+        score -= Math.min(20, invalid.length * 2);
+        score -= Math.min(20, symmetry.filter((x) => x.judge === "attention").length * 4);
+        score -= Math.min(10, modules.filter((m) => !m.ok).length * 5);
+        score = Math.max(0, score);
+        const grade = score >= 90 ? ("优" as const) : score >= 75 ? ("良" as const) : score >= 60 ? ("注意" as const) : ("异常" as const);
+
+        return { scannedAt: now, score, grade, modules, sensors, activeFaults, symmetry };
+      },
+      () => super.getHealthReport(),
+    );
+  }
+
+  /** 事件关联时间线：故障发生/消除 + 操作按下 + 关键电机启停，按时间归并。 */
+  async getEventTimeline(fromMs: number, toMs: number): Promise<TimelineResponse> {
+    return this.withDb(
+      (db) => {
+        type Ev = { ts: number; kind: "fault" | "clear" | "op" | "state"; text: string; tone: "stop" | "warn" | "ok" | "op" | "state" };
+        const events: Ev[] = [];
+
+        const faults = db
+          .prepare(
+            `SELECT fn.occur_ts, fn.clear_ts, fr.name, fr.type FROM fault_normal fn
+             JOIN fault_rule fr ON fr.fault_code = fn.fault_code
+             WHERE fr.type IN (1,2) AND fn.occur_ts BETWEEN ? AND ?
+             ORDER BY fn.occur_ts DESC LIMIT 300`,
+          )
+          .all(fromMs, toMs) as unknown as Array<{ occur_ts: number; clear_ts: number | null; name: string; type: number }>;
+        for (const f of faults) {
+          events.push({ ts: f.occur_ts, kind: "fault", text: f.name, tone: f.type === 2 ? "stop" : "warn" });
+          if (f.clear_ts !== null && f.clear_ts <= toMs) {
+            events.push({ ts: f.clear_ts, kind: "clear", text: `${f.name}（消除）`, tone: "ok" });
+          }
+        }
+
+        const ops = db
+          .prepare(
+            `SELECT occur_ts, source_name, op_name FROM device_action
+             WHERE action = '按下' AND source_type = '输入' AND occur_ts BETWEEN ? AND ?
+             ORDER BY occur_ts DESC LIMIT 300`,
+          )
+          .all(fromMs, toMs) as unknown as Array<{ occur_ts: number; source_name: string; op_name: string }>;
+        for (const o of ops) {
+          events.push({ ts: o.occur_ts, kind: "op", text: `${o.source_name} 按下「${o.op_name}」`, tone: "op" });
+        }
+
+        const STATE_TAGS: Array<[string, string]> = [
+          ["left_cutter_running", "左截割电机"],
+          ["right_cutter_running", "右截割电机"],
+          ["pump_running", "泵电机"],
+          ["haul_started", "牵引"],
+        ];
+        const stStmt = db.prepare(
+          `SELECT ts, state_code AS v FROM state_hyper WHERE std_tag = ? AND ts BETWEEN ? AND ? ORDER BY ts`,
+        );
+        const seedStmt = db.prepare(
+          `SELECT state_code AS v FROM state_hyper WHERE std_tag = ? AND ts < ? ORDER BY ts DESC LIMIT 1`,
+        );
+        for (const [tag, label] of STATE_TAGS) {
+          let prev = (seedStmt.get(tag, fromMs) as { v: number } | undefined)?.v ?? 0;
+          for (const r of stStmt.all(tag, fromMs, toMs) as unknown as Array<{ ts: number; v: number }>) {
+            if (r.v !== prev) {
+              events.push({ ts: r.ts, kind: "state", text: `${label}${r.v === 1 ? "启动" : "停止"}`, tone: "state" });
+              prev = r.v;
+            }
+          }
+        }
+
+        events.sort((a, b) => b.ts - a.ts);
+        return { fromMs, toMs, events: events.slice(0, 400) };
+      },
+      () => super.getEventTimeline(fromMs, toMs),
+    );
+  }
+
+  /** 故障复发统计：某故障码在全库范围内的次数/平均间隔/平均持续。 */
+  async getFaultRecurrence(code: number): Promise<FaultRecurrence> {
+    return this.withDb(
+      (db) => {
+        const rows = db
+          .prepare(
+            `SELECT occur_ts, clear_ts FROM fault_normal WHERE fault_code = ? ORDER BY occur_ts`,
+          )
+          .all(code) as unknown as Array<{ occur_ts: number; clear_ts: number | null }>;
+        if (rows.length === 0) {
+          return { count: 0, avgIntervalSec: null, avgDurationSec: null, maxDurationSec: null, lastOccurTs: null };
+        }
+        const durations = rows
+          .filter((r) => r.clear_ts !== null)
+          .map((r) => (r.clear_ts as number) - r.occur_ts);
+        const intervals: number[] = [];
+        for (let i = 1; i < rows.length; i += 1) {
+          intervals.push(rows[i].occur_ts - rows[i - 1].occur_ts);
+        }
+        const avg = (a: number[]) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
+        const avgInterval = avg(intervals);
+        const avgDuration = avg(durations);
+        return {
+          count: rows.length,
+          avgIntervalSec: avgInterval === null ? null : Math.round(avgInterval / 1000),
+          avgDurationSec: avgDuration === null ? null : Math.round(avgDuration / 1000),
+          maxDurationSec: durations.length ? Math.round(Math.max(...durations) / 1000) : null,
+          lastOccurTs: rows[rows.length - 1].occur_ts,
+        };
+      },
+      () => super.getFaultRecurrence(),
     );
   }
 

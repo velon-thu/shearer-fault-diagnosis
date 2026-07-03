@@ -10,6 +10,11 @@ import {
   InternalFaultRulesSchema,
   LiveFaultsResponseSchema,
   MachineStatusSchema,
+  FreezeFrameSchema,
+  HealthReportSchema,
+  TimelineQuerySchema,
+  TimelineResponseSchema,
+  FaultRecurrenceSchema,
   AuthLoginRequestSchema,
   AuthLoginResponseSchema,
   AuthLogoutResponseSchema,
@@ -72,6 +77,10 @@ const InternalFaultRulesApiResponseSchema = createApiSuccessResponseSchema(Inter
 const LiveFaultsApiResponseSchema = createApiSuccessResponseSchema(LiveFaultsResponseSchema);
 const DowntimeApiResponseSchema = createApiSuccessResponseSchema(DowntimeResponseSchema);
 const MachineStatusApiResponseSchema = createApiSuccessResponseSchema(MachineStatusSchema);
+const FreezeFrameApiResponseSchema = createApiSuccessResponseSchema(FreezeFrameSchema);
+const HealthReportApiResponseSchema = createApiSuccessResponseSchema(HealthReportSchema);
+const TimelineApiResponseSchema = createApiSuccessResponseSchema(TimelineResponseSchema);
+const FaultRecurrenceApiResponseSchema = createApiSuccessResponseSchema(FaultRecurrenceSchema);
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
 const KnowledgeAssetsApiResponseSchema = createApiSuccessResponseSchema(KnowledgeAssetsResponseSchema);
 const RunCycleApiResponseSchema = createApiSuccessResponseSchema(RunCycleResponseSchema);
@@ -325,6 +334,40 @@ export const buildApp = ({
       data: await adapter.getFaultRules(),
     }),
   );
+
+  app.get("/api/freeze-frame", async (request) => {
+    const ts = Number((request.query as Record<string, string>).ts);
+
+    return FreezeFrameApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getFreezeFrame(Number.isFinite(ts) ? ts : Date.now()),
+    });
+  });
+
+  app.get("/api/health-check", async () =>
+    HealthReportApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getHealthReport(),
+    }),
+  );
+
+  app.get("/api/event-timeline", async (request) => {
+    const { from, to } = TimelineQuerySchema.parse(request.query);
+
+    return TimelineApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getEventTimeline(from, to),
+    });
+  });
+
+  app.get("/api/fault-recurrence", async (request) => {
+    const code = Number((request.query as Record<string, string>).code);
+
+    return FaultRecurrenceApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getFaultRecurrence(Number.isFinite(code) ? code : -1),
+    });
+  });
 
   app.get("/api/machine-status", async () =>
     MachineStatusApiResponseSchema.parse({

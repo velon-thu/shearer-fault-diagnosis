@@ -36,12 +36,15 @@ const MACHINE_STYLE: Record<MachineStatus["state"], { label: string; color: stri
 // 主页面 = 时钟 + 功能导航（Launchpad 风格：大图标、无说明文字、单屏不滚动）
 const homeNavItems = [
   { label: "传感器", href: "/sensors", icon: "传", from: "#54a5ff", to: "#2e6be6" },
-  { label: "故障代码查询", href: "/fault-codes", icon: "码", from: "#ffb03a", to: "#f07b22" },
+  { label: "信号对比", href: "/signals", icon: "比", from: "#4ad4e0", to: "#1fa3c4" },
   { label: "实时故障", href: "/live-faults", icon: "障", from: "#ff6b5c", to: "#e03e30" },
+  { label: "事件时间线", href: "/timeline", icon: "线", from: "#7b9bff", to: "#4b63e6" },
+  { label: "一键体检", href: "/health", icon: "体", from: "#2dd4bf", to: "#0d9488" },
   { label: "停机分析", href: "/downtime", icon: "停", from: "#4cd97b", to: "#2aa857" },
   { label: "近期故障排名", href: "/rankings", icon: "排", from: "#a78bfa", to: "#7c4de0" },
+  { label: "故障代码查询", href: "/fault-codes", icon: "码", from: "#ffb03a", to: "#f07b22" },
   { label: "日常检修打卡", href: "/checkins", icon: "检", from: "#5ee0b8", to: "#2bb88c" },
-  { label: "知识库", href: "/knowledge", icon: "知", from: "#7b9bff", to: "#4b63e6" },
+  { label: "知识库", href: "/knowledge", icon: "知", from: "#8b9bff", to: "#5b63d6" },
   { label: "系统设置", href: "/settings", icon: "设", from: "#b3b9c6", to: "#7c8494" },
 ] as const;
 

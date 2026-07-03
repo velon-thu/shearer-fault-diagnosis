@@ -1,8 +1,12 @@
 import type {
   DataWindow,
   DowntimeResponse,
+  FaultRecurrence,
   FaultRuleItem,
+  FreezeFrame,
+  HealthReport,
   MachineStatus,
+  TimelineResponse,
   InternalFaultRules,
   LiveFault,
   BootstrapResponse,
@@ -118,6 +122,30 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
 
   async getMachineStatus(): Promise<MachineStatus> {
     return { state: "offline", speedMmin: 0 };
+  }
+
+  async getFreezeFrame(tsMs: number): Promise<FreezeFrame> {
+    return { ts: tsMs, signals: [] };
+  }
+
+  async getHealthReport(): Promise<HealthReport> {
+    return {
+      scannedAt: Date.now(),
+      score: 0,
+      grade: "异常",
+      modules: [],
+      sensors: { total: 0, valid: 0, notInstalled: 0, invalid: [] },
+      activeFaults: [],
+      symmetry: [],
+    };
+  }
+
+  async getEventTimeline(fromMs: number, toMs: number): Promise<TimelineResponse> {
+    return { fromMs, toMs, events: [] };
+  }
+
+  async getFaultRecurrence(_code?: number): Promise<FaultRecurrence> {
+    return { count: 0, avgIntervalSec: null, avgDurationSec: null, maxDurationSec: null, lastOccurTs: null };
   }
 
   async getLiveFaults(): Promise<LiveFault[]> {
