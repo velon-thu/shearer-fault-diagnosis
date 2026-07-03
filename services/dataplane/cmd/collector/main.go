@@ -2,8 +2,9 @@
 //
 // 启动流程（每次启动回到确定的初始状态）：
 //  1. 清空业务表（sensor_hyper/state_hyper/device_action/fault_normal/fault_internal/fifo_state）；
-//  2. 预载：直接解析 org 文件，把同步点（-sync-org-ts，默认 2026-06-30 00:00）之前
-//     -preload（默认 24h）的数据经同一套引擎灌入数据库，org 时间轴平移到"现在"结尾；
+//  2. 预载：直接解析 org 文件，把同步点（-sync-org-ts，默认 2026-06-30 20:45）之前
+//     -preload（默认 150h，覆盖 06-26 起全部数据）经同一套引擎灌入数据库，
+//     org 时间轴平移到"现在"结尾；
 //  3. 直播：100ms 扫描共享内存（replayer 从同步点开始续播），沿用同一套引擎。
 //
 // 采集策略：
@@ -42,7 +43,7 @@ func main() {
 		snapshot  = flag.Duration("snapshot", 60*time.Second, "全量快照周期（变化存之外的心跳）")
 		dir       = flag.String("dir", "testdata", "org 文件目录（预载用）")
 		syncTs    = flag.Int64("sync-org-ts", defs.DefaultSyncOrgTsMs, "同步点 org 毫秒时间戳")
-		preload   = flag.Duration("preload", 24*time.Hour, "预载时长（0 关闭预载）")
+		preload   = flag.Duration("preload", 150*time.Hour, "预载时长（默认覆盖同步点前全部 org 数据；0 关闭预载）")
 		resetData = flag.Bool("reset", true, "启动时清空业务表（每次启动回到同一初始状态）")
 	)
 	flag.Parse()

@@ -48,7 +48,7 @@ echo "[3/4] 启动 collector（清库+预载历史数据）…"
 COLLECTOR_PID=$!
 
 # 等预载完成再起回放器，保证"历史→直播"无缝衔接
-for _ in $(seq 1 90); do
+for _ in $(seq 1 300); do
   if grep -q "预载完成" logs/collector.log 2> /dev/null; then
     break
   fi

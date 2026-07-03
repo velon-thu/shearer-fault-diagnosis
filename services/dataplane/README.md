@@ -43,8 +43,9 @@ pnpm dev
 
 - **每次启动重置**：collector 启动即清空业务表（-reset=true），随后预载、
   再直播——重开系统总是回到同步点时刻的状态。
-- **预载 + 直播**：同步点默认 org 时间 2026-06-30 00:00（defs.DefaultSyncOrgTsMs）。
-  collector 直接解析 org 把同步点前 24h（-preload）灌库（时间轴平移到"现在"结尾）；
+- **预载 + 直播**：同步点默认 org 时间 2026-06-30 20:45（defs.DefaultSyncOrgTsMs，
+  选点：采煤机运行中且故障种类峰值时段）。collector 直接解析 org 把同步点前
+  全部数据（-preload 默认 150h，即 06-26 起约 4.9 天）灌库（时间轴平移到"现在"结尾）；
   replayer 从同步点起播（-start-org-ts），按当前系统时间紧密逐行写共享内存。
   start-services.sh 会先等预载完成再起回放器，保证历史与直播无缝衔接。
 - **BOC 展示性覆盖**：现有 org 数据第 285 列（BOC 通讯值，地址 2000）几乎全程为 0，
