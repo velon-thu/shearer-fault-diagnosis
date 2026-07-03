@@ -69,6 +69,18 @@ const saveFaultPrefs = (prefs: FaultPrefs) => {
   }
 };
 
+const TYPE_TEXT = ["提示", "警告", "停机"];
+const KIND_TEXT: Record<number, string> = {
+  1: "变频器", 2: "电机", 3: "模块", 4: "传感器", 5: "自动化", 6: "内部", 7: "来源",
+};
+
+// handle 形如 "1.xxx。2.xxx。3.xxx。" → 拆成建议条目
+const splitHandle = (handle?: string): string[] =>
+  (handle ?? "")
+    .split(/\d+[.、]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
 const pad = (n: number) => String(n).padStart(2, "0");
 
 const fmtDateTime = (ms: number) => {
@@ -179,6 +191,7 @@ export default function RankingsPage() {
   const [faultPrefs, setFaultPrefs] = useState<FaultPrefs>({ hidden: new Set(), shown: new Set() });
   const [faultSearch, setFaultSearch] = useState("");
   const [page, setPage] = useState(0);
+  const [detailRule, setDetailRule] = useState<FaultRuleItem | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 数据窗口 + 故障目录 + 本机隐藏配置
@@ -250,6 +263,14 @@ export default function RankingsPage() {
     }
     return result;
   }, [faultRules, faultPrefs]);
+
+  const rulesByName = useMemo(() => {
+    const map = new Map<string, FaultRuleItem>();
+    for (const rule of faultRules) {
+      map.set(rule.name, rule);
+    }
+    return map;
+  }, [faultRules]);
 
   const hiddenNames = useMemo(() => {
     const names = new Set<string>();
@@ -419,7 +440,12 @@ export default function RankingsPage() {
                     <div className="empty">该时间段内暂无故障记录。</div>
                   ) : (
                     pagedRankings.map((item, index) => (
-                      <div className="rank-item" key={item.name}>
+                      <button
+                        className="rank-item rank-item-btn"
+                        key={item.name}
+                        onClick={() => setDetailRule(rulesByName.get(item.name) ?? null)}
+                        type="button"
+                      >
                         <div className="rank-left">
                           <div className="rank-top">
                             <span className="rank-index">{safePage * PAGE_SIZE + index + 1}</span>
@@ -427,7 +453,7 @@ export default function RankingsPage() {
                           </div>
                         </div>
                         <div className="rank-count">{item.sharePct}%</div>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
@@ -457,6 +483,35 @@ export default function RankingsPage() {
             </div>
           </>
         )}
+
+        {/* 故障详情弹窗：处理建议 + 类型/类别 */}
+        {detailRule ? (
+          <div className="fc-modal-backdrop" onClick={() => setDetailRule(null)}>
+            <div className="fc-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="fc-modal-head">
+                <span className="fc-modal-code">{detailRule.code}</span>
+                <h2 className="fc-modal-title">{detailRule.name}</h2>
+              </div>
+              <p className="fc-modal-desc">
+                类型：{TYPE_TEXT[detailRule.type] ?? detailRule.type} · 类别：
+                {KIND_TEXT[detailRule.kind] ?? detailRule.kind}
+              </p>
+              {splitHandle(detailRule.handle).length > 0 ? (
+                <>
+                  <div className="fc-modal-sub">处理建议</div>
+                  <ol className="fc-modal-suggestions">
+                    {splitHandle(detailRule.handle).map((tip, index) => (
+                      <li key={index}>{tip}</li>
+                    ))}
+                  </ol>
+                </>
+              ) : null}
+              <button className="fc-modal-close" onClick={() => setDetailRule(null)} type="button">
+                关 闭
+              </button>
+            </div>
+          </div>
+        ) : null}
       </section>
     </AppShell>
   );

@@ -550,8 +550,16 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
     return this.withDb(
       (db) =>
         (db
-          .prepare(`SELECT fault_code AS code, name, type, kind FROM fault_rule ORDER BY fault_code`)
-          .all() as unknown as Array<{ code: number; name: string; type: number; kind: number }>),
+          .prepare(
+            `SELECT fault_code AS code, name, type, kind, handle FROM fault_rule ORDER BY fault_code`,
+          )
+          .all() as unknown as Array<{
+          code: number;
+          name: string;
+          type: number;
+          kind: number;
+          handle: string;
+        }>),
       () => super.getFaultRules(),
     );
   }

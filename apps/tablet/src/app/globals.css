@@ -3236,3 +3236,22 @@ button.calendar-cell {
   font-size: 30px;
   color: var(--text-2);
 }
+
+
+/* 排名条目可点击（弹出处理建议） */
+.rank-item-btn {
+  width: 100%;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rank-item-btn:hover {
+  border-color: rgba(79, 140, 255, 0.35);
+  background: rgba(79, 140, 255, 0.08);
+}
+
+.rank-item-btn:active {
+  transform: scale(0.985);
+}

@@ -415,7 +415,8 @@ export const FaultRuleItemSchema = z.object({
   code: z.number(),
   name: z.string(),
   type: z.number(), // 0提示 1警告 2停机
-  kind: z.number(),
+  kind: z.number(), // 1变频器 2电机 3模块 4传感器 5自动化 6内部 7来源
+  handle: z.string().optional(), // 处理建议（fault_rule 独有）
 });
 export const FaultRulesResponseSchema = z.array(FaultRuleItemSchema);
 
