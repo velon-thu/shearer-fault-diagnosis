@@ -443,11 +443,11 @@ export const DowntimeResponseSchema = z.object({
   kpis: z.object({
     cuttingMs: z.number(),
     dispatchMs: z.number(),
-    stoppedMs: z.number(),
+    stoppedMs: z.number(), // 故障停机总时长
     poweroffMs: z.number(),
-    stoppedCount: z.number(),
-    longestStoppedMs: z.number(),
-    cuttingRatePct: z.number(), // 割煤时长 / 通电时长
+    stoppedCount: z.number(), // 故障停机次数
+    longestStoppedMs: z.number(), // 最长单次故障停机
+    cuttingRatePct: z.number(), // 割煤时长占比（通电时间口径）
   }),
   segments: z.array(DowntimeSegmentSchema),
 });

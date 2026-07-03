@@ -130,8 +130,12 @@ export default function DowntimePage() {
     }
   };
 
+  // 停机事件明细：从现在往前排（最新在前）
   const stoppedSegs = useMemo(
-    () => (data ? data.segments.filter((s) => s.state === "stopped") : []),
+    () =>
+      data
+        ? data.segments.filter((s) => s.state === "stopped").sort((a, b) => b.fromMs - a.fromMs)
+        : [],
     [data],
   );
 
@@ -209,26 +213,22 @@ export default function DowntimePage() {
                     <strong style={{ color: "#38d889" }}>{fmtHours(data.kpis.cuttingMs)}</strong>
                   </div>
                   <div className="dt-kpi">
-                    <span>割煤率（通电口径）</span>
+                    <span>割煤时长占比</span>
                     <strong style={{ color: "#38d889" }}>{data.kpis.cuttingRatePct}%</strong>
                   </div>
                   <div className="dt-kpi">
-                    <span>停机次数</span>
+                    <span>故障停机次数</span>
                     <strong style={{ color: "#ff5c5c" }}>{data.kpis.stoppedCount}</strong>
                   </div>
                   <div className="dt-kpi">
-                    <span>停机总时长</span>
+                    <span>故障停机总时长</span>
                     <strong style={{ color: "#ff5c5c" }}>{fmtHours(data.kpis.stoppedMs)}</strong>
                   </div>
                   <div className="dt-kpi">
-                    <span>最长单次停机</span>
+                    <span>最长单次故障停机</span>
                     <strong style={{ color: "#ffb03a" }}>
                       {fmtDuration(data.kpis.longestStoppedMs)}
                     </strong>
-                  </div>
-                  <div className="dt-kpi">
-                    <span>断电检修</span>
-                    <strong style={{ color: "#8fa3bf" }}>{fmtHours(data.kpis.poweroffMs)}</strong>
                   </div>
                 </div>
 
@@ -293,11 +293,17 @@ export default function DowntimePage() {
                                     style={{
                                       background: `${style.color}26`,
                                       color: style.color,
+                                      minWidth: 96,
                                     }}
                                   >
                                     {style.label}
                                   </span>
-                                  <div className="rank-name">{seg.causeText ?? style.label}</div>
+                                  <div className="rank-name">
+                                    {(seg.causeText ?? style.label).replace(
+                                      /^(故障停机：|人工停机：)/,
+                                      "",
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="meta-line" style={{ marginTop: 6 }}>
                                   {fmtClock(seg.fromMs)} → {fmtClock(seg.toMs)}

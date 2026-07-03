@@ -3475,7 +3475,7 @@ button.calendar-cell {
 /* ===== 停机分析 ===== */
 .dt-kpis {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 20px;
 }

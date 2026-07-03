@@ -1040,14 +1040,14 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
           }
         }
 
-        // KPI
+        // KPI（停机三项只统计"故障停机"）
         const kpis = { ...empty.kpis };
         for (const seg of segments) {
           const dur = seg.toMs - seg.fromMs;
           if (seg.state === "cutting") kpis.cuttingMs += dur;
           else if (seg.state === "dispatch") kpis.dispatchMs += dur;
           else if (seg.state === "poweroff") kpis.poweroffMs += dur;
-          else {
+          else if (seg.cause === "fault") {
             kpis.stoppedMs += dur;
             kpis.stoppedCount += 1;
             kpis.longestStoppedMs = Math.max(kpis.longestStoppedMs, dur);
