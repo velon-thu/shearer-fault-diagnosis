@@ -556,6 +556,20 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
     );
   }
 
+  async getInternalFaultRules() {
+    return this.withDb(
+      (db) => ({
+        bocHpc: db
+          .prepare(`SELECT code, name, type, kind FROM fault_boc_hpc_rule ORDER BY code`)
+          .all() as unknown as Array<{ code: number; name: string; type: number; kind: number }>,
+        moc: db
+          .prepare(`SELECT code, name, type, kind FROM fault_moc_rule ORDER BY code`)
+          .all() as unknown as Array<{ code: number; name: string; type: number; kind: number }>,
+      }),
+      () => super.getInternalFaultRules(),
+    );
+  }
+
   async getRankings(params: RankingsParams) {
     return this.withDb(
       (db) => {

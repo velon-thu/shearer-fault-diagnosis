@@ -419,6 +419,12 @@ export const FaultRuleItemSchema = z.object({
 });
 export const FaultRulesResponseSchema = z.array(FaultRuleItemSchema);
 
+// 内部故障目录（BOC/HPC 现成解析条目 + MOC 来源代码表）
+export const InternalFaultRulesSchema = z.object({
+  bocHpc: FaultRulesResponseSchema,
+  moc: FaultRulesResponseSchema,
+});
+
 export const CheckinsQuerySchema = z.object({});
 
 export const PumpAnalysisQuerySchema = z.object({
@@ -455,6 +461,7 @@ export type FaultCodeResult = z.infer<typeof FaultCodeResultSchema>;
 export type RankingItem = z.infer<typeof RankingItemSchema>;
 export type DataWindow = z.infer<typeof DataWindowSchema>;
 export type FaultRuleItem = z.infer<typeof FaultRuleItemSchema>;
+export type InternalFaultRules = z.infer<typeof InternalFaultRulesSchema>;
 export type RankingsResponse = z.infer<typeof RankingsResponseSchema>;
 export type CheckinStatus = z.infer<typeof CheckinStatusSchema>;
 export type CheckinItem = z.infer<typeof CheckinItemSchema>;

@@ -1,44 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import {
+  FaultCodeResultSchema,
+  InternalFaultRulesSchema,
+  createApiSuccessResponseSchema,
+  type FaultRuleItem,
+} from "@shearer/contracts";
+import { useEffect, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
 
-/**
- * 故障代码查询：
- *   入口（系统/变频器）→ 20 个常用代码铺满屏 → 点击弹出大字详情（点外部收起）
- *   底部"自定义故障查询"→ 大键盘（26 字母 + 10 数字）输入代码 → 详情
- *
- * TODO: 以下为 mock 占位数据，等系统/变频器故障代码仓库到位后替换为真实数据源。
- */
-type FaultEntry = {
-  code: string;
-  name: string;
-  description: string;
-  suggestions: string[];
+const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
+const InternalFaultRulesApiResponseSchema = createApiSuccessResponseSchema(InternalFaultRulesSchema);
+
+const resolveHttpBase = () => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL;
+  }
+
+  const { protocol, hostname, port } = window.location;
+
+  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
+    return `${protocol}//${hostname}:18080`;
+  }
+
+  return `${protocol}//${window.location.host}`;
 };
 
-const SYSTEM_FAULTS: FaultEntry[] = [
-  { code: "2400", name: "左截割电机过载反时限保护动作", description: "左截割电机电流持续超过额定值，反时限保护动作，系统已停机保护。", suggestions: ["检查左截割电机运行状态与负载情况。", "检查电流互感器与参数设置。", "降低牵引速度运行，观察电流变化。"] },
-  { code: "2402", name: "右截割电机过载反时限保护动作", description: "右截割电机电流持续超过额定值，反时限保护动作，系统已停机保护。", suggestions: ["检查右截割电机运行状态与负载情况。", "检查电流互感器与参数设置。", "降低牵引速度运行，观察电流变化。"] },
-  { code: "2404", name: "左牵引电机过载反时限保护动作", description: "左牵引电机长时间过载，保护动作。", suggestions: ["检查牵引部机械阻力是否异常。", "检查滚筒截割阻力与工作面煤质。", "适当降低牵引速度。"] },
-  { code: "2406", name: "泵电机过载反时限保护动作", description: "泵电机电流长时间超限，保护动作。", suggestions: ["检查液压系统压力是否异常升高。", "检查泵站溢流阀设定值。", "检查泵电机绝缘与轴承状态。"] },
-  { code: "2420", name: "左截割电机温度高保护", description: "左截割电机绕组温度超过保护阈值。", suggestions: ["检查冷却水路流量与压力。", "停机等待电机冷却后再启动。", "检查温度传感器接线是否可靠。"] },
-  { code: "2422", name: "右截割电机温度高保护", description: "右截割电机绕组温度超过保护阈值。", suggestions: ["检查冷却水路流量与压力。", "停机等待电机冷却后再启动。", "检查温度传感器接线是否可靠。"] },
-  { code: "2440", name: "左摇臂温度高报警", description: "左摇臂减速箱油温超过报警阈值。", suggestions: ["检查摇臂油位与油质。", "检查冷却水路是否畅通。", "持续超温需停机检查齿轮箱。"] },
-  { code: "2460", name: "左水路压力低保护", description: "左侧冷却水路压力低于保护阈值，截割电机禁止启动。", suggestions: ["检查供水管路与阀门开度。", "检查水路过滤器是否堵塞。", "检查水压传感器读数是否正常。"] },
-  { code: "2462", name: "右水路压力低保护", description: "右侧冷却水路压力低于保护阈值。", suggestions: ["检查供水管路与阀门开度。", "检查水路过滤器是否堵塞。", "检查水压传感器读数是否正常。"] },
-  { code: "2480", name: "瓦斯浓度超限保护", description: "工作面瓦斯浓度超过安全阈值，系统立即停机。", suggestions: ["立即按矿方安全规程处置。", "加强通风，确认瓦斯浓度回落。", "浓度正常后方可复位启动。"] },
-  { code: "2500", name: "泵箱油位低报警", description: "泵箱油位低于下限，液压系统存在吸空风险。", suggestions: ["补充液压油至规定油位。", "检查泵箱与管路是否渗漏。", "检查油位传感器是否正常。"] },
-  { code: "2520", name: "俯仰角超限报警", description: "机身俯仰角超过安全范围。", suggestions: ["检查工作面底板起伏情况。", "调整采高与行走姿态。", "确认倾角传感器安装牢固。"] },
-  { code: "2613", name: "系统处于满载限速状态", description: "截割负荷达到上限，系统自动限制牵引速度。", suggestions: ["属于自动保护，可等待负荷回落。", "持续满载建议降低采高或牵引速度。", "检查煤层硬度变化情况。"] },
-  { code: "2724", name: "牵引保护控制模块CAN通信未检出", description: "HPC 模块 CAN 总线通信中断。", suggestions: ["检查模块供电与 CAN 接线端子。", "检查总线终端电阻。", "尝试断电重启该模块。"] },
-  { code: "2728", name: "电机启停控制模块CAN通信未检出", description: "MOC 模块 CAN 总线通信中断。", suggestions: ["检查模块供电与 CAN 接线端子。", "检查总线终端电阻。", "尝试断电重启该模块。"] },
-  { code: "2733", name: "顺槽工控机网络通信未检出", description: "顺槽工控机与机载系统网络中断。", suggestions: ["检查顺槽通信链路与交换机。", "检查网线/光纤接头。", "确认顺槽工控机运行正常。"] },
-  { code: "2760", name: "左遥控器与WCR通讯未建立", description: "左遥控器未与接收模块建立通讯。", suggestions: ["检查遥控器电池电量。", "重新对码配对。", "确认接收天线连接可靠。"] },
-  { code: "2761", name: "右遥控器与WCR通讯未建立", description: "右遥控器未与接收模块建立通讯。", suggestions: ["检查遥控器电池电量。", "重新对码配对。", "确认接收天线连接可靠。"] },
-  { code: "2762", name: "因通讯中断导致系统停机", description: "关键模块通讯中断，系统执行保护性停机。", suggestions: ["查看具体中断的模块并恢复通讯。", "检查供电与总线接线。", "通讯恢复后复位重启。"] },
-  { code: "2771", name: "人员接近保护系统无效", description: "人员接近探测系统离线或自检失败。", suggestions: ["检查探测终端供电与通讯。", "确认系统自检通过后再作业。", "按安全规程降级运行或停机。"] },
-];
+const TYPE_TEXT = ["提示", "警告", "停机"];
+
+/** 弹窗内容 */
+type ModalContent = {
+  code: string;
+  title: string;
+  description?: string;
+  suggestions?: string[];
+  notFound?: boolean;
+};
+
+/**
+ * 变频器故障：mock 占位数据。
+ * TODO: 等变频器故障代码仓库到位后替换（系统/内部故障已接真实解析）。
+ */
+type FaultEntry = { code: string; name: string; description: string; suggestions: string[] };
 
 const INVERTER_FAULTS: FaultEntry[] = [
   { code: "0x0001", name: "变频器过流保护", description: "输出电流瞬时超过保护阈值。", suggestions: ["检查电机及电缆是否短路或绝缘下降。", "检查负载是否突变或卡死。", "复位后重新启动，记录发生工况。"] },
@@ -56,19 +63,12 @@ const INVERTER_FAULTS: FaultEntry[] = [
   { code: "0x000D", name: "预充电故障", description: "上电预充电过程未完成。", suggestions: ["检查预充电回路与接触器。", "检查母线电容状态。", "测量预充电电阻。"] },
   { code: "0x000E", name: "风机故障", description: "冷却风机运行异常。", suggestions: ["检查风机供电与转动是否卡阻。", "清理风道。", "更换故障风机。"] },
   { code: "0x000F", name: "制动单元故障", description: "制动斩波器回路异常。", suggestions: ["检查制动电阻阻值。", "检查制动单元接线。", "复位后监测母线电压。"] },
-  { code: "0x2201", name: "左端头站急停停机", description: "接收到来自左端头站的急停操作指令。", suggestions: ["确认左端头站急停按钮状态。", "排除现场急停原因。", "旋出急停按钮后复位。"] },
-  { code: "0x2301", name: "右端头站急停停机", description: "接收到来自右端头站的急停操作指令。", suggestions: ["确认右端头站急停按钮状态。", "排除现场急停原因。", "旋出急停按钮后复位。"] },
-  { code: "0x2401", name: "左遥控器急停停机", description: "接收到来自左遥控器的急停操作指令。", suggestions: ["确认遥控器急停按键状态。", "排除现场急停原因后复位。", "检查遥控器通讯是否正常。"] },
-  { code: "0x2601", name: "顺槽远程急停停机", description: "接收到来自顺槽控制站的远程急停指令。", suggestions: ["与顺槽操作人员确认急停原因。", "排除原因后远程复位。", "检查顺槽通讯链路。"] },
+  { code: "0x0010", name: "载波频率降额", description: "高温下自动降低载波频率。", suggestions: ["改善散热条件。", "属于自动保护，可继续运行。", "持续出现需检查冷却系统。"] },
+  { code: "0x0011", name: "对地短路保护", description: "上电自检检测到对地短路。", suggestions: ["断开电机电缆分段排查。", "测量电机对地绝缘。", "排除后重新上电。"] },
+  { code: "0x0012", name: "温度传感器异常", description: "模块温度采样信号异常。", suggestions: ["检查温度传感器接插件。", "记录故障出现频次。", "反复出现需更换驱动板。"] },
+  { code: "0x0013", name: "母线电容老化预警", description: "母线电容容量下降预警。", suggestions: ["安排检修窗口更换电容。", "监测母线电压纹波。", "避免频繁启停。"] },
   { code: "0x00FF", name: "未知内部故障", description: "变频器内部未定义故障码。", suggestions: ["记录完整故障码并联系厂家。", "断电 5 分钟后重新上电。", "反复出现需返厂检测。"] },
 ];
-
-const CATALOGS = {
-  system: { title: "系统故障代码查询", faults: SYSTEM_FAULTS },
-  inverter: { title: "变频器故障代码查询", faults: INVERTER_FAULTS },
-} as const;
-
-type Category = keyof typeof CATALOGS;
 
 const KEY_ROWS: string[][] = [
   ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
@@ -77,45 +77,119 @@ const KEY_ROWS: string[][] = [
   ["Z", "X", "C", "V", "B", "N", "M"],
 ];
 
+type Category = "system" | "inverter";
 type ViewMode = "menu" | "grid" | "custom";
 
 export default function FaultCodesPage() {
   const shellState = useAppShellState();
   const [view, setView] = useState<ViewMode>("menu");
   const [category, setCategory] = useState<Category>("system");
-  const [modalFault, setModalFault] = useState<FaultEntry | null>(null);
-  const [notFoundCode, setNotFoundCode] = useState<string | null>(null);
+  const [bocHpcRules, setBocHpcRules] = useState<FaultRuleItem[]>([]);
+  const [modal, setModal] = useState<ModalContent | null>(null);
   const [input, setInput] = useState("");
+  const [searching, setSearching] = useState(false);
 
-  const catalog = CATALOGS[category];
+  // 内部故障目录（BOC/HPC 现成解析条目）
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await fetch(`${resolveHttpBase()}/api/internal-fault-rules`, {
+          cache: "no-store",
+        });
+        const parsed = InternalFaultRulesApiResponseSchema.parse(await response.json());
+        if (!cancelled) {
+          setBocHpcRules(parsed.data.bocHpc);
+        }
+      } catch {
+        // 目录加载失败时方块区为空，自定义查询仍可用
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const openCategory = (next: Category) => {
     setCategory(next);
     setView("grid");
   };
 
-  const lookupCustom = () => {
+  // 系统（内部）故障：常用 20 条取 BOC/HPC 目录前 20
+  const systemTiles = bocHpcRules.slice(0, 20);
+
+  const openSystemTile = (rule: FaultRuleItem) => {
+    setModal({
+      code: String(rule.code),
+      title: rule.name,
+      description: `BOC/HPC 内部故障目录条目 · 级别：${TYPE_TEXT[rule.type] ?? rule.type}`,
+    });
+  };
+
+  const openInverterTile = (fault: FaultEntry) => {
+    setModal({
+      code: fault.code,
+      title: fault.name,
+      description: fault.description,
+      suggestions: fault.suggestions,
+    });
+  };
+
+  // 自定义查询
+  const lookupCustom = async () => {
     const typed = input.trim();
     if (!typed) {
       return;
     }
-    const normalized = typed.toUpperCase().replace(/^0X/, "0x");
-    const hit = catalog.faults.find(
-      (f) => f.code.toUpperCase().replace(/^0X/, "0x").toUpperCase() === normalized.toUpperCase(),
-    );
-    if (hit) {
-      setModalFault(hit);
-      setNotFoundCode(null);
-    } else {
-      setModalFault(null);
-      setNotFoundCode(typed.toUpperCase());
+
+    if (category === "inverter") {
+      const normalized = typed.toUpperCase();
+      const hit = INVERTER_FAULTS.find((f) => f.code.toUpperCase() === normalized || f.code.toUpperCase() === `0X${normalized}`.replace("0X0X", "0X"));
+      setModal(
+        hit
+          ? { code: hit.code, title: hit.name, description: hit.description, suggestions: hit.suggestions }
+          : { code: typed.toUpperCase(), title: "未找到该故障代码", description: "当前变频器故障库中没有此代码，请核对后重新输入。", notFound: true },
+      );
+      return;
+    }
+
+    // 系统（内部）故障：后端三级解析——BOC/HPC 表 → 0x22xx~0x26xx → MOC 位解析
+    try {
+      setSearching(true);
+      const response = await fetch(
+        `${resolveHttpBase()}/api/fault-codes/search?category=inverter&code=${encodeURIComponent(typed)}`,
+        { cache: "no-store" },
+      );
+      const parsed = FaultCodeResultApiResponseSchema.parse(await response.json());
+      const result = parsed.data;
+      setModal(
+        result.found
+          ? {
+              code: typed.toUpperCase(),
+              title: result.description ?? "解析成功",
+              description: result.tip ?? undefined,
+            }
+          : {
+              code: typed.toUpperCase(),
+              title: "无法解析该代码",
+              description: "该代码不在 BOC/HPC 故障表中，也不符合停机操作码与 MOC 码的解析规则，视为无效代码。",
+              notFound: true,
+            },
+      );
+    } catch {
+      setModal({
+        code: typed.toUpperCase(),
+        title: "查询失败",
+        description: "查询服务暂不可用，请确认服务已启动。",
+        notFound: true,
+      });
+    } finally {
+      setSearching(false);
     }
   };
 
-  const closeModal = () => {
-    setModalFault(null);
-    setNotFoundCode(null);
-  };
+  const categoryTitle = category === "system" ? "系统故障代码查询" : "变频器故障代码查询";
 
   return (
     <AppShell hideFloatingHome={view === "custom"} shellState={shellState} title="故障代码查询">
@@ -139,20 +213,32 @@ export default function FaultCodesPage() {
               <button className="sensor-back-btn" onClick={() => setView("menu")} type="button">
                 ‹ 返回
               </button>
-              <h1 className="sensor-detail-title">{catalog.title}</h1>
+              <h1 className="sensor-detail-title">{categoryTitle}</h1>
             </div>
             <div className="fc-grid">
-              {catalog.faults.map((fault) => (
-                <button
-                  className="fc-tile"
-                  key={fault.code}
-                  onClick={() => setModalFault(fault)}
-                  type="button"
-                >
-                  <span className="fc-tile-code">{fault.code}</span>
-                  <span className="fc-tile-name">{fault.name}</span>
-                </button>
-              ))}
+              {category === "system"
+                ? systemTiles.map((rule) => (
+                    <button
+                      className="fc-tile"
+                      key={rule.code}
+                      onClick={() => openSystemTile(rule)}
+                      type="button"
+                    >
+                      <span className="fc-tile-code">{rule.code}</span>
+                      <span className="fc-tile-name">{rule.name}</span>
+                    </button>
+                  ))
+                : INVERTER_FAULTS.map((fault) => (
+                    <button
+                      className="fc-tile"
+                      key={fault.code}
+                      onClick={() => openInverterTile(fault)}
+                      type="button"
+                    >
+                      <span className="fc-tile-code">{fault.code}</span>
+                      <span className="fc-tile-name">{fault.name}</span>
+                    </button>
+                  ))}
             </div>
             <div className="sensor-pager" style={{ justifyContent: "center" }}>
               <button
@@ -168,15 +254,33 @@ export default function FaultCodesPage() {
             </div>
           </>
         ) : (
-          /* ===== 自定义查询：大键盘 ===== */
+          /* ===== 自定义查询：大键盘 + 规则提示 ===== */
           <>
             <div className="sensor-detail-head">
               <button className="sensor-back-btn" onClick={() => setView("grid")} type="button">
                 ‹ 返回
               </button>
-              <h1 className="sensor-detail-title">{catalog.title} · 自定义</h1>
+              <h1 className="sensor-detail-title">{categoryTitle} · 自定义</h1>
             </div>
             <div className="fc-custom">
+              {category === "system" ? (
+                <div className="fc-rules">
+                  <div className="fc-rules-item">
+                    <strong>① 直接查表</strong>
+                    输入十进制代码（如 17），命中 BOC/HPC 故障表直接给出含义
+                  </div>
+                  <div className="fc-rules-item">
+                    <strong>② 停机操作码 0x22xx ~ 0x26xx</strong>
+                    高8位=来源（22左端头站 · 23右端头站 · 24左遥控器 · 25右遥控器 · 26顺槽远程），
+                    低8位=命令（Bit7急停 · Bit6总停 · Bit5左截停 · Bit4右截停 · Bit3破停 · Bit1泵停）
+                  </div>
+                  <div className="fc-rules-item">
+                    <strong>③ MOC 码按二进制解析</strong>
+                    Bit15~9=来源代码（查系统代码表），Bit8~0=停止代码
+                    （Bit0左截停 · Bit1右截停 · Bit2泵停 · Bit3破碎停 · Bit4牵引停 · Bit7总停 · Bit8断电急停）
+                  </div>
+                </div>
+              ) : null}
               <div className="fc-input-display">{input || "请输入故障代码"}</div>
               <div className="fc-keyboard">
                 {KEY_ROWS.map((row, rowIndex) => (
@@ -206,11 +310,11 @@ export default function FaultCodesPage() {
                   </button>
                   <button
                     className="fc-key fc-key-confirm"
-                    disabled={!input.trim()}
-                    onClick={lookupCustom}
+                    disabled={!input.trim() || searching}
+                    onClick={() => void lookupCustom()}
                     type="button"
                   >
-                    确 认
+                    {searching ? "解析中…" : "确 认"}
                   </button>
                 </div>
               </div>
@@ -219,35 +323,25 @@ export default function FaultCodesPage() {
         )}
 
         {/* ===== 详情弹窗（点击外部收起） ===== */}
-        {modalFault || notFoundCode ? (
-          <div className="fc-modal-backdrop" onClick={closeModal}>
+        {modal ? (
+          <div className="fc-modal-backdrop" onClick={() => setModal(null)}>
             <div className="fc-modal" onClick={(event) => event.stopPropagation()}>
-              {modalFault ? (
+              <div className="fc-modal-head">
+                <span className="fc-modal-code">{modal.code}</span>
+                <h2 className="fc-modal-title">{modal.title}</h2>
+              </div>
+              {modal.description ? <p className="fc-modal-desc">{modal.description}</p> : null}
+              {modal.suggestions && modal.suggestions.length > 0 ? (
                 <>
-                  <div className="fc-modal-head">
-                    <span className="fc-modal-code">{modalFault.code}</span>
-                    <h2 className="fc-modal-title">{modalFault.name}</h2>
-                  </div>
-                  <p className="fc-modal-desc">{modalFault.description}</p>
                   <div className="fc-modal-sub">处理建议</div>
                   <ol className="fc-modal-suggestions">
-                    {modalFault.suggestions.map((tip, index) => (
+                    {modal.suggestions.map((tip, index) => (
                       <li key={index}>{tip}</li>
                     ))}
                   </ol>
                 </>
-              ) : (
-                <>
-                  <div className="fc-modal-head">
-                    <span className="fc-modal-code">{notFoundCode}</span>
-                    <h2 className="fc-modal-title">未找到该故障代码</h2>
-                  </div>
-                  <p className="fc-modal-desc">
-                    当前{catalog.title.replace("查询", "")}库中没有此代码，请核对后重新输入。
-                  </p>
-                </>
-              )}
-              <button className="fc-modal-close" onClick={closeModal} type="button">
+              ) : null}
+              <button className="fc-modal-close" onClick={() => setModal(null)} type="button">
                 关 闭
               </button>
             </div>

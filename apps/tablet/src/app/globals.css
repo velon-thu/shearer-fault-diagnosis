@@ -3137,3 +3137,35 @@ button.calendar-cell {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* 自定义查询：解析规则提示（大字） */
+.fc-rules {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 1100px) {
+  .fc-rules {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fc-rules-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(79, 140, 255, 0.22);
+  background: rgba(79, 140, 255, 0.07);
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.fc-rules-item strong {
+  font-size: 20px;
+  color: #48c7ff;
+}

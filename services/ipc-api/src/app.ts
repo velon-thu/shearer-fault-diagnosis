@@ -5,6 +5,7 @@ import {
   ApiErrorResponseSchema,
   DataWindowSchema,
   FaultRulesResponseSchema,
+  InternalFaultRulesSchema,
   AuthLoginRequestSchema,
   AuthLoginResponseSchema,
   AuthLogoutResponseSchema,
@@ -63,6 +64,7 @@ const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCod
 const RankingsApiResponseSchema = createApiSuccessResponseSchema(RankingsResponseSchema);
 const DataWindowApiResponseSchema = createApiSuccessResponseSchema(DataWindowSchema);
 const FaultRulesApiResponseSchema = createApiSuccessResponseSchema(FaultRulesResponseSchema);
+const InternalFaultRulesApiResponseSchema = createApiSuccessResponseSchema(InternalFaultRulesSchema);
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
 const KnowledgeAssetsApiResponseSchema = createApiSuccessResponseSchema(KnowledgeAssetsResponseSchema);
 const RunCycleApiResponseSchema = createApiSuccessResponseSchema(RunCycleResponseSchema);
@@ -314,6 +316,13 @@ export const buildApp = ({
     FaultRulesApiResponseSchema.parse({
       success: true,
       data: await adapter.getFaultRules(),
+    }),
+  );
+
+  app.get("/api/internal-fault-rules", async () =>
+    InternalFaultRulesApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getInternalFaultRules(),
     }),
   );
 

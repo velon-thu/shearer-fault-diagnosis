@@ -2,6 +2,7 @@ import type {
   BootstrapResponse,
   DataWindow,
   FaultRuleItem,
+  InternalFaultRules,
   CheckinsResponse,
   CheckinsSubmitRequest,
   ConnectionStatus,
@@ -55,6 +56,7 @@ export interface DataSourceAdapter {
   getRankings(params: RankingsParams): Promise<RankingsResponse>;
   getDataWindow(): Promise<DataWindow>;
   getFaultRules(): Promise<FaultRuleItem[]>;
+  getInternalFaultRules(): Promise<InternalFaultRules>;
   getCheckins(): Promise<CheckinsResponse>;
   saveCheckin(payload: CheckinsSubmitRequest): Promise<CheckinsResponse>;
   getKnowledgeAssets(): Promise<KnowledgeAssetsResponse>;
