@@ -74,11 +74,12 @@ func (e OrgExpr) Eval(r *orgfile.Record) uint16 {
 	}
 }
 
-// DefaultSyncOrgTsMs 回放同步点：org 时间 2026-06-30 20:45:00 (+08:00)。
-// 选点依据：该时刻采煤机运行中（速度4.66m/min、左截负荷48%），
-// 且处于全天故障种类最丰富的 20:30~21:00 窗口；其后约 6300 条记录供直播。
+// DefaultSyncOrgTsMs 回放同步点：org 时间 2026-06-30 20:47:50 (+08:00)。
+// 选点依据：采煤机运行中（速度2.54m/min、负荷42%）；"牵引系统2#变频器
+// 存在严重故障"与"BP2.变频器故障跳闸"自 20:35:50 起激活——启动即见约
+// 12 分钟的"进行中"故障，直播约 2 分 20 秒后（20:50:11）当场消除，适合演示。
 // 同步点之前的全部 org 数据（06-26 起）由 collector 预载入库。
-const DefaultSyncOrgTsMs int64 = 1782823500000
+const DefaultSyncOrgTsMs int64 = 1782823670000
 
 // SensorDef 值型变量定义（sensor_data_defi）。
 type SensorDef struct {
