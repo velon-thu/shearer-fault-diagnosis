@@ -17,6 +17,7 @@ import type {
   FaultCategory,
   FaultCodeResult,
   HomeSummary,
+  LiveFault,
   PumpAnalysisRange,
   PumpAnalysisResponse,
   RunCycleResponse,
@@ -700,54 +701,124 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
         }
 
         // category === "inverter"：按内部故障码解析（BOC/HPC → 0x22xx 规则 → MOC）
-        const bocHpc = db
-          .prepare(`SELECT name, type FROM fault_boc_hpc_rule WHERE code = ?`)
-          .get(num) as { name: string; type: number } | undefined;
-        if (bocHpc) {
-          const typeText = ["提示", "警告", "停机"][bocHpc.type] ?? "";
-          return {
-            category,
-            code,
-            found: true,
-            description: `[BOC/HPC${typeText ? " · " + typeText : ""}] ${bocHpc.name}`,
-            tip: null,
-          };
-        }
-
-        const high = (num >> 8) & 0xff;
-        if (high >= 0x22 && high <= 0x26) {
-          const source = BOC_HPC_SOURCES[high];
-          const cmds = BOC_HPC_CMD_BITS.filter(([bit]) => (num & (1 << bit)) !== 0).map(
-            ([, label]) => label,
-          );
-          return {
-            category,
-            code,
-            found: true,
-            description: `来自${source}停机操作${cmds.length ? "：" + cmds.join("、") : ""}`,
-            tip: "0x22xx~0x26xx：Bit15-8 操作来源，Bit7-0 停止命令。",
-          };
-        }
-
-        const mocSource = (num >> 9) & 0x7f;
-        const mocRow = db
-          .prepare(`SELECT name FROM fault_moc_rule WHERE code = ?`)
-          .get(mocSource) as { name: string } | undefined;
-        if (mocRow) {
-          const stops = MOC_STOP_BITS.filter(([bit]) => (num & (1 << bit)) !== 0).map(
-            ([, label]) => label,
-          );
-          return {
-            category,
-            code,
-            found: true,
-            description: `[MOC] ${mocRow.name}${stops.length ? "：" + stops.join("、") : ""}`,
-            tip: "MOC 码：Bit15-9 来源代码（系统代码表），Bit8-0 停止代码。",
-          };
+        const decoded = this.decodeInternalCode(db, num);
+        if (decoded) {
+          return { category, code, found: true, description: decoded.title, tip: decoded.tip };
         }
         return notFound;
       },
       () => super.getFaultCodeResult(category, code),
+    );
+  }
+
+  /** 内部故障码三级解码：BOC/HPC 表 → 0x22xx~0x26xx 停机操作码 → MOC 位解析。 */
+  private decodeInternalCode(
+    db: DatabaseSync,
+    num: number,
+  ): { title: string; tip: string | null } | null {
+    const bocHpc = db
+      .prepare(`SELECT name, type FROM fault_boc_hpc_rule WHERE code = ?`)
+      .get(num) as { name: string; type: number } | undefined;
+    if (bocHpc) {
+      const typeText = ["提示", "警告", "停机"][bocHpc.type] ?? "";
+      return { title: `[BOC/HPC${typeText ? " · " + typeText : ""}] ${bocHpc.name}`, tip: null };
+    }
+
+    const high = (num >> 8) & 0xff;
+    if (high >= 0x22 && high <= 0x26) {
+      const source = BOC_HPC_SOURCES[high];
+      const cmds = BOC_HPC_CMD_BITS.filter(([bit]) => (num & (1 << bit)) !== 0).map(
+        ([, label]) => label,
+      );
+      return {
+        title: `来自${source}停机操作${cmds.length ? "：" + cmds.join("、") : ""}`,
+        tip: "0x22xx~0x26xx：Bit15-8 操作来源，Bit7-0 停止命令。",
+      };
+    }
+
+    const mocSource = (num >> 9) & 0x7f;
+    const mocRow = db
+      .prepare(`SELECT name FROM fault_moc_rule WHERE code = ?`)
+      .get(mocSource) as { name: string } | undefined;
+    if (mocRow) {
+      const stops = MOC_STOP_BITS.filter(([bit]) => (num & (1 << bit)) !== 0).map(
+        ([, label]) => label,
+      );
+      return {
+        title: `[MOC] ${mocRow.name}${stops.length ? "：" + stops.join("、") : ""}`,
+        tip: "MOC 码：Bit15-9 来源代码（系统代码表），Bit8-0 停止代码。",
+      };
+    }
+    return null;
+  }
+
+  /** 实时故障流：普通故障（仅警告/停机）+ 内部故障（FIFO 事件），按发生时间倒序。 */
+  async getLiveFaults(limit = 80) {
+    return this.withDb(
+      (db) => {
+        const normals = db
+          .prepare(
+            `SELECT fn.id AS id, fn.fault_code, fn.occur_ts, fn.clear_ts,
+                    fr.name, fr.type, fr.kind, fr.handle
+             FROM fault_normal fn JOIN fault_rule fr ON fr.fault_code = fn.fault_code
+             WHERE fr.type IN (1, 2)
+             ORDER BY fn.occur_ts DESC LIMIT ?`,
+          )
+          .all(limit) as unknown as Array<{
+          id: number;
+          fault_code: number;
+          occur_ts: number;
+          clear_ts: number | null;
+          name: string;
+          type: number;
+          kind: number;
+          handle: string;
+        }>;
+        const internals = db
+          .prepare(
+            `SELECT id, fault_code, occur_ts, module_name FROM fault_internal
+             ORDER BY occur_ts DESC LIMIT ?`,
+          )
+          .all(limit) as unknown as Array<{
+          id: number;
+          fault_code: number;
+          occur_ts: number;
+          module_name: string;
+        }>;
+
+        const items: LiveFault[] = normals.map((n) => ({
+          id: `n${n.id}`,
+          source: "normal" as const,
+          code: String(n.fault_code),
+          name: n.name,
+          type: n.type,
+          kind: n.kind,
+          module: "",
+          occurTs: n.occur_ts,
+          clearTs: n.clear_ts,
+          handle: n.handle ?? "",
+        }));
+        for (const i of internals) {
+          const hex = `0x${i.fault_code.toString(16).toUpperCase().padStart(4, "0")}`;
+          const decoded = this.decodeInternalCode(db, i.fault_code);
+          items.push({
+            id: `i${i.id}`,
+            source: "internal" as const,
+            code: hex,
+            name: decoded?.title ?? `内部故障码 ${hex}`,
+            type: 2,
+            kind: 6,
+            module: i.module_name,
+            // FIFO 内部故障是瞬时事件，视为发生即结束
+            occurTs: i.occur_ts,
+            clearTs: i.occur_ts,
+            handle: decoded?.tip ?? "记录完整故障码，结合模块指示灯与故障记录进一步定位。",
+          });
+        }
+        items.sort((a, b) => b.occurTs - a.occurTs);
+        return items.slice(0, limit);
+      },
+      () => super.getLiveFaults(),
     );
   }
 

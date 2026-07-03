@@ -6,6 +6,7 @@ import {
   DataWindowSchema,
   FaultRulesResponseSchema,
   InternalFaultRulesSchema,
+  LiveFaultsResponseSchema,
   AuthLoginRequestSchema,
   AuthLoginResponseSchema,
   AuthLogoutResponseSchema,
@@ -65,6 +66,7 @@ const RankingsApiResponseSchema = createApiSuccessResponseSchema(RankingsRespons
 const DataWindowApiResponseSchema = createApiSuccessResponseSchema(DataWindowSchema);
 const FaultRulesApiResponseSchema = createApiSuccessResponseSchema(FaultRulesResponseSchema);
 const InternalFaultRulesApiResponseSchema = createApiSuccessResponseSchema(InternalFaultRulesSchema);
+const LiveFaultsApiResponseSchema = createApiSuccessResponseSchema(LiveFaultsResponseSchema);
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
 const KnowledgeAssetsApiResponseSchema = createApiSuccessResponseSchema(KnowledgeAssetsResponseSchema);
 const RunCycleApiResponseSchema = createApiSuccessResponseSchema(RunCycleResponseSchema);
@@ -316,6 +318,13 @@ export const buildApp = ({
     FaultRulesApiResponseSchema.parse({
       success: true,
       data: await adapter.getFaultRules(),
+    }),
+  );
+
+  app.get("/api/live-faults", async () =>
+    LiveFaultsApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getLiveFaults(),
     }),
   );
 

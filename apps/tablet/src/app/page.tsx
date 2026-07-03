@@ -8,7 +8,7 @@ import { AppShell, formatDate, formatTime, useAppShellState } from "@/components
 const homeNavItems = [
   { label: "传感器", href: "/sensors", icon: "传", from: "#54a5ff", to: "#2e6be6" },
   { label: "故障代码查询", href: "/fault-codes", icon: "码", from: "#ffb03a", to: "#f07b22" },
-  { label: "截割部分析", href: "/analysis/cutting", icon: "截", from: "#ff6b5c", to: "#e03e30" },
+  { label: "实时故障", href: "/live-faults", icon: "障", from: "#ff6b5c", to: "#e03e30" },
   { label: "牵引部分析", href: "/analysis/traction", icon: "牵", from: "#4cd97b", to: "#2aa857" },
   { label: "泵分析", href: "/analysis/pump", icon: "泵", from: "#4ad4e0", to: "#1fa3c4" },
   { label: "近期故障排名", href: "/rankings", icon: "排", from: "#a78bfa", to: "#7c4de0" },

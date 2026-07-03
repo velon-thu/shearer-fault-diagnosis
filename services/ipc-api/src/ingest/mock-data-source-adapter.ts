@@ -2,6 +2,7 @@ import type {
   DataWindow,
   FaultRuleItem,
   InternalFaultRules,
+  LiveFault,
   BootstrapResponse,
   CheckinsSubmitRequest,
   ConnectionStatus,
@@ -111,6 +112,10 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
 
   async getInternalFaultRules(): Promise<InternalFaultRules> {
     return { bocHpc: [], moc: [] };
+  }
+
+  async getLiveFaults(): Promise<LiveFault[]> {
+    return [];
   }
 
   async getRankings(params: RankingsParams) {

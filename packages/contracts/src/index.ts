@@ -420,6 +420,21 @@ export const FaultRuleItemSchema = z.object({
 });
 export const FaultRulesResponseSchema = z.array(FaultRuleItemSchema);
 
+// 实时故障流条目（普通故障[警告/停机] + 内部故障[BOC/HPC/MOC]）
+export const LiveFaultSchema = z.object({
+  id: z.string(),
+  source: z.enum(["normal", "internal"]),
+  code: z.string(),
+  name: z.string(),
+  type: z.number(), // 1警告 2停机（内部故障按 2 处理）
+  kind: z.number(),
+  module: z.string(), // 内部故障：BOC/HPC/MOC；普通故障为空
+  occurTs: z.number(),
+  clearTs: z.number().nullable(), // null=进行中；内部故障为瞬时事件=occurTs
+  handle: z.string(), // 处理建议/解析说明
+});
+export const LiveFaultsResponseSchema = z.array(LiveFaultSchema);
+
 // 内部故障目录（BOC/HPC 现成解析条目 + MOC 来源代码表）
 export const InternalFaultRulesSchema = z.object({
   bocHpc: FaultRulesResponseSchema,
@@ -463,6 +478,7 @@ export type RankingItem = z.infer<typeof RankingItemSchema>;
 export type DataWindow = z.infer<typeof DataWindowSchema>;
 export type FaultRuleItem = z.infer<typeof FaultRuleItemSchema>;
 export type InternalFaultRules = z.infer<typeof InternalFaultRulesSchema>;
+export type LiveFault = z.infer<typeof LiveFaultSchema>;
 export type RankingsResponse = z.infer<typeof RankingsResponseSchema>;
 export type CheckinStatus = z.infer<typeof CheckinStatusSchema>;
 export type CheckinItem = z.infer<typeof CheckinItemSchema>;
