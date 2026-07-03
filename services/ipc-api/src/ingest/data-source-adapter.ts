@@ -1,6 +1,7 @@
 import type {
   BootstrapResponse,
   DataWindow,
+  DowntimeResponse,
   FaultRuleItem,
   InternalFaultRules,
   LiveFault,
@@ -59,6 +60,7 @@ export interface DataSourceAdapter {
   getFaultRules(): Promise<FaultRuleItem[]>;
   getInternalFaultRules(): Promise<InternalFaultRules>;
   getLiveFaults(limit?: number): Promise<LiveFault[]>;
+  getDowntime(fromMs?: number, toMs?: number): Promise<DowntimeResponse>;
   getCheckins(): Promise<CheckinsResponse>;
   saveCheckin(payload: CheckinsSubmitRequest): Promise<CheckinsResponse>;
   getKnowledgeAssets(): Promise<KnowledgeAssetsResponse>;

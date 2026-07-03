@@ -4,6 +4,8 @@ import websocket from "@fastify/websocket";
 import {
   ApiErrorResponseSchema,
   DataWindowSchema,
+  DowntimeQuerySchema,
+  DowntimeResponseSchema,
   FaultRulesResponseSchema,
   InternalFaultRulesSchema,
   LiveFaultsResponseSchema,
@@ -67,6 +69,7 @@ const DataWindowApiResponseSchema = createApiSuccessResponseSchema(DataWindowSch
 const FaultRulesApiResponseSchema = createApiSuccessResponseSchema(FaultRulesResponseSchema);
 const InternalFaultRulesApiResponseSchema = createApiSuccessResponseSchema(InternalFaultRulesSchema);
 const LiveFaultsApiResponseSchema = createApiSuccessResponseSchema(LiveFaultsResponseSchema);
+const DowntimeApiResponseSchema = createApiSuccessResponseSchema(DowntimeResponseSchema);
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
 const KnowledgeAssetsApiResponseSchema = createApiSuccessResponseSchema(KnowledgeAssetsResponseSchema);
 const RunCycleApiResponseSchema = createApiSuccessResponseSchema(RunCycleResponseSchema);
@@ -320,6 +323,15 @@ export const buildApp = ({
       data: await adapter.getFaultRules(),
     }),
   );
+
+  app.get("/api/downtime", async (request) => {
+    const { from, to } = DowntimeQuerySchema.parse(request.query);
+
+    return DowntimeApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getDowntime(from, to),
+    });
+  });
 
   app.get("/api/live-faults", async () =>
     LiveFaultsApiResponseSchema.parse({

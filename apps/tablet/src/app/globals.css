@@ -3471,3 +3471,88 @@ button.calendar-cell {
   margin: 0 8px;
   color: rgba(245, 247, 251, 0.35);
 }
+
+/* ===== 停机分析 ===== */
+.dt-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1100px) {
+  .dt-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.dt-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dt-kpi span {
+  font-size: 16px;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.dt-kpi strong {
+  font-size: clamp(24px, 3.4vh, 34px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 状态时间带 */
+.dt-band {
+  position: relative;
+  height: 72px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dt-band-seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0.92;
+  transition: opacity 0.12s ease;
+}
+
+.dt-band-seg:hover {
+  opacity: 1;
+  filter: brightness(1.15);
+}
+
+.dt-legend {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin: 14px 2px 22px;
+}
+
+.dt-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.dt-legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}

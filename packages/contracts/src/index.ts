@@ -420,6 +420,43 @@ export const FaultRuleItemSchema = z.object({
 });
 export const FaultRulesResponseSchema = z.array(FaultRuleItemSchema);
 
+// ===== 停机分析 =====
+export const DowntimeCauseSchema = z.enum(["fault", "manual", "idle"]);
+
+export const DowntimeSegmentSchema = z.object({
+  state: z.enum(["cutting", "dispatch", "stopped", "poweroff"]),
+  fromMs: z.number(),
+  toMs: z.number(),
+  cause: DowntimeCauseSchema.optional(), // 仅 stopped
+  causeText: z.string().optional(),
+  faults: z
+    .array(z.object({ name: z.string(), occurTs: z.number(), handle: z.string() }))
+    .optional(),
+  actions: z
+    .array(z.object({ ts: z.number(), source: z.string(), op: z.string(), action: z.string() }))
+    .optional(),
+});
+
+export const DowntimeResponseSchema = z.object({
+  fromMs: z.number(),
+  toMs: z.number(),
+  kpis: z.object({
+    cuttingMs: z.number(),
+    dispatchMs: z.number(),
+    stoppedMs: z.number(),
+    poweroffMs: z.number(),
+    stoppedCount: z.number(),
+    longestStoppedMs: z.number(),
+    cuttingRatePct: z.number(), // 割煤时长 / 通电时长
+  }),
+  segments: z.array(DowntimeSegmentSchema),
+});
+
+export const DowntimeQuerySchema = z.object({
+  from: z.coerce.number().int().positive().optional(),
+  to: z.coerce.number().int().positive().optional(),
+});
+
 // 实时故障流条目（普通故障[警告/停机] + 内部故障[BOC/HPC/MOC]）
 export const LiveFaultSchema = z.object({
   id: z.string(),
@@ -479,6 +516,8 @@ export type DataWindow = z.infer<typeof DataWindowSchema>;
 export type FaultRuleItem = z.infer<typeof FaultRuleItemSchema>;
 export type InternalFaultRules = z.infer<typeof InternalFaultRulesSchema>;
 export type LiveFault = z.infer<typeof LiveFaultSchema>;
+export type DowntimeSegment = z.infer<typeof DowntimeSegmentSchema>;
+export type DowntimeResponse = z.infer<typeof DowntimeResponseSchema>;
 export type RankingsResponse = z.infer<typeof RankingsResponseSchema>;
 export type CheckinStatus = z.infer<typeof CheckinStatusSchema>;
 export type CheckinItem = z.infer<typeof CheckinItemSchema>;

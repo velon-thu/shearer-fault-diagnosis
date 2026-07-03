@@ -16,6 +16,8 @@ import type {
   DeviceStatus,
   FaultCategory,
   FaultCodeResult,
+  DowntimeResponse,
+  DowntimeSegment,
   HomeSummary,
   LiveFault,
   PumpAnalysisRange,
@@ -847,6 +849,216 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
         return items.slice(0, limit);
       },
       () => super.getLiveFaults(),
+    );
+  }
+
+  /**
+   * 停机分析：把时间线切成 割煤/调度移机/停机/断电检修 四种状态段。
+   *
+   * 判定（与用户约定）：
+   *   停机   = 左右截割电机都停 且 牵引停(haul_started=0) 且 速度<0.1，持续≥30s
+   *   割煤   = 任一截割电机运行
+   *   调度移机 = 截割停但机器在走（牵引启 或 速度≥0.1）
+   *   断电检修 = 数据流中断 >10 分钟（检修班断电，连数据都没有）
+   * 归因（仅停机段）：停机时刻激活的停机级故障 → 故障停机；
+   *   无故障但停机前 2 分钟内有停类操作 → 人工停机（含操作来源）；否则待机。
+   */
+  async getDowntime(fromMs?: number, toMs?: number): Promise<DowntimeResponse> {
+    return this.withDb(
+      (db) => {
+        // 窗口缺省 = 库内全部数据
+        const win = db
+          .prepare(`SELECT MIN(ts) AS lo, MAX(ts) AS hi FROM sensor_hyper`)
+          .get() as { lo: number | null; hi: number | null };
+        const lo = fromMs ?? win.lo ?? 0;
+        const hi = toMs ?? win.hi ?? 0;
+        const empty: DowntimeResponse = {
+          fromMs: lo,
+          toMs: hi,
+          kpis: {
+            cuttingMs: 0, dispatchMs: 0, stoppedMs: 0, poweroffMs: 0,
+            stoppedCount: 0, longestStoppedMs: 0, cuttingRatePct: 0,
+          },
+          segments: [],
+        };
+        if (hi - lo < 1_000) {
+          return empty;
+        }
+
+        const STATE_TAGS = ["left_cutter_running", "right_cutter_running", "haul_started"];
+        const SPEED_TAG = "left_speed_measured";
+        const GAP_MS = 10 * 60_000; // 断电检修阈值
+        const MIN_STOP_MS = 30_000; // 停机最短时长（重启间隙不算）
+
+        // 事件流：状态位 + 速度，按时间归并
+        type Ev = { ts: number; tag: string; v: number };
+        const events: Ev[] = [];
+        const stStmt = db.prepare(
+          `SELECT ts, state_code AS v FROM state_hyper WHERE std_tag = ? AND ts >= ? AND ts <= ? ORDER BY ts`,
+        );
+        for (const tag of STATE_TAGS) {
+          for (const r of stStmt.all(tag, lo, hi) as unknown as Array<{ ts: number; v: number }>) {
+            events.push({ ts: r.ts, tag, v: r.v });
+          }
+        }
+        for (const r of db
+          .prepare(
+            `SELECT ts, value AS v FROM sensor_hyper WHERE std_tag = ? AND ts >= ? AND ts <= ? ORDER BY ts`,
+          )
+          .all(SPEED_TAG, lo, hi) as unknown as Array<{ ts: number; v: number }>) {
+          events.push({ ts: r.ts, tag: SPEED_TAG, v: r.v });
+        }
+        if (events.length === 0) {
+          return { ...empty, segments: [{ state: "poweroff", fromMs: lo, toMs: hi }] };
+        }
+        events.sort((a, b) => a.ts - b.ts);
+
+        // 窗口起点的初始状态：各信号取窗口前最后一个值
+        const cur: Record<string, number> = {};
+        const seedState = db.prepare(
+          `SELECT state_code AS v FROM state_hyper WHERE std_tag = ? AND ts < ? ORDER BY ts DESC LIMIT 1`,
+        );
+        for (const tag of STATE_TAGS) {
+          cur[tag] = (seedState.get(tag, lo) as { v: number } | undefined)?.v ?? 0;
+        }
+        cur[SPEED_TAG] =
+          (
+            db
+              .prepare(
+                `SELECT value AS v FROM sensor_hyper WHERE std_tag = ? AND ts < ? ORDER BY ts DESC LIMIT 1`,
+              )
+              .get(SPEED_TAG, lo) as { v: number } | undefined
+          )?.v ?? 0;
+
+        const classify = (): DowntimeSegment["state"] => {
+          const cutting = cur.left_cutter_running === 1 || cur.right_cutter_running === 1;
+          if (cutting) {
+            return "cutting";
+          }
+          const speed = cur[SPEED_TAG];
+          const speedValid = speed >= 0 && speed < 600; // 哨兵/负值视为无效（不动）
+          const moving = cur.haul_started === 1 || (speedValid && speed >= 0.1);
+          return moving ? "dispatch" : "stopped";
+        };
+
+        // 扫描事件流生成状态段（数据空洞 >10min 插入断电段）
+        const raw: DowntimeSegment[] = [];
+        let segStart = lo;
+        let segState = classify();
+        let prevTs = lo;
+        const pushSeg = (endTs: number) => {
+          if (endTs > segStart) {
+            raw.push({ state: segState, fromMs: segStart, toMs: endTs });
+          }
+        };
+        for (const ev of events) {
+          if (ev.ts - prevTs > GAP_MS) {
+            pushSeg(prevTs);
+            raw.push({ state: "poweroff", fromMs: prevTs, toMs: ev.ts });
+            segStart = ev.ts;
+          }
+          cur[ev.tag] = ev.v;
+          const next = classify();
+          if (next !== segState && ev.ts > segStart) {
+            pushSeg(ev.ts);
+            segStart = ev.ts;
+          }
+          if (next !== segState || ev.ts - prevTs > GAP_MS) {
+            segState = next;
+          }
+          prevTs = ev.ts;
+        }
+        if (hi - prevTs > GAP_MS) {
+          pushSeg(prevTs);
+          raw.push({ state: "poweroff", fromMs: prevTs, toMs: hi });
+        } else {
+          pushSeg(hi);
+        }
+
+        // 30s 门槛：过短的停机并入前段状态，然后合并相邻同状态段
+        for (const seg of raw) {
+          if (seg.state === "stopped" && seg.toMs - seg.fromMs < MIN_STOP_MS) {
+            seg.state = "cutting";
+          }
+        }
+        const segments: DowntimeSegment[] = [];
+        for (const seg of raw) {
+          const last = segments[segments.length - 1];
+          if (last && last.state === seg.state) {
+            last.toMs = seg.toMs;
+          } else {
+            segments.push({ ...seg });
+          }
+        }
+
+        // 归因（仅停机段）
+        const faultStmt = db.prepare(
+          `SELECT fr.name, fn.occur_ts, fr.handle FROM fault_normal fn
+           JOIN fault_rule fr ON fr.fault_code = fn.fault_code
+           WHERE fr.type = 2 AND fn.occur_ts <= ? AND (fn.clear_ts IS NULL OR fn.clear_ts >= ?)
+           ORDER BY fn.occur_ts DESC LIMIT 6`,
+        );
+        const actionStmt = db.prepare(
+          `SELECT occur_ts, source_name, op_name, action FROM device_action
+           WHERE occur_ts BETWEEN ? AND ? AND action = '按下'
+             AND op_name IN ('急停','总停','左截停','右截停','牵停')
+             AND source_type = '输入'
+           ORDER BY occur_ts DESC LIMIT 6`,
+        );
+        for (const seg of segments) {
+          if (seg.state !== "stopped") {
+            continue;
+          }
+          const edge = seg.fromMs;
+          const faults = faultStmt.all(edge + 60_000, edge - 60_000) as unknown as Array<{
+            name: string;
+            occur_ts: number;
+            handle: string;
+          }>;
+          const actions = actionStmt.all(edge - 120_000, edge + 60_000) as unknown as Array<{
+            occur_ts: number;
+            source_name: string;
+            op_name: string;
+            action: string;
+          }>;
+          seg.faults = faults.map((f) => ({ name: f.name, occurTs: f.occur_ts, handle: f.handle ?? "" }));
+          seg.actions = actions.map((a) => ({
+            ts: a.occur_ts,
+            source: a.source_name,
+            op: a.op_name,
+            action: a.action,
+          }));
+          if (faults.length > 0) {
+            seg.cause = "fault";
+            seg.causeText = `故障停机：${faults[0].name}`;
+          } else if (actions.length > 0) {
+            seg.cause = "manual";
+            seg.causeText = `人工停机：${actions[0].source_name} ${actions[0].op_name}`;
+          } else {
+            seg.cause = "idle";
+            seg.causeText = "待机（无故障与操作记录，疑似工序性等待）";
+          }
+        }
+
+        // KPI
+        const kpis = { ...empty.kpis };
+        for (const seg of segments) {
+          const dur = seg.toMs - seg.fromMs;
+          if (seg.state === "cutting") kpis.cuttingMs += dur;
+          else if (seg.state === "dispatch") kpis.dispatchMs += dur;
+          else if (seg.state === "poweroff") kpis.poweroffMs += dur;
+          else {
+            kpis.stoppedMs += dur;
+            kpis.stoppedCount += 1;
+            kpis.longestStoppedMs = Math.max(kpis.longestStoppedMs, dur);
+          }
+        }
+        const powered = hi - lo - kpis.poweroffMs;
+        kpis.cuttingRatePct = powered > 0 ? Number(((kpis.cuttingMs / powered) * 100).toFixed(1)) : 0;
+
+        return { fromMs: lo, toMs: hi, kpis, segments };
+      },
+      () => super.getDowntime(),
     );
   }
 

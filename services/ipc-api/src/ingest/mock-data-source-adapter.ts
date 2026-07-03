@@ -1,5 +1,6 @@
 import type {
   DataWindow,
+  DowntimeResponse,
   FaultRuleItem,
   InternalFaultRules,
   LiveFault,
@@ -116,6 +117,23 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
 
   async getLiveFaults(): Promise<LiveFault[]> {
     return [];
+  }
+
+  async getDowntime(): Promise<DowntimeResponse> {
+    return {
+      fromMs: 0,
+      toMs: 0,
+      kpis: {
+        cuttingMs: 0,
+        dispatchMs: 0,
+        stoppedMs: 0,
+        poweroffMs: 0,
+        stoppedCount: 0,
+        longestStoppedMs: 0,
+        cuttingRatePct: 0,
+      },
+      segments: [],
+    };
   }
 
   async getRankings(params: RankingsParams) {
