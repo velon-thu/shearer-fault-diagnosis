@@ -28,7 +28,7 @@ const resolveHttpBase = () => {
 // 机况胶囊样式：在不在割煤一眼可辨
 const MACHINE_STYLE: Record<MachineStatus["state"], { label: string; color: string }> = {
   cutting: { label: "割煤中", color: "#38d889" },
-  dispatch: { label: "调机中", color: "#48c7ff" },
+  dispatch: { label: "牵引调度", color: "#48c7ff" },
   stopped: { label: "停 机", color: "#ffb03a" },
   offline: { label: "离 线", color: "#8fa3bf" },
 };
