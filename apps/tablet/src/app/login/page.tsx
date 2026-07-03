@@ -118,9 +118,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const submitLogin = async () => {
     const trimmedAccount = account.trim();
 
     if (!trimmedAccount || !password) {
@@ -148,10 +146,39 @@ export default function LoginPage() {
     }
   };
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await submitLogin();
+  };
+
+  /* 确认键：账号输完 → 自动跳到密码；密码输完 → 直接登录 */
+  const confirmField = () => {
+    if (activeField === "account") {
+      setActiveField("password");
+      passwordRef.current?.focus();
+      return;
+    }
+    void submitLogin();
+  };
+
+  /* 点击键盘和输入框之外的任意位置 → 收起键盘 */
+  const handleShellPointerDown = (event: React.PointerEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.closest(".login-osk") || target.closest(".login-input")) {
+      return;
+    }
+    if (activeField) {
+      hideKeyboard();
+    }
+  };
+
   const submitDisabled = checkingSession || submitting || !account.trim() || !password;
 
   return (
-    <main className={`login-shell${activeField ? " login-shell--kb" : ""}`}>
+    <main
+      className={`login-shell${activeField ? " login-shell--kb" : ""}`}
+      onPointerDown={handleShellPointerDown}
+    >
       <form
         autoComplete="on"
         className="login-card login-simple"
@@ -241,6 +268,14 @@ export default function LoginPage() {
               </button>
               <button className="fc-key fc-key-wide" onClick={hideKeyboard} type="button">
                 收起键盘
+              </button>
+              <button
+                className="fc-key fc-key-confirm"
+                disabled={activeField === "password" && (!account.trim() || !password)}
+                onClick={confirmField}
+                type="button"
+              >
+                {activeField === "account" ? "确认 · 下一步" : "确认登录"}
               </button>
             </div>
           </div>
