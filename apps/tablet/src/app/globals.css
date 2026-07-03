@@ -3556,3 +3556,45 @@ button.calendar-cell {
   height: 14px;
   border-radius: 4px;
 }
+
+/* 主页机况胶囊：割煤状态 + 速度 */
+.home-machine {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: clamp(16px, 2.6vh, 26px);
+  padding: 12px 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: clamp(19px, 2.8vh, 25px);
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.home-machine-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  animation: home-machine-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes home-machine-pulse {
+  50% { box-shadow: 0 0 0 9px transparent; }
+}
+
+.home-machine-sep {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.home-machine-speed {
+  font-variant-numeric: tabular-nums;
+}
+
+.home-machine-unit {
+  font-size: 0.72em;
+  font-weight: 600;
+  color: var(--text-2);
+}

@@ -420,6 +420,12 @@ export const FaultRuleItemSchema = z.object({
 });
 export const FaultRulesResponseSchema = z.array(FaultRuleItemSchema);
 
+// 采煤机当前机况（主页状态胶囊）
+export const MachineStatusSchema = z.object({
+  state: z.enum(["cutting", "dispatch", "stopped", "offline"]),
+  speedMmin: z.number(), // 当前牵引速度 m/min（无效读数按 0）
+});
+
 // ===== 停机分析 =====
 export const DowntimeCauseSchema = z.enum(["fault", "manual", "idle"]);
 
@@ -516,6 +522,7 @@ export type DataWindow = z.infer<typeof DataWindowSchema>;
 export type FaultRuleItem = z.infer<typeof FaultRuleItemSchema>;
 export type InternalFaultRules = z.infer<typeof InternalFaultRulesSchema>;
 export type LiveFault = z.infer<typeof LiveFaultSchema>;
+export type MachineStatus = z.infer<typeof MachineStatusSchema>;
 export type DowntimeSegment = z.infer<typeof DowntimeSegmentSchema>;
 export type DowntimeResponse = z.infer<typeof DowntimeResponseSchema>;
 export type RankingsResponse = z.infer<typeof RankingsResponseSchema>;

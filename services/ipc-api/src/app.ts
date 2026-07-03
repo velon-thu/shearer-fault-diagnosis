@@ -9,6 +9,7 @@ import {
   FaultRulesResponseSchema,
   InternalFaultRulesSchema,
   LiveFaultsResponseSchema,
+  MachineStatusSchema,
   AuthLoginRequestSchema,
   AuthLoginResponseSchema,
   AuthLogoutResponseSchema,
@@ -70,6 +71,7 @@ const FaultRulesApiResponseSchema = createApiSuccessResponseSchema(FaultRulesRes
 const InternalFaultRulesApiResponseSchema = createApiSuccessResponseSchema(InternalFaultRulesSchema);
 const LiveFaultsApiResponseSchema = createApiSuccessResponseSchema(LiveFaultsResponseSchema);
 const DowntimeApiResponseSchema = createApiSuccessResponseSchema(DowntimeResponseSchema);
+const MachineStatusApiResponseSchema = createApiSuccessResponseSchema(MachineStatusSchema);
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
 const KnowledgeAssetsApiResponseSchema = createApiSuccessResponseSchema(KnowledgeAssetsResponseSchema);
 const RunCycleApiResponseSchema = createApiSuccessResponseSchema(RunCycleResponseSchema);
@@ -321,6 +323,13 @@ export const buildApp = ({
     FaultRulesApiResponseSchema.parse({
       success: true,
       data: await adapter.getFaultRules(),
+    }),
+  );
+
+  app.get("/api/machine-status", async () =>
+    MachineStatusApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getMachineStatus(),
     }),
   );
 

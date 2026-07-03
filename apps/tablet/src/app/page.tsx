@@ -1,8 +1,37 @@
 "use client";
 
+import {
+  MachineStatusSchema,
+  createApiSuccessResponseSchema,
+  type MachineStatus,
+} from "@shearer/contracts";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppShell, formatDate, formatTime, useAppShellState } from "@/components/app-shell";
+
+const MachineStatusApiResponseSchema = createApiSuccessResponseSchema(MachineStatusSchema);
+
+const resolveHttpBase = () => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL;
+  }
+  const { protocol, hostname, port } = window.location;
+  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
+    return `${protocol}//${hostname}:18080`;
+  }
+  return `${protocol}//${window.location.host}`;
+};
+
+// 机况胶囊样式：在不在割煤一眼可辨
+const MACHINE_STYLE: Record<MachineStatus["state"], { label: string; color: string }> = {
+  cutting: { label: "割煤中", color: "#38d889" },
+  dispatch: { label: "移机中", color: "#48c7ff" },
+  stopped: { label: "已停机", color: "#ffb03a" },
+  offline: { label: "离 线", color: "#8fa3bf" },
+};
 
 // 主页面 = 时钟 + 功能导航（Launchpad 风格：大图标、无说明文字、单屏不滚动）
 const homeNavItems = [
@@ -19,6 +48,33 @@ const homeNavItems = [
 export default function HomePage() {
   const shellState = useAppShellState();
   const { now } = shellState;
+  const [machine, setMachine] = useState<MachineStatus | null>(null);
+
+  // 机况胶囊：3s 轮询
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await fetch(`${resolveHttpBase()}/api/machine-status`, {
+          cache: "no-store",
+        });
+        const parsed = MachineStatusApiResponseSchema.parse(await response.json());
+        if (!cancelled) {
+          setMachine(parsed.data);
+        }
+      } catch {
+        if (!cancelled) {
+          setMachine(null);
+        }
+      }
+    };
+    void load();
+    const timer = setInterval(() => void load(), 3_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
 
   // 主页面单屏固定，禁用页面滚动
   useEffect(() => {
@@ -36,6 +92,26 @@ export default function HomePage() {
           <div className="home-clock">
             <div className="home-clock-time">{formatTime(now)}</div>
             <div className="home-clock-date">{formatDate(now, true)}</div>
+            {machine ? (
+              <div
+                className="home-machine"
+                style={{ borderColor: `${MACHINE_STYLE[machine.state].color}55` }}
+              >
+                <span
+                  className="home-machine-dot"
+                  style={{
+                    background: MACHINE_STYLE[machine.state].color,
+                    boxShadow: `0 0 0 0 ${MACHINE_STYLE[machine.state].color}88`,
+                  }}
+                />
+                <strong style={{ color: MACHINE_STYLE[machine.state].color }}>
+                  {MACHINE_STYLE[machine.state].label}
+                </strong>
+                <span className="home-machine-sep" />
+                <strong className="home-machine-speed">{machine.speedMmin.toFixed(2)}</strong>
+                <span className="home-machine-unit">m/min</span>
+              </div>
+            ) : null}
           </div>
 
           <div className="launchpad-grid">

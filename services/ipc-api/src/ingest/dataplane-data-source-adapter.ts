@@ -852,6 +852,40 @@ export class DataplaneDataSourceAdapter extends MockDataSourceAdapter {
     );
   }
 
+  /** 当前机况：与停机分析同一套判定（割煤/移机/停机），供主页状态胶囊 3s 轮询。 */
+  async getMachineStatus() {
+    return this.withDb(
+      (db) => {
+        const stateOf = (tag: string): number => {
+          const row = db
+            .prepare(`SELECT state_code AS v FROM state_hyper WHERE std_tag = ? ORDER BY ts DESC LIMIT 1`)
+            .get(tag) as { v: number } | undefined;
+          return row?.v ?? 0;
+        };
+        const speedRow = db
+          .prepare(
+            `SELECT value AS v, ts FROM sensor_hyper WHERE std_tag = 'left_speed_measured' ORDER BY ts DESC LIMIT 1`,
+          )
+          .get() as { v: number; ts: number } | undefined;
+
+        // 数据流断了（>2 分钟无速度记录）视为离线
+        if (!speedRow || Date.now() - speedRow.ts > 2 * 60_000) {
+          return { state: "offline" as const, speedMmin: 0 };
+        }
+
+        const speedValid = speedRow.v >= 0 && speedRow.v < 600;
+        const speed = speedValid ? Number(speedRow.v.toFixed(2)) : 0;
+        const cutting = stateOf("left_cutter_running") === 1 || stateOf("right_cutter_running") === 1;
+        if (cutting) {
+          return { state: "cutting" as const, speedMmin: speed };
+        }
+        const moving = stateOf("haul_started") === 1 || speed >= 0.1;
+        return { state: moving ? ("dispatch" as const) : ("stopped" as const), speedMmin: speed };
+      },
+      () => super.getMachineStatus(),
+    );
+  }
+
   /**
    * 停机分析：把时间线切成 割煤/调度移机/停机/断电检修 四种状态段。
    *

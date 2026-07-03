@@ -2,6 +2,7 @@ import type {
   DataWindow,
   DowntimeResponse,
   FaultRuleItem,
+  MachineStatus,
   InternalFaultRules,
   LiveFault,
   BootstrapResponse,
@@ -113,6 +114,10 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
 
   async getInternalFaultRules(): Promise<InternalFaultRules> {
     return { bocHpc: [], moc: [] };
+  }
+
+  async getMachineStatus(): Promise<MachineStatus> {
+    return { state: "offline", speedMmin: 0 };
   }
 
   async getLiveFaults(): Promise<LiveFault[]> {
