@@ -4,10 +4,7 @@ import {
   CheckinsResponseSchema,
   CheckinsSubmitRequestSchema,
   createApiSuccessResponseSchema,
-  type CheckinCalendarRecord,
-  type CheckinHistoryEntry,
-  type CheckinStatus,
-  type CheckinsResponse,
+  type CheckinItem,
 } from "@shearer/contracts";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
@@ -18,377 +15,305 @@ const resolveHttpBase = () => {
   if (typeof window === "undefined") {
     return "";
   }
-
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
     return process.env.NEXT_PUBLIC_API_BASE_URL;
   }
-
   const { protocol, hostname, port } = window.location;
-
   if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
     return `${protocol}//${hostname}:18080`;
   }
-
   return `${protocol}//${window.location.host}`;
 };
 
-const weekdays = ["日", "一", "二", "三", "四", "五", "六"] as const;
+const pad = (n: number) => String(n).padStart(2, "0");
+const dateKey = (d: Date) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-const getCheckinStatusConfig = (status?: CheckinStatus) => {
-  if (status === "done") {
-    return { text: "已打卡", badge: "done", tag: "已完成", badgeClass: "success" };
-  }
-
-  if (status === "partial") {
-    return { text: "部分完成", badge: "partial", tag: "部分完成", badgeClass: "warn" };
-  }
-
-  if (status === "missed") {
-    return { text: "未打卡", badge: "missed", tag: "未完成", badgeClass: "error" };
-  }
-
-  return { text: "无记录", badge: "empty", tag: "暂无记录", badgeClass: "info" };
+/** 某天的打卡记录 */
+type DayRecord = {
+  date: string;
+  shift: string;
+  person: string;
+  result: string;
+  items: Array<{ label: string; checked: boolean }>;
 };
 
-const getHistoryBadgeClass = (item: CheckinHistoryEntry) => {
-  if (item.result.includes("未")) {
-    return "error";
-  }
-
-  if (item.result.includes("部分") || item.result.includes("补检")) {
-    return "warn";
-  }
-
-  return "success";
-};
+const WEEKDAYS = ["一", "二", "三", "四", "五", "六", "日"];
 
 export default function CheckinsPage() {
   const shellState = useAppShellState();
-  const [checkins, setCheckins] = useState<CheckinsResponse | null>(null);
-  const [selectedDate, setSelectedDate] = useState("2026-03-16");
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<CheckinItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [submittedToday, setSubmittedToday] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calMonth, setCalMonth] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+  const [dayDetail, setDayDetail] = useState<DayRecord | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const loadCheckins = async () => {
-    try {
-      setLoading(true);
-
-      const response = await fetch(`${resolveHttpBase()}/api/checkins`, {
-        cache: "no-store",
-      });
-      const json = await response.json();
-      const parsed = CheckinsApiResponseSchema.parse(json);
-
-      setCheckins(parsed.data);
-      setSelectedDate(parsed.data.todayDate);
-      setErrorMessage(null);
-    } catch {
-      setErrorMessage("日常检修打卡数据加载失败，请先启动 IPC 服务。");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 今日打卡项（四项）来自接口；勾选状态本地维护
   useEffect(() => {
-    void loadCheckins();
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await fetch(`${resolveHttpBase()}/api/checkins`, { cache: "no-store" });
+        const parsed = CheckinsApiResponseSchema.parse(await response.json());
+        if (!cancelled) {
+          setItems(parsed.data.todayItems.map((i) => ({ ...i, checked: false })));
+          setErrorMessage(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setErrorMessage("打卡项加载失败，请确认服务已启动。");
+        }
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const toggleItem = (id: string) => {
-    setCheckins((current) => {
-      if (!current) {
-        return current;
-      }
-
-      return {
-        ...current,
-        todayItems: current.todayItems.map((item) =>
-          item.id === id ? { ...item, checked: !item.checked } : item,
-        ),
-      };
-    });
-  };
-
-  const submitTodayCheckins = async () => {
-    if (!checkins) {
+    if (submittedToday) {
       return;
     }
+    setItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item)),
+    );
+  };
 
+  const submit = async () => {
     try {
       setSubmitting(true);
-
       const payload = CheckinsSubmitRequestSchema.parse({
-        checkedItemIds: checkins.todayItems.filter((item) => item.checked).map((item) => item.id),
+        checkedItemIds: items.filter((i) => i.checked).map((i) => i.id),
       });
-
-      const response = await fetch(`${resolveHttpBase()}/api/checkins`, {
+      await fetch(`${resolveHttpBase()}/api/checkins`, {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        cache: "no-store",
       });
-      const json = await response.json();
-      const parsed = CheckinsApiResponseSchema.parse(json);
-
-      setCheckins(parsed.data);
-      setSelectedDate(parsed.data.todayDate);
+      setSubmittedToday(true);
       setErrorMessage(null);
     } catch {
-      setErrorMessage("提交今日打卡失败，请稍后重试。");
+      setErrorMessage("提交失败，请重试。");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const calendarCells = useMemo(() => {
-    const year = 2026;
-    const month = 3;
-    const firstDay = new Date(year, month - 1, 1).getDay();
-    const dayCount = new Date(year, month, 0).getDate();
-    const cells: Array<
-      | {
-          type: "empty";
-          key: string;
-        }
-      | {
-          type: "day";
-          key: string;
-          date: string;
-          day: number;
-          record?: CheckinCalendarRecord;
-        }
-    > = [];
-
-    for (let index = 0; index < firstDay; index += 1) {
-      cells.push({
-        type: "empty",
-        key: `empty-${index}`,
+  /**
+   * 历史打卡记录（按约定 mock）：项目启动前四天均已完成打卡；
+   * 今天提交后当天也计入。待真实打卡数据源接入后替换。
+   */
+  const records = useMemo(() => {
+    const map = new Map<string, DayRecord>();
+    const today = new Date();
+    for (let back = 1; back <= 4; back += 1) {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - back);
+      map.set(dateKey(d), {
+        date: dateKey(d),
+        shift: "检修班",
+        person: "tiandi · 点检员",
+        result: "已完成 4/4 项",
+        items: items.map((i) => ({ label: i.label, checked: true })),
       });
     }
-
-    for (let day = 1; day <= dayCount; day += 1) {
-      const date = `2026-03-${String(day).padStart(2, "0")}`;
-      cells.push({
-        type: "day",
-        key: date,
-        date,
-        day,
-        record: checkins?.calendarRecords[date],
+    if (submittedToday) {
+      const done = items.filter((i) => i.checked).length;
+      map.set(dateKey(today), {
+        date: dateKey(today),
+        shift: "检修班",
+        person: "tiandi · 点检员",
+        result: `已完成 ${done}/${items.length} 项`,
+        items: items.map((i) => ({ label: i.label, checked: i.checked })),
       });
     }
+    return map;
+  }, [items, submittedToday]);
 
+  // 当前展示月份的日历格（周一开头）
+  const calCells = useMemo(() => {
+    const year = calMonth.getFullYear();
+    const month = calMonth.getMonth();
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const cells: Array<{ day: number; key: string } | null> = [];
+    for (let i = 0; i < firstWeekday; i += 1) {
+      cells.push(null);
+    }
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      cells.push({ day, key: dateKey(new Date(year, month, day)) });
+    }
     return cells;
-  }, [checkins?.calendarRecords]);
+  }, [calMonth]);
 
-  const selectedRecord = checkins?.calendarRecords[selectedDate];
-  const selectedStatus = getCheckinStatusConfig(selectedRecord?.status);
+  const checkedCount = items.filter((i) => i.checked).length;
+  const todayText = dateKey(new Date());
 
   return (
-    <AppShell
-      shellState={shellState}
-      subtitle="简洁打卡与历史记录"
-      tagText="简洁模式"
-      title="采煤机日常检修打卡"
-    >
-      {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
-
+    <AppShell hideFloatingHome={showCalendar} shellState={shellState} title="日常检修打卡">
       <section className="page active">
-        <div className="checkin-layout">
-          <div className="stack">
-            <div className="panel">
-              <div className="panel-head">
-                <div>
-                  <h3 className="panel-title">
-                    <span className="accent-bar" />
-                    今日打卡项列表
-                  </h3>
-                  <p className="panel-subtitle">打卡界面保持简洁，适合现场快速勾选并提交。</p>
-                </div>
-                <span className="pill green">简洁模式</span>
-              </div>
-              <div className="panel-body">
-                <div className="list">
-                  {loading ? (
-                    <div className="empty">正在加载今日打卡项...</div>
-                  ) : (
-                    checkins?.todayItems.map((item) => (
-                      <button
-                        className={`check-item ${item.checked ? "done" : ""}`}
-                        key={item.id}
-                        onClick={() => toggleItem(item.id)}
-                        type="button"
-                      >
-                        <div className="check-box">{item.checked ? "✓" : ""}</div>
-                        <div className="check-title">{item.label}</div>
-                      </button>
-                    ))
-                  )}
-                </div>
+        {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
-                <div className="action-row">
-                  <button
-                    className="button success"
-                    disabled={!checkins || submitting}
-                    onClick={() => void submitTodayCheckins()}
-                    type="button"
-                  >
-                    {submitting ? "提交中..." : "提交今日打卡"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* ===== 今日打卡项 ===== */}
+        <div className="ck-head">
+          <h1 className="sensor-detail-title">今日检修打卡</h1>
+          <span className="range-picker-current">{todayText}</span>
+          <span
+            className={`pill ${submittedToday ? "green" : "blue"}`}
+            style={{ marginLeft: "auto" }}
+          >
+            {submittedToday ? `已打卡 · ${checkedCount}/${items.length} 项` : `已勾选 ${checkedCount}/${items.length} 项`}
+          </span>
+        </div>
 
-          <div className="stack">
-            <div className="panel">
-              <div className="panel-head">
-                <div>
-                  <h3 className="panel-title">
-                    <span className="accent-bar" />
-                    历史打卡记录区
-                  </h3>
-                  <p className="panel-subtitle">展示最近几次提交的班次、责任人与摘要。</p>
-                </div>
-              </div>
-              <div className="panel-body">
-                <div className="history-list">
-                  {loading ? (
-                    <div className="empty">正在加载历史打卡记录...</div>
-                  ) : (
-                    checkins?.historyData.map((item) => (
-                      <div className="history-item" key={`${item.date}-${item.shift}-${item.person}`}>
-                        <div>
-                          <div className="asset-title">{item.date}</div>
-                          <div className="asset-meta">
-                            {item.shift} · {item.person} · {item.note}
-                          </div>
-                        </div>
-                        <span className={`badge ${getHistoryBadgeClass(item)}`}>{item.result}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
+        <div className="ck-items">
+          {items.length === 0 ? (
+            <div className="empty">正在加载打卡项...</div>
+          ) : (
+            items.map((item, index) => (
+              <button
+                className={`ck-item${item.checked ? " on" : ""}`}
+                key={item.id}
+                onClick={() => toggleItem(item.id)}
+                type="button"
+              >
+                <span className={`ck-item-box${item.checked ? " on" : ""}`}>
+                  {item.checked ? "✓" : index + 1}
+                </span>
+                <span className="ck-item-label">{item.label}</span>
+              </button>
+            ))
+          )}
+        </div>
 
-            <div className="panel">
-              <div className="panel-head">
-                <div>
-                  <h3 className="panel-title">
-                    <span className="accent-bar" />
-                    月历视图
-                  </h3>
-                  <p className="panel-subtitle">点击某一天后显示详细信息。</p>
-                </div>
-                <span className="pill blue">日历视图</span>
-              </div>
-              <div className="panel-body">
-                <div className="calendar-wrap">
-                  <div className="calendar-toolbar">
-                    <div className="calendar-month">2026 年 03 月</div>
-                    <div className="calendar-legend">
-                      <span className="calendar-legend-item">
-                        <span className="legend-dot done" />
-                        已完成
-                      </span>
-                      <span className="calendar-legend-item">
-                        <span className="legend-dot partial" />
-                        部分完成
-                      </span>
-                      <span className="calendar-legend-item">
-                        <span className="legend-dot missed" />
-                        未打卡
-                      </span>
-                      <span className="calendar-legend-item">
-                        <span className="legend-dot empty" />
-                        暂无记录
-                      </span>
-                    </div>
+        {items.length > 0 && !submittedToday ? (
+          <button
+            className="range-picker-confirm ck-submit"
+            disabled={submitting || checkedCount === 0}
+            onClick={() => void submit()}
+            type="button"
+          >
+            {submitting ? "提交中…" : "提交打卡"}
+          </button>
+        ) : null}
+
+        <div className="sensor-pager" style={{ justifyContent: "center" }}>
+          <button
+            className="sensor-settings-btn"
+            onClick={() => {
+              setDayDetail(null);
+              setShowCalendar(true);
+            }}
+            type="button"
+          >
+            历史打卡记录
+          </button>
+        </div>
+
+        {/* ===== 日历弹窗 ===== */}
+        {showCalendar ? (
+          <div className="fc-modal-backdrop" onClick={() => setShowCalendar(false)}>
+            <div className="fc-modal" onClick={(event) => event.stopPropagation()}>
+              {dayDetail === null ? (
+                <>
+                  <div className="ck-cal-head">
+                    <button
+                      className="sensor-back-btn"
+                      onClick={() =>
+                        setCalMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))
+                      }
+                      type="button"
+                    >
+                      ‹
+                    </button>
+                    <h2 className="fc-modal-title">
+                      {calMonth.getFullYear()} 年 {calMonth.getMonth() + 1} 月
+                    </h2>
+                    <button
+                      className="sensor-back-btn"
+                      onClick={() =>
+                        setCalMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))
+                      }
+                      type="button"
+                    >
+                      ›
+                    </button>
                   </div>
-
-                  <div className="calendar-grid">
-                    {weekdays.map((weekday) => (
-                      <div className="calendar-weekday" key={weekday}>
-                        {weekday}
+                  <div className="ck-cal-grid">
+                    {WEEKDAYS.map((w) => (
+                      <div className="ck-cal-weekday" key={w}>
+                        {w}
                       </div>
                     ))}
-                    {calendarCells.map((cell) => {
-                      if (cell.type === "empty") {
-                        return <div className="calendar-cell empty" key={cell.key} />;
-                      }
-
-                      const status = getCheckinStatusConfig(cell.record?.status);
-
-                      return (
+                    {calCells.map((cell, index) =>
+                      cell === null ? (
+                        <div key={`empty-${index}`} />
+                      ) : (
                         <button
-                          className={`calendar-cell ${cell.record?.status ?? ""} ${selectedDate === cell.date ? "selected" : ""}`.trim()}
+                          className={`ck-cal-day${records.has(cell.key) ? " has-record" : ""}${cell.key === todayText ? " today" : ""}`}
                           key={cell.key}
-                          onClick={() => setSelectedDate(cell.date)}
+                          onClick={() => {
+                            const rec = records.get(cell.key);
+                            setDayDetail(
+                              rec ?? {
+                                date: cell.key,
+                                shift: "--",
+                                person: "--",
+                                result: "当天无打卡记录",
+                                items: [],
+                              },
+                            );
+                          }}
                           type="button"
                         >
-                          <div className="calendar-date">{cell.day}</div>
-                          <div>
-                            <div className={`calendar-badge ${status.badge}`}>{status.text}</div>
-                            <div className="calendar-note">
-                              {cell.record ? cell.record.note : "暂无打卡记录"}
-                            </div>
-                          </div>
+                          {cell.day}
+                          {records.has(cell.key) ? <span className="ck-cal-dot" /> : null}
                         </button>
-                      );
-                    })}
+                      ),
+                    )}
                   </div>
-                </div>
-
-                <div className="calendar-detail">
-                  {selectedRecord ? (
+                </>
+              ) : (
+                <>
+                  <div className="fc-modal-head">
+                    <span className="fc-modal-code">{dayDetail.date}</span>
+                    <h2 className="fc-modal-title">{dayDetail.result}</h2>
+                  </div>
+                  {dayDetail.items.length > 0 ? (
                     <>
-                      <div className="calendar-detail-head">
-                        <div>
-                          <h4 className="calendar-detail-title">{selectedDate}</h4>
-                          <div className="calendar-detail-meta">
-                            {selectedRecord.shift} · {selectedRecord.person} · {selectedRecord.result}
-                          </div>
-                        </div>
-                        <span className={`badge ${selectedStatus.badgeClass}`}>{selectedStatus.tag}</span>
-                      </div>
-                      <div className="calendar-detail-note">{selectedRecord.detail}</div>
-                      <div className="calendar-detail-list">
-                        <div className="calendar-detail-row">
-                          <strong>记录摘要</strong>
-                          <span>{selectedRecord.note}</span>
-                        </div>
-                        <div className="calendar-detail-row">
-                          <strong>点检内容</strong>
-                          <span>
-                            主电缆、压力接点引出电缆、刻度记录、控制箱按钮及紧固螺钉检查。
-                          </span>
-                        </div>
-                        <div className="calendar-detail-row">
-                          <strong>适用说明</strong>
-                          <span>该区域用于展示当天打卡结论、责任人和值班班次。</span>
-                        </div>
-                      </div>
+                      <p className="fc-modal-desc">
+                        班次：{dayDetail.shift} · 点检人：{dayDetail.person}
+                      </p>
+                      <ol className="fc-modal-suggestions">
+                        {dayDetail.items.map((item, index) => (
+                          <li key={index}>
+                            {item.checked ? "✓ " : "✗ "}
+                            {item.label}
+                          </li>
+                        ))}
+                      </ol>
                     </>
                   ) : (
-                    <>
-                      <div className="calendar-detail-head">
-                        <div>
-                          <h4 className="calendar-detail-title">{selectedDate}</h4>
-                          <div className="calendar-detail-meta">当日暂无历史打卡记录</div>
-                        </div>
-                        <span className="badge info">无记录</span>
-                      </div>
-                      <div className="calendar-detail-note">
-                        该日期尚未录入打卡信息，可在实际系统中继续补录。
-                      </div>
-                    </>
+                    <p className="fc-modal-desc">该日期没有打卡记录。</p>
                   )}
-                </div>
-              </div>
+                  <button
+                    className="fc-modal-close"
+                    onClick={() => setDayDetail(null)}
+                    type="button"
+                  >
+                    返回日历
+                  </button>
+                </>
+              )}
             </div>
           </div>
-        </div>
+        ) : null}
       </section>
     </AppShell>
   );
