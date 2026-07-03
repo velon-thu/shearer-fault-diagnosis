@@ -60,7 +60,7 @@ for _ in $(seq 1 300); do
 done
 
 echo "      预载完成，启动 replayer（从同步点直播续灌）…"
-"$BIN/replayer" -dir testdata -interval 100ms > logs/replayer.log 2>&1 &
+"$BIN/replayer" -dir testdata > logs/replayer.log 2>&1 &
 REPLAYER_PID=$!
 
 cleanup() {

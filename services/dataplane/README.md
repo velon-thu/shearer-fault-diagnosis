@@ -33,7 +33,8 @@ pnpm dev
 
 | 程序 | 参数 | 默认 | 说明 |
 |---|---|---|---|
-| replayer | `-interval` | 100ms | 每条记录写入间隔（回放节奏） |
+| replayer | `-interval` | 0 | 固定写入间隔；0=按原始时间戳 1:1 实时回放 |
+| replayer | `-gap-cap` / `-gap-wait` | 60s / 5s | 超过 gap-cap 的停机空洞压缩为 gap-wait 等待 |
 | replayer | `-loop` | false | 播完 5 个文件后从头循环 |
 | replayer | `-shm` | td3sharemem | 共享内存映射名 |
 | collector | `-scan` | 100ms | 扫描周期 |
@@ -46,7 +47,8 @@ pnpm dev
 - **预载 + 直播**：同步点默认 org 时间 2026-06-30 20:45（defs.DefaultSyncOrgTsMs，
   选点：采煤机运行中且故障种类峰值时段）。collector 直接解析 org 把同步点前
   全部数据（-preload 默认 150h，即 06-26 起约 4.9 天）灌库（时间轴平移到"现在"结尾）；
-  replayer 从同步点起播（-start-org-ts），按当前系统时间紧密逐行写共享内存。
+  replayer 从同步点起播（-start-org-ts），按 org 原始时间戳 1:1 实时写共享内存
+  （与真实数据源同速率，故障持续时长保真；长空洞压缩，见上表）。
   start-services.sh 会先等预载完成再起回放器，保证历史与直播无缝衔接。
 - **BOC 展示性覆盖**：现有 org 数据第 285 列（BOC 通讯值，地址 2000）几乎全程为 0，
   为满足"启动即 BOC 正常"的演示需求，WritePlan 末尾固定写 1（defs.go，接真实数据源后删除）。
