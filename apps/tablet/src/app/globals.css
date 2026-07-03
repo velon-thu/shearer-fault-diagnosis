@@ -2289,14 +2289,14 @@ button.calendar-cell {
 
 .launchpad-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: clamp(20px, 2.6vw, 36px);
-  width: min(1280px, 100%);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(22px, 3vw, 44px);
+  width: min(1120px, 100%);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 760px) {
   .launchpad-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
