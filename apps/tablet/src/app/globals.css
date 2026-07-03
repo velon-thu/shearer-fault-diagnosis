@@ -3255,3 +3255,13 @@ button.calendar-cell {
 .rank-item-btn:active {
   transform: scale(0.985);
 }
+
+
+/* 排名占比按故障类型着色：0提示=蓝 1警告=黄(默认) 2停机=红 */
+.rank-count-type0 {
+  color: #48c7ff;
+}
+
+.rank-count-type2 {
+  color: #ff5c5c;
+}

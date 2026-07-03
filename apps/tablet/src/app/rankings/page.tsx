@@ -452,7 +452,11 @@ export default function RankingsPage() {
                             <div className="rank-name">{item.name}</div>
                           </div>
                         </div>
-                        <div className="rank-count">{item.sharePct}%</div>
+                        <div
+                          className={`rank-count rank-count-type${rulesByName.get(item.name)?.type ?? 1}`}
+                        >
+                          {item.sharePct}%
+                        </div>
                       </button>
                     ))
                   )}
