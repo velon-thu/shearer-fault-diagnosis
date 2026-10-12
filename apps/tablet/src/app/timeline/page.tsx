@@ -9,23 +9,10 @@ import {
 import { useEffect, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
 import { DualRangeSlider, fmtSliderDateTime } from "@/components/dual-range-slider";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const DataWindowApiResponseSchema = createApiSuccessResponseSchema(DataWindowSchema);
 const TimelineApiResponseSchema = createApiSuccessResponseSchema(TimelineResponseSchema);
-
-const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-  const { protocol, hostname, port } = window.location;
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-  return `${protocol}//${window.location.host}`;
-};
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const fmtClock = (ms: number) => {
@@ -108,7 +95,12 @@ export default function TimelinePage() {
   const shown = filter === "all" ? events : events.filter((e) => e.kind === filter);
 
   return (
-    <AppShell shellState={shellState} title="事件时间线">
+    <AppShell
+      back={view === "list" ? { label: "选择时间段", onClick: () => setView("range") } : undefined}
+      shellState={shellState}
+      title="事件时间线"
+      viewTitle={view === "list" ? "事件流" : "选择时间段"}
+    >
       <section className="page active">
         {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
@@ -156,9 +148,6 @@ export default function TimelinePage() {
         ) : (
           <>
             <div className="sensor-topbar">
-              <button className="sensor-back-btn" onClick={() => setView("range")} type="button">
-                重新选择时间
-              </button>
               <span className="range-picker-current">
                 {fmtSliderDateTime(fromMs)} → {fmtSliderDateTime(toMs)}
               </span>

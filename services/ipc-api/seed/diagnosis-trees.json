@@ -1,0 +1,5226 @@
+{
+  "generatedAt": "2026-08-02T04:08:23+00:00",
+  "trees": [
+    {
+      "id": "motor-start-stop",
+      "shortName": "电机启停故障",
+      "title": "采煤机电机启停故障诊断树",
+      "schemaVersion": "1.0",
+      "sourceDir": "采煤机电机启停故障诊断树",
+      "extractionNotes": [],
+      "modules": [
+        {
+          "id": "height_pump_start_stop",
+          "index": 1,
+          "name": "调高泵启停故障",
+          "startNode": "hp_q001",
+          "nodes": [
+            {
+              "id": "hp_q001",
+              "type": "question",
+              "text": "注意：所有电机启动都有按钮防压死保护，按钮按下时间不足3秒或超过5秒都将无法启动，请规范操作。采煤机上电启动后，显示器进入正常监视画面，所有模块状态均显示为绿色。按下油泵启动按钮3～5秒，显示器是否有油泵电机启动提示（有语音配置的采煤机同时有语音提示）？",
+              "options": [
+                {
+                  "label": "有",
+                  "next": "hp_q002",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无",
+                  "next": "hp_q020",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_004_0002.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q002",
+              "type": "question",
+              "text": "显示器有油泵电机启动提示（有语音配置的采煤机同时有语音提示），说明采煤机已经开始执行启动命令。提示结束后，油泵电机是否正常启动？",
+              "options": [
+                {
+                  "label": "已启动",
+                  "next": "hp_q003",
+                  "status": "recorded"
+                },
+                {
+                  "label": "未启动",
+                  "next": "hp_q008",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_005_0005.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q003",
+              "type": "question",
+              "text": "提示结束后油泵电机正常启动。启动以后，油泵电机是否可以持续平稳运转？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "hp_q004",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不能",
+                  "next": "hp_q006",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_006_0018.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q004",
+              "type": "question",
+              "text": "油泵电机持续运转，说明泵电机启动回路工作正常。请观察显示器是否有牵引（或截割）被泵电机闭锁提示？",
+              "options": [
+                {
+                  "label": "有",
+                  "next": "hp_q005",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "hp_r003",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_007_0028.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q005",
+              "type": "question",
+              "text": "有牵引（或截割）被泵电机闭锁提示，说明泵电机接触器吸合后反馈没有进入系统。请检查MOC-JX4.7在泵接触器吸合后是否有F+24V。",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "hp_r001",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "hp_r002",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_008_0036.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r001",
+              "type": "result",
+              "text": "在泵接触器吸合后，MOC-JX4.7上可以测量到F+24V，说明电源及泵接触器辅助触点正常。在确认MOC-JX4插头没有问题后，请直接更换MOC模块。",
+              "options": [],
+              "sourceFrame": "heightpump/page_009_0045.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r002",
+              "type": "result",
+              "text": "请依次检查F24V到泵接触器辅助触点、再由辅助触点到MOC-JX4.7之间的线路，找到断路点并处理。",
+              "options": [],
+              "sourceFrame": "heightpump/page_010_0052.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r003",
+              "type": "result",
+              "text": "没有显示牵引（或截割）被泵电机闭锁提示，系统允许进一步操作采煤机，说明泵电机启动电路正常。",
+              "options": [],
+              "sourceFrame": "heightpump/page_011_0065.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q006",
+              "type": "question",
+              "text": "油泵电机启动后立即停止运转。请观察显示器是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+              "options": [
+                {
+                  "label": "有故障",
+                  "next": "hp_r004",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无故障",
+                  "next": "hp_q007",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_012_0072.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r004",
+              "type": "result",
+              "text": "根据系统提示的故障信息进行针对性处理。在系统模块“最近停机原因”中查到的停机代码，可在「故障代码查询 → 系统故障代码」中查看。",
+              "options": [],
+              "sourceFrame": "heightpump/page_013_0085.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q007",
+              "type": "question",
+              "text": "没有故障提示，多数是控制线路有虚接，接触器吸合时因振动再次断开；也可能是接触器自身无法吸持或模块不能保持。可手持短线短接MOC-JX2.5和MOC-JX2.8，检查接触器是否能吸合并保持。",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "hp_r005",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不能",
+                  "next": "hp_r006",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤。",
+              "sourceFrame": "heightpump/page_014_0089.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r005",
+              "type": "result",
+              "text": "短接MOC-JX2.5和MOC-JX2.8后，接触器保持吸合状态，说明问题在MOC模块。请更换MOC模块后再次尝试启动油泵。",
+              "options": [],
+              "sourceFrame": "heightpump/page_015_0097.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r006",
+              "type": "result",
+              "text": "短接MOC-JX2.5和MOC-JX2.8后，接触器不能保持吸合状态，说明接触器吸持线圈存在问题，请直接更换接触器。",
+              "options": [],
+              "sourceFrame": "heightpump/page_016_0099.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q008",
+              "type": "question",
+              "text": "提示结束后油泵电机没有启动，请认真观察显示屏是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+              "options": [
+                {
+                  "label": "有故障",
+                  "next": "hp_q009",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无故障",
+                  "next": "hp_q012",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_017_0105.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q009",
+              "type": "question",
+              "text": "油泵电机没有启动，屏幕是否提示油泵电机漏电或者220V漏电？",
+              "options": [
+                {
+                  "label": "泵电机漏电",
+                  "next": "hp_q010",
+                  "status": "recorded"
+                },
+                {
+                  "label": "220V漏电",
+                  "next": "hp_q011",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_018_0115.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q010",
+              "type": "question",
+              "text": "提示油泵电机漏电，请检查油泵电机和电缆的绝缘状况。",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "hp_r007",
+                  "status": "recorded"
+                },
+                {
+                  "label": "正常",
+                  "next": "hp_r008",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_019_0122.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r007",
+              "type": "result",
+              "text": "查找漏电原因，处理漏电。",
+              "options": [],
+              "sourceFrame": "heightpump/page_020_0133.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r008",
+              "type": "result",
+              "text": "检测绝缘状态良好，说明是漏电检测模块误动作。请更换高压漏电检测模块。没有配件时，可临时将接在油泵接触器上的粉红色检测线拆除并包扎，或将MOC-JX3.15上的线从端子排上拆除并包扎。请尽快更换模块。",
+              "options": [],
+              "sourceFrame": "heightpump/page_021_0137.0.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q011",
+              "type": "question",
+              "text": "屏幕提示220V漏电，请检查220V电源对地绝缘。使用万用表直接测量对地绝缘即可，严禁使用摇表测试。",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "hp_r009",
+                  "status": "recorded"
+                },
+                {
+                  "label": "绝缘正常",
+                  "next": "hp_r010",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_022_0142.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r009",
+              "type": "result",
+              "text": "查找漏电原因，处理漏电。这类故障多数由线路捆扎不合理、绝缘皮磨破造成。",
+              "options": [],
+              "sourceFrame": "heightpump/page_023_0152.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r010",
+              "type": "result",
+              "text": "经过测试绝缘良好，说明220V漏电模块误动作。临时措施：将MOC-JX4.9上的线从端子排上拆除并包扎。请尽快更换220V漏电模块。",
+              "options": [],
+              "sourceFrame": "heightpump/page_024_0157.0.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q012",
+              "type": "question",
+              "text": "油泵电机没有启动，屏幕也没有任何故障提示，可能原因：1.有停止信号进入控制系统；2.接触器、接触器电源或MOC模块故障。",
+              "options": [
+                {
+                  "label": "1",
+                  "next": "hp_q013",
+                  "status": "recorded"
+                },
+                {
+                  "label": "2",
+                  "next": "hp_q019",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_025_0168.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q013",
+              "type": "question",
+              "text": "停止信号可能来自启动按钮、停止按钮、顺槽远程、端头站或遥控器。",
+              "options": [
+                {
+                  "label": "按钮",
+                  "next": "hp_q014",
+                  "status": "recorded"
+                },
+                {
+                  "label": "其他原因",
+                  "next": null,
+                  "status": "unresolved_not_recorded"
+                }
+              ],
+              "note": "“其他原因”分支在现有资料中未继续展开，已标记待补录。",
+              "sourceFrame": "heightpump/page_026_0172.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q014",
+              "type": "question",
+              "text": "请检查油泵启动按钮、停止按钮、总停按钮是否卡死在接通状态。",
+              "options": [
+                {
+                  "label": "接通",
+                  "next": "hp_r011",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不通",
+                  "next": "hp_q015",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_027_0186.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r011",
+              "type": "result",
+              "text": "油泵启动按钮、停止按钮或总停按钮存在卡死情况，均会造成无法启动。请检查卡死原因并酌情处理。",
+              "options": [],
+              "sourceFrame": "heightpump/page_028_0194.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q015",
+              "type": "question",
+              "text": "油泵启动按钮、停止按钮和总停按钮均正常，请检查MOC-JX3.3（总停）、MOC-JX3.4（泵启）、MOC-JX3.5（泵停）上是否有DV24V。",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "hp_r012",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "hp_q016",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_029_0196.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r012",
+              "type": "result",
+              "text": "有DV24V进入MOC模块，说明有停止信号进入系统，请检查相关线路，找到24V进入原因并处理。",
+              "options": [],
+              "sourceFrame": "heightpump/page_030_0202.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q016",
+              "type": "question",
+              "text": "MOC-JX3.3（总停）、MOC-JX3.4（泵启）、MOC-JX3.5（泵停）上没有F+24V电压，说明没有停止信号进入系统。请手持短接线短接MOC-JX2.5和MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+              "options": [
+                {
+                  "label": "吸合",
+                  "next": "hp_r013",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不吸合",
+                  "next": "hp_q017",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤。",
+              "sourceFrame": "heightpump/page_031_0204.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r013",
+              "type": "result",
+              "text": "短接后接触器吸合，说明MOC模块内部继电器没有吸合或触点已损坏。在确保MOC-JX2插头没有问题后，请直接更换MOC模块。",
+              "options": [],
+              "sourceFrame": "heightpump/page_032_0212.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q017",
+              "type": "question",
+              "text": "短接后接触器不吸合，可能原因：1.接触器已损坏；2.电源或供电线路故障。请检查控制变压器输出132V（220V）是否正常。",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "hp_r014",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "hp_q018",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_033_0213.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r014",
+              "type": "result",
+              "text": "控制变压器输出132V（220V）电压正常，请检查控制变压器到模块和接触器之间的线路，找到断点处理。若供电线路没有问题，请直接更换接触器。",
+              "options": [],
+              "sourceFrame": "heightpump/page_034_0222.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q018",
+              "type": "question",
+              "text": "控制变压器输出132V（220V）端口没有电压，请检查控制变压器输入电压是否正常。",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "hp_r015",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "hp_r016",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_035_0224.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r015",
+              "type": "result",
+              "text": "控制变压器输入侧电压正常、输出侧没有电压，基本确定控制变压器已损坏，请更换控制变压器。",
+              "options": [],
+              "sourceFrame": "heightpump/page_036_0232.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r016",
+              "type": "result",
+              "text": "控制变压器输入侧没有电压，请检查输入侧保险或空气开关是否跳闸断开。若空气开关合闸后立即跳闸或保险立即烧断，请勿使用铜丝短接，应先处理断路或短路故障。",
+              "options": [],
+              "sourceFrame": "heightpump/page_037_0234.0.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q019",
+              "type": "question",
+              "text": "在排除有停止信号进入系统后，手持短接线短接MOC-JX2.5和MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+              "options": [
+                {
+                  "label": "吸合",
+                  "next": "hp_r013",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不吸合",
+                  "next": "hp_q017",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤。",
+              "sourceFrame": "heightpump/page_038_0244.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_q020",
+              "type": "question",
+              "text": "按下油泵启动按钮3～5秒，采煤机没有反应且显示器上无泵电机启动提示，说明按钮指令没有进入MOC模块。请检查MOC-JX3.4在按下泵启动按钮时是否有F+24V电压。",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "hp_r017",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无",
+                  "next": "hp_r018",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "heightpump/page_039_0289.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r017",
+              "type": "result",
+              "text": "按下泵启动按钮时，MOC-JX3.4上可以测量到F+24V，说明启动信号已经到达MOC模块。在确认MOC-JX3插头没有问题后，请直接更换MOC模块。",
+              "options": [],
+              "sourceFrame": "heightpump/page_040_0304.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "hp_r018",
+              "type": "result",
+              "text": "按下泵启动按钮时，MOC-JX3.4上没有F+24V电压，说明没有启动指令进入。请依次检查F+24V电源到泵启按钮、再由按钮到MOC-JX3.4之间的线路，找到断路点处理。",
+              "options": [],
+              "sourceFrame": "heightpump/page_041_0307.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            }
+          ],
+          "sourceVideo": "调高泵启停故障.mp4"
+        },
+        {
+          "id": "cutting_motor_start",
+          "index": 2,
+          "name": "截割启动故障",
+          "startNode": "cut_q001",
+          "nodes": [
+            {
+              "id": "cut_q001",
+              "type": "question",
+              "text": "注意：所有电机启动都有按钮防压死保护，按钮按下时间不足3秒或超过5秒都将无法启动，请规范操作。采煤机上电启动后，显示器进入正常监视画面，所有模块状态均显示为绿色。按下截割启动按钮3～5秒，显示器是否有截割电机启动提示（有语音配置的采煤机同时有语音提示）？",
+              "options": [
+                {
+                  "label": "有",
+                  "next": "cut_q002",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无",
+                  "next": "cut_q018",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_001_0000.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q002",
+              "type": "question",
+              "text": "显示器有左（右）截割电机启动提示（有语音配置的采煤机同时有语音提示），说明采煤机已经开始执行启动命令。提示结束后，左（右）截割电机是否正常启动？",
+              "options": [
+                {
+                  "label": "已启动",
+                  "next": "cut_q003",
+                  "status": "recorded"
+                },
+                {
+                  "label": "未启动",
+                  "next": "cut_q006",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_002_0010.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q003",
+              "type": "question",
+              "text": "提示结束后左（右）截割电机正常启动。启动以后，左（右）截割电机是否可以持续平稳运转？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "cut_r001",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不能",
+                  "next": "cut_q004",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_003_0019.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r001",
+              "type": "result",
+              "text": "左（右）截割电机持续运转，说明左（右）截割电机启动回路工作正常。",
+              "options": [],
+              "sourceFrame": "cut/page_004_0028.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q004",
+              "type": "question",
+              "text": "左（右）截割电机启动后立即停止运转，请观察显示器是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+              "options": [
+                {
+                  "label": "有故障",
+                  "next": "cut_r002",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无故障",
+                  "next": "cut_q005",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_005_0032.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r002",
+              "type": "result",
+              "text": "根据系统提示的故障信息进行针对性处理。在系统模块“最近停机原因”中查到的停机代码，可在「故障代码查询 → 系统故障代码」中查看。",
+              "options": [],
+              "sourceFrame": "cut/page_006_0038.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q005",
+              "type": "question",
+              "text": "没有故障提示，多数是控制线路有虚接，接触器吸合时因振动再次断开。请仔细检查线路；也可能是接触器自身无法吸持或模块不能保持。可手持短线短接左侧MOC-JX2.3与MOC-JX2.8，或右侧MOC-JX2.4与MOC-JX2.8，检查接触器是否能吸合并保持。",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "cut_r003",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不能",
+                  "next": "cut_r004",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤。",
+              "sourceFrame": "cut/page_007_0043.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r003",
+              "type": "result",
+              "text": "短接后接触器保持吸合状态，说明问题在MOC模块，请更换MOC模块后再次尝试启动截割电机。",
+              "options": [],
+              "sourceFrame": "cut/page_008_0050.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r004",
+              "type": "result",
+              "text": "短接后接触器不能维持吸合状态，说明接触器吸持线圈存在问题，请直接更换接触器。",
+              "options": [],
+              "sourceFrame": "cut/page_009_0054.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q006",
+              "type": "question",
+              "text": "提示结束后左（右）截割电机没有启动，请认真观察显示屏是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+              "options": [
+                {
+                  "label": "有故障",
+                  "next": "cut_q007",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无故障",
+                  "next": "cut_q010",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_010_0061.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q007",
+              "type": "question",
+              "text": "左（右）截割电机没有启动，屏幕是否提示左（右）截割电机漏电，或220V（或132V）漏电？",
+              "options": [
+                {
+                  "label": "截割漏电",
+                  "next": "cut_q008",
+                  "status": "recorded"
+                },
+                {
+                  "label": "220V漏电",
+                  "next": "cut_q009",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_011_0067.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q008",
+              "type": "question",
+              "text": "提示左（右）截割电机漏电，请检查左（右）截割电机和电缆的绝缘状况。",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "cut_r005",
+                  "status": "recorded"
+                },
+                {
+                  "label": "绝缘正常",
+                  "next": "cut_r006",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_012_0075.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r005",
+              "type": "result",
+              "text": "查找漏电原因，处理漏电。",
+              "options": [],
+              "sourceFrame": "cut/page_013_0086.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r006",
+              "type": "result",
+              "text": "检测绝缘状态良好，说明是漏电检测模块误动作。请更换高压漏电检测模块。没有配件时，可临时将接在左（右）截割接触器上的粉红色检测线拆除并包扎，或将左MOC-JX3.13（右MOC-JX3.14）上的线从端子排上拆除并包扎。请尽快更换模块。",
+              "options": [],
+              "sourceFrame": "cut/page_014_0090.5.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q009",
+              "type": "question",
+              "text": "对于油泵无控制或延时启动的煤机，220V（或132V）漏电同样会导致截割不能启动。屏幕提示220V漏电，请检查220V（或132V）控制电源对地绝缘。使用万用表直接测量对地绝缘即可，严禁使用摇表测试。",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "cut_r007",
+                  "status": "recorded"
+                },
+                {
+                  "label": "绝缘正常",
+                  "next": "cut_r008",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_015_0096.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r007",
+              "type": "result",
+              "text": "查找漏电原因，处理漏电。这类故障多数由线路捆扎不合理、绝缘皮磨破造成。",
+              "options": [],
+              "sourceFrame": "cut/page_016_0106.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r008",
+              "type": "result",
+              "text": "经过测试绝缘良好，说明220V漏电模块误动作。临时措施：将MOC-JX4.9上的线从端子排上拆除并包扎。请尽快更换220V漏电模块。",
+              "options": [],
+              "sourceFrame": "cut/page_017_0109.0.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q010",
+              "type": "question",
+              "text": "左（右）截割电机没有启动，屏幕也没有任何故障提示，可能原因：1.有停止信号进入控制系统；2.接触器、接触器电源或MOC模块故障。",
+              "options": [
+                {
+                  "label": "1",
+                  "next": "cut_q011",
+                  "status": "recorded"
+                },
+                {
+                  "label": "2",
+                  "next": "cut_q017",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_018_0116.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q011",
+              "type": "question",
+              "text": "停止信号可能来自启动按钮、停止按钮、顺槽远程、端头站或遥控器。",
+              "options": [
+                {
+                  "label": "按钮",
+                  "next": "cut_q012",
+                  "status": "recorded"
+                },
+                {
+                  "label": "其他原因",
+                  "next": "cut_r015",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_019_0120.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q012",
+              "type": "question",
+              "text": "请检查左（右）截割停止按钮、启动按钮和总停按钮是否卡死在接通状态。",
+              "options": [
+                {
+                  "label": "接通",
+                  "next": "cut_r009",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不通",
+                  "next": "cut_q013",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_020_0131.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r009",
+              "type": "result",
+              "text": "左（右）截割停止按钮、启动按钮或总停按钮存在卡死情况，请检查卡死原因并处理。",
+              "options": [],
+              "sourceFrame": "cut/page_021_0138.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q013",
+              "type": "question",
+              "text": "左（右）截割停止按钮、启动按钮和总停按钮没有卡死。请检查MOC-JX3.3（总停）、MOC-JX3.6（左截割启）、MOC-JX3.7（左截割停）、MOC-JX3.8（右截割启）、MOC-JX3.9（右截割停）上是否有DV24V。",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "cut_r010",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "cut_q014",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_022_0139.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r010",
+              "type": "result",
+              "text": "有DV24V进入MOC模块，说明有停止信号进入系统，请检查相关线路，找到24V进入原因并处理。",
+              "options": [],
+              "sourceFrame": "cut/page_023_0145.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q014",
+              "type": "question",
+              "text": "MOC-JX3.3、MOC-JX3.6、MOC-JX3.7、MOC-JX3.8、MOC-JX3.9上没有F+24V电压，说明没有停止信号进入系统。请手持短接线短接左MOC-JX2.3与MOC-JX2.8，或右MOC-JX2.4与MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+              "options": [
+                {
+                  "label": "吸合",
+                  "next": "cut_r011",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不吸合",
+                  "next": "cut_q015",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤。",
+              "sourceFrame": "cut/page_024_0146.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r011",
+              "type": "result",
+              "text": "短接后接触器吸合，说明MOC模块内部继电器没有吸合或触点已损坏。在确保MOC-JX2插头没有问题后，请直接更换MOC模块。",
+              "options": [],
+              "sourceFrame": "cut/page_025_0152.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q015",
+              "type": "question",
+              "text": "短接后接触器不吸合，可能原因：1.接触器已损坏；2.电源或供电线路故障。请检查控制变压器输出132V（220V）是否正常。",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "cut_r012",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "cut_q016",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_026_0154.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r012",
+              "type": "result",
+              "text": "控制变压器输出132V（220V）电压正常，请检查控制变压器到模块和接触器之间的线路，找到断点处理。若供电线路没有问题，请直接更换接触器。",
+              "options": [],
+              "sourceFrame": "cut/page_027_0161.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q016",
+              "type": "question",
+              "text": "控制变压器输出132V（220V）端口没有电压，请检查控制变压器输入电压是否正常。",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "cut_r013",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "cut_r014",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_028_0162.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r013",
+              "type": "result",
+              "text": "控制变压器输入侧电压正常、输出侧没有电压，基本确定控制变压器已损坏，请更换控制变压器。",
+              "options": [],
+              "sourceFrame": "cut/page_029_0168.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r014",
+              "type": "result",
+              "text": "控制变压器输入侧没有电压，请检查输入侧保险或空气开关是否跳闸断开。若空气开关合闸后立即跳闸或保险立即烧断，请勿使用铜丝短接，应先处理断路或短路故障。",
+              "options": [],
+              "sourceFrame": "cut/page_030_0170.0.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r015",
+              "type": "result",
+              "text": "停止信号若来自顺槽远程，可按下模式按钮再次尝试启动；若可以启动，应到集控室查明信号来源并处理。若停止信号来自端头站，可临时拔掉端头站航空插头后再次尝试；若可启动，应检修或更换端头站。若怀疑遥控器，可关机后再次尝试或更换遥控器。遥控器引起此类故障较少见。",
+              "options": [],
+              "sourceFrame": "cut/page_031_0175.5.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q017",
+              "type": "question",
+              "text": "在排除有停止信号进入系统后，手持短接线短接左MOC-JX2.3与MOC-JX2.8，或右MOC-JX2.4与MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+              "options": [
+                {
+                  "label": "吸合",
+                  "next": "cut_r011",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不吸合",
+                  "next": "cut_q015",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤。",
+              "sourceFrame": "cut/page_032_0180.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_q018",
+              "type": "question",
+              "text": "按下左（右）截割启动按钮3～5秒，采煤机没有反应且显示器上无左（右）截割电机启动提示，说明按钮指令没有进入MOC模块。请检查左MOC-JX3.6（右MOC-JX3.8）在按下左（右）截割启动按钮时是否有F+24V电压。",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "cut_r016",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "cut_r017",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "cut/page_034_0201.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r016",
+              "type": "result",
+              "text": "按下左（右）截割启动按钮时，左MOC-JX3.6（右MOC-JX3.8）上可以测量到F+24V，说明启动信号已经到达MOC模块。在确认MOC-JX3插头没有问题后，请直接更换MOC模块。",
+              "options": [],
+              "sourceFrame": "cut/page_035_0202.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cut_r017",
+              "type": "result",
+              "text": "按下左（右）截割启动按钮时，左MOC-JX3.6（右MOC-JX3.8）上没有F+24V电压，说明没有启动指令进入。请依次检查F+24V电源到左（右）截割启动按钮、再由按钮到左MOC-JX3.6（右MOC-JX3.8）之间的线路，找到断路点处理。",
+              "options": [],
+              "sourceFrame": "cut/page_036_0204.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            }
+          ],
+          "sourceVideo": "截割启动故障.mp4"
+        },
+        {
+          "id": "crusher_motor_start",
+          "index": 3,
+          "name": "破碎电机启动故障",
+          "startNode": "cr_q001",
+          "nodes": [
+            {
+              "id": "cr_q001",
+              "type": "question",
+              "text": "注意：所有电机启动都有按钮防压死保护，按钮按下时间不足3秒或超过5秒都将无法启动，请规范操作。油泵电机必须已启动，且屏幕无“截割电机（或牵引启动）被泵电机闭锁”提示；如存在闭锁，请先处理油泵启动故障。然后按下破碎启动按钮3～5秒，显示器是否有破碎电机启动提示（有语音配置的采煤机同时有语音提示）？",
+              "options": [
+                {
+                  "label": "有",
+                  "next": "cr_q003",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无",
+                  "next": "cr_q002",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_002_0002.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q002",
+              "type": "question",
+              "text": "按下破碎启动按钮3～5秒，采煤机没有反应且显示器上无破碎电机启动提示，说明按钮指令没有进入MOC模块。请检查MOC-JX3.10在按下破碎启动按钮时是否有F+24V电压。",
+              "options": [
+                {
+                  "label": "有",
+                  "next": "cr_r001",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无",
+                  "next": "cr_r002",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_003_0010.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r001",
+              "type": "result",
+              "text": "按下破碎启动按钮时，MOC-JX3.10上可以测量到F+24V，说明启动信号已到达MOC模块。在确认MOC-JX3插头没有问题后，请直接更换MOC模块。",
+              "options": [],
+              "sourceFrame": "crusher/page_004_0012.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r002",
+              "type": "result",
+              "text": "按下破碎启动按钮时，MOC-JX3.10上没有F+24V电压，说明没有启动指令进入。请依次检查F+24V电源到破碎启动按钮、再由按钮到MOC-JX3.10之间的线路，找到断路点处理。",
+              "options": [],
+              "sourceFrame": "crusher/page_005_0014.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q003",
+              "type": "question",
+              "text": "显示器有破碎电机启动提示（有语音配置的采煤机同时有语音提示），说明采煤机已经开始执行启动命令。提示结束后，破碎电机是否正常启动？",
+              "options": [
+                {
+                  "label": "已启动",
+                  "next": "cr_q004",
+                  "status": "recorded"
+                },
+                {
+                  "label": "未启动",
+                  "next": "cr_q007",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_006_0016.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q004",
+              "type": "question",
+              "text": "提示结束后破碎电机正常启动。启动以后，破碎电机是否可以持续平稳运转？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "cr_r003",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不能",
+                  "next": "cr_q005",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_007_0025.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r003",
+              "type": "result",
+              "text": "破碎电机持续运转，说明破碎电机启动回路工作正常。",
+              "options": [],
+              "sourceFrame": "crusher/page_008_0031.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q005",
+              "type": "question",
+              "text": "破碎电机启动后立即停止运转，请观察显示器是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+              "options": [
+                {
+                  "label": "有故障",
+                  "next": "cr_r004",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无故障",
+                  "next": "cr_q006",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_009_0032.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r004",
+              "type": "result",
+              "text": "根据系统提示的故障信息进行针对性处理。在系统模块“最近停机原因”中查到的停机代码，可在「故障代码查询 → 系统故障代码」中查看。",
+              "options": [],
+              "sourceFrame": "crusher/page_010_0038.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q006",
+              "type": "question",
+              "text": "没有故障提示，多数是控制线路有虚接，接触器吸合时因振动再次断开。请仔细检查线路；也可能是接触器自身无法吸持或模块不能保持。可手持短线短接MOC-JX2.6和MOC-JX2.8，检查接触器是否能吸合并保持。",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "cr_r005",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不能",
+                  "next": "cr_r006",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤。",
+              "sourceFrame": "crusher/page_011_0040.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r005",
+              "type": "result",
+              "text": "短接MOC-JX2.6和MOC-JX2.8后，接触器保持吸合状态，说明问题在MOC模块，请更换MOC模块后再次尝试启动破碎机。",
+              "options": [],
+              "sourceFrame": "crusher/page_012_0047.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r006",
+              "type": "result",
+              "text": "短接MOC-JX2.6和MOC-JX2.8后，接触器不能保持吸合状态，说明接触器吸持线圈存在问题，请直接更换接触器。",
+              "options": [],
+              "sourceFrame": "crusher/page_013_0049.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q007",
+              "type": "question",
+              "text": "提示结束后破碎电机没有启动，请认真观察显示屏是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+              "options": [
+                {
+                  "label": "有故障",
+                  "next": "cr_q008",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无故障",
+                  "next": "cr_q011",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_014_0059.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q008",
+              "type": "question",
+              "text": "破碎电机没有启动，屏幕是否提示破碎电机漏电，或者220V漏电？",
+              "options": [
+                {
+                  "label": "破碎漏电",
+                  "next": "cr_q009",
+                  "status": "recorded"
+                },
+                {
+                  "label": "220V漏电",
+                  "next": "cr_q010",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_015_0066.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q009",
+              "type": "question",
+              "text": "提示破碎电机漏电，请检查破碎电机和电缆的绝缘状况。",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "cr_r007",
+                  "status": "recorded"
+                },
+                {
+                  "label": "绝缘正常",
+                  "next": "cr_r008",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_016_0076.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r007",
+              "type": "result",
+              "text": "查找漏电原因，处理漏电。",
+              "options": [],
+              "sourceFrame": "crusher/page_017_0087.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r008",
+              "type": "result",
+              "text": "检测绝缘状态良好，说明是漏电检测模块误动作。请更换高压漏电检测模块。没有配件时，可临时将接在破碎接触器上的粉红色检测线拆除并包扎，或将MOC-JX3.16上的线从端子排上拆除并包扎。请尽快更换模块。",
+              "options": [],
+              "sourceFrame": "crusher/page_018_0090.5.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q010",
+              "type": "question",
+              "text": "屏幕提示220V漏电，请检查220V（或132V）控制电源对地绝缘。使用万用表直接测量对地绝缘即可，严禁使用摇表测试。",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "cr_r009",
+                  "status": "recorded"
+                },
+                {
+                  "label": "绝缘正常",
+                  "next": "cr_r010",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_019_0095.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r009",
+              "type": "result",
+              "text": "查找漏电原因，处理漏电。这类故障多数由线路捆扎不合理、绝缘皮磨破造成。",
+              "options": [],
+              "sourceFrame": "crusher/page_020_0105.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r010",
+              "type": "result",
+              "text": "经过测试绝缘良好，说明220V漏电模块误动作。临时措施：将MOC-JX4.9上的线从端子排上拆除并包扎。请尽快更换220V漏电模块。",
+              "options": [],
+              "sourceFrame": "crusher/page_021_0106.5.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q011",
+              "type": "question",
+              "text": "破碎电机没有启动，屏幕也没有任何故障提示，可能原因：1.有停止信号进入控制系统；2.接触器、接触器电源或MOC模块故障。",
+              "options": [
+                {
+                  "label": "1",
+                  "next": "cr_q012",
+                  "status": "recorded"
+                },
+                {
+                  "label": "2",
+                  "next": "cr_q018",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_022_0118.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q012",
+              "type": "question",
+              "text": "停止信号可能来自启动按钮、停止按钮、顺槽远程、端头站或遥控器。",
+              "options": [
+                {
+                  "label": "按钮",
+                  "next": "cr_q013",
+                  "status": "recorded"
+                },
+                {
+                  "label": "其他原因",
+                  "next": null,
+                  "status": "unresolved_not_recorded"
+                }
+              ],
+              "note": "“其他原因”分支在现有资料中未继续展开，已标记待补录。",
+              "sourceFrame": "crusher/page_023_0123.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q013",
+              "type": "question",
+              "text": "请检查破碎机启动按钮、停止按钮、总停按钮是否卡死在接通状态。",
+              "options": [
+                {
+                  "label": "接通",
+                  "next": "cr_r011",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不通",
+                  "next": "cr_q014",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_024_0131.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r011",
+              "type": "result",
+              "text": "破碎机启动按钮、停止按钮或总停按钮存在卡死情况，均会造成无法启动。请检查卡死原因并酌情处理。",
+              "options": [],
+              "sourceFrame": "crusher/page_025_0137.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q014",
+              "type": "question",
+              "text": "破碎机启动按钮、停止按钮和总停按钮均正常，请检查MOC-JX3.3（总停）、MOC-JX3.10（破碎启）、MOC-JX3.11（破碎停）上是否有DV24V。",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "cr_r012",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "cr_q015",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_026_0139.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r012",
+              "type": "result",
+              "text": "有DV24V进入MOC模块，说明有停止信号进入系统，请检查相关线路，找到24V进入原因并处理。",
+              "options": [],
+              "sourceFrame": "crusher/page_027_0142.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q015",
+              "type": "question",
+              "text": "MOC-JX3.3（总停）、MOC-JX3.10（破碎启）、MOC-JX3.11（破碎停）上没有F+24V电压，说明没有停止信号进入系统。请手持短接线短接MOC-JX2.6和MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+              "options": [
+                {
+                  "label": "吸合",
+                  "next": "cr_r013",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不吸合",
+                  "next": "cr_q016",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤。",
+              "sourceFrame": "crusher/page_028_0143.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r013",
+              "type": "result",
+              "text": "短接后接触器吸合，说明MOC模块内部继电器没有吸合或触点已损坏。在确保MOC-JX2插头没有问题后，请直接更换MOC模块。",
+              "options": [],
+              "sourceFrame": "crusher/page_029_0144.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q016",
+              "type": "question",
+              "text": "短接后接触器不吸合，可能原因：1.接触器已损坏；2.电源或供电线路故障。请检查控制变压器输出132V（220V）是否正常。",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "cr_r014",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "cr_q017",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_030_0146.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r014",
+              "type": "result",
+              "text": "控制变压器输出132V（220V）电压正常，请检查控制变压器到模块和接触器之间的线路，找到断点处理。若供电线路没有问题，请直接更换接触器。",
+              "options": [],
+              "sourceFrame": "crusher/page_031_0147.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q017",
+              "type": "question",
+              "text": "控制变压器输出132V（220V）端口没有电压，请检查控制变压器输入电压是否正常。",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "cr_r015",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "cr_r016",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "crusher/page_032_0149.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r015",
+              "type": "result",
+              "text": "控制变压器输入侧电压正常、输出侧没有电压，基本确定控制变压器已损坏，请更换控制变压器。",
+              "options": [],
+              "sourceFrame": "crusher/page_033_0150.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_r016",
+              "type": "result",
+              "text": "控制变压器输入侧没有电压，请检查输入侧保险或空气开关是否跳闸断开。若空气开关合闸后立即跳闸或保险立即烧断，请勿使用铜丝短接，应先处理断路或短路故障。",
+              "options": [],
+              "sourceFrame": "crusher/page_034_0151.5.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "cr_q018",
+              "type": "question",
+              "text": "在排除有停止信号进入系统后，手持短接线短接MOC-JX2.6和MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+              "options": [
+                {
+                  "label": "吸合",
+                  "next": "cr_r013",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不吸合",
+                  "next": "cr_q016",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤。",
+              "sourceFrame": "crusher/page_035_0156.5.png",
+              "confidence": "high"
+            }
+          ],
+          "sourceVideo": "破碎电机启动故障.mp4"
+        },
+        {
+          "id": "auto_oil_pump",
+          "index": 4,
+          "name": "自启动油泵故障",
+          "startNode": "ap_q001",
+          "nodes": [
+            {
+              "id": "ap_q001",
+              "type": "question",
+              "text": "采煤机油泵接触器和牵引接触器线圈并联，由HPC-JX2.14和HPC-JX2.16内部的继电器触点控制。采煤机上电后检测电源电压以及牵引电机、电缆绝缘，全部符合要求时牵引和油泵接触器自动吸合，完成牵引上电和油泵启动。采煤机上电后经过一段时间，牵引和油泵接触器是否吸合？",
+              "options": [
+                {
+                  "label": "吸合",
+                  "next": "ap_r001",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不吸合",
+                  "next": "ap_q002",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_002_0001.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r001",
+              "type": "result",
+              "text": "牵引和油泵接触器可以正常吸合，说明系统检测正常，可以开始正常操作煤机。",
+              "options": [],
+              "sourceFrame": "autopump/page_003_0003.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q002",
+              "type": "question",
+              "text": "牵引和油泵接触器经过一段时间不吸合，请观察屏幕上HPC的状态是否为绿色？",
+              "options": [
+                {
+                  "label": "绿色",
+                  "next": "ap_q003",
+                  "status": "recorded"
+                },
+                {
+                  "label": "红或黄",
+                  "next": null,
+                  "status": "unresolved_not_recorded"
+                }
+              ],
+              "note": "“红或黄”分支在现有资料中未继续展开，已保留为待补录分支。",
+              "sourceFrame": "autopump/page_004_0005.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q003",
+              "type": "question",
+              "text": "HPC状态为绿色，说明HPC在工作并且通讯正常。请观察屏幕是否有故障提示？注意：1.不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到；2.小屏幕显示牵引系统未上电、大屏幕的牵电状态为红色不算故障提示，只代表牵引接触器的状态。",
+              "options": [
+                {
+                  "label": "有故障",
+                  "next": "ap_q004",
+                  "status": "recorded"
+                },
+                {
+                  "label": "无故障",
+                  "next": "ap_q011",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_005_0006.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q004",
+              "type": "question",
+              "text": "HPC工作正常。请观察屏幕是否有电压异常或漏电提示？",
+              "options": [
+                {
+                  "label": "电压异常",
+                  "next": "ap_q005",
+                  "status": "recorded"
+                },
+                {
+                  "label": "漏电故障",
+                  "next": "ap_q006",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_006_0007.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q005",
+              "type": "question",
+              "text": "系统有电压异常提示，会有两种情况：1.供电电压过高或过低；2.供电电压正常，由于电压检测电路误动作引起。",
+              "options": [
+                {
+                  "label": "1",
+                  "next": "ap_r002",
+                  "status": "recorded"
+                },
+                {
+                  "label": "2",
+                  "next": "ap_r003",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_007_0008.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r002",
+              "type": "result",
+              "text": "系统有电压异常提示，说明供电电压过高或过低。请检查牵引接触器电源侧电压。对于380V（660V）变频器，欠电压阈值约为320V（550V），过电压阈值约为450V（750V）。请调整移动变电站输出电压至合适范围。",
+              "options": [],
+              "sourceFrame": "autopump/page_008_0009.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r003",
+              "type": "result",
+              "text": "电网供电电压正常，这类故障一般由电压互感器故障造成，可更换电压互感器。若暂时没有电压互感器，可拆除电压互感器电源作为临时措施，但应尽快更换电压互感器。",
+              "options": [],
+              "sourceFrame": "autopump/page_009_0011.0.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q006",
+              "type": "question",
+              "text": "系统有漏电提示，请观察是左右牵引电机及电缆漏电（0或1通道漏电），还是油泵电机及电缆220V漏电？",
+              "options": [
+                {
+                  "label": "牵引",
+                  "next": "ap_q007",
+                  "status": "recorded"
+                },
+                {
+                  "label": "油泵",
+                  "next": "ap_q008",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_010_0014.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q007",
+              "type": "question",
+              "text": "系统显示0或1通道漏电，是指左右牵引电机或电缆漏电。请检查牵引电机及电缆的绝缘状况。注意：摇测绝缘时必须断开与变频器的连接，否则会损坏变频器！",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "ap_r004",
+                  "status": "recorded"
+                },
+                {
+                  "label": "绝缘正常",
+                  "next": "ap_r005",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_011_0014.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r004",
+              "type": "result",
+              "text": "牵引电机及电缆绝缘低，请查找漏电原因并处理。",
+              "options": [],
+              "sourceFrame": "autopump/page_012_0015.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r005",
+              "type": "result",
+              "text": "采煤机系统检测到漏电，但摇表检测牵引电机及电缆绝缘良好。一般是漏电检测电路误动作，可能由牵引模块本身或漏电组件造成。可将HPC-JX5插头拔掉进行区分：若仍显示漏电，可能是牵引模块故障。该做法仅为临时诊断措施，请尽快更换牵引模块HPC或漏电组件。",
+              "options": [],
+              "sourceFrame": "autopump/page_013_0017.0.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q008",
+              "type": "question",
+              "text": "显示器显示的是油泵电机漏电，还是220V漏电？",
+              "options": [
+                {
+                  "label": "油泵",
+                  "next": "ap_q009",
+                  "status": "recorded"
+                },
+                {
+                  "label": "220V漏电",
+                  "next": "ap_q010",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_014_0018.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q009",
+              "type": "question",
+              "text": "显示器显示油泵电机漏电，请检查油泵电机以及电缆的绝缘状况。",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "ap_r006",
+                  "status": "recorded"
+                },
+                {
+                  "label": "正常",
+                  "next": "ap_r007",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_015_0019.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r006",
+              "type": "result",
+              "text": "查找漏电原因，处理漏电。",
+              "options": [],
+              "sourceFrame": "autopump/page_016_0020.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r007",
+              "type": "result",
+              "text": "检测绝缘状态良好，说明是漏电检测模块误动作。请更换高压漏电检测模块。没有配件时，可临时将接在油泵接触器上的粉红色检测线拆除并包扎，或将MOC-JX3.15上的线从端子排上拆除并包扎。临时措施使用后应尽快更换模块。",
+              "options": [],
+              "sourceFrame": "autopump/page_017_0021.5.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q010",
+              "type": "question",
+              "text": "屏幕提示220V漏电，请检查220V电源对地绝缘。使用万用表直接测量对地绝缘即可，严禁使用摇表测试。",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "ap_r008",
+                  "status": "recorded"
+                },
+                {
+                  "label": "绝缘正常",
+                  "next": "ap_r009",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_018_0024.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r008",
+              "type": "result",
+              "text": "查找漏电原因，处理漏电。这类故障多数由线路捆扎不合理、绝缘皮磨破造成。",
+              "options": [],
+              "sourceFrame": "autopump/page_019_0025.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r009",
+              "type": "result",
+              "text": "经过测试绝缘良好，说明220V漏电模块误动作。临时措施：将MOC-JX4.9上的线从端子排上拆除并包扎。请尽快更换220V漏电模块。",
+              "options": [],
+              "sourceFrame": "autopump/page_020_0027.5.png",
+              "severity": "warning",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q011",
+              "type": "question",
+              "text": "系统检测正常，泵和牵引接触器并联同时损坏的概率极低，可能原因有：1.HPC-JX2.14和HPC-JX2.16内部触点损坏；2.电源及其线路故障。请短接HPC-JX2.14和HPC-JX2.16，观察接触器是否吸合（危险电压，注意安全）。",
+              "options": [
+                {
+                  "label": "吸合",
+                  "next": "ap_r010",
+                  "status": "recorded"
+                },
+                {
+                  "label": "不吸合",
+                  "next": "ap_q012",
+                  "status": "recorded"
+                }
+              ],
+              "note": "高风险带电短接步骤，程序中必须增加权限和安全确认。",
+              "sourceFrame": "autopump/page_021_0062.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r010",
+              "type": "result",
+              "text": "短接HPC-JX2.14和HPC-JX2.16后，泵和牵引接触器可以吸合，说明电源及其线路没有问题，可能是HPC内部继电器或触点损坏。在排除JX2插头本身问题后，请更换HPC模块。",
+              "options": [],
+              "sourceFrame": "autopump/page_022_0063.5.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q012",
+              "type": "question",
+              "text": "短接HPC-JX2.14和HPC-JX2.16后，泵和牵引接触器仍然不吸合，请检查控制变压器是否有220V输出。",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "ap_r011",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "ap_q013",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_023_0065.0.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r011",
+              "type": "result",
+              "text": "控制变压器输出220V电压正常，请检查控制变压器到模块和接触器之间的线路，找到断点处理。泵和牵引接触器并联同时损坏的概率极低；若其中一个接触器能够吸合，另一个不吸合，则重点检查对应线路或接触器。",
+              "options": [],
+              "sourceFrame": "autopump/page_024_0066.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_q013",
+              "type": "question",
+              "text": "控制变压器输出220V端口没有电压，请检查控制变压器输入电压是否正常。",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "ap_r012",
+                  "status": "recorded"
+                },
+                {
+                  "label": "没有",
+                  "next": "ap_r013",
+                  "status": "recorded"
+                }
+              ],
+              "sourceFrame": "autopump/page_025_0067.5.png",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r012",
+              "type": "result",
+              "text": "控制变压器输入侧电压正常、输出侧没有电压，基本确定控制变压器已损坏，请更换控制变压器。",
+              "options": [],
+              "sourceFrame": "autopump/page_026_0068.0.png",
+              "severity": "diagnosis",
+              "confidence": "high"
+            },
+            {
+              "id": "ap_r013",
+              "type": "result",
+              "text": "控制变压器输入侧没有电压，请检查输入侧保险或空气开关是否跳闸断开。若空气开关合闸后立即跳闸或保险立即烧断，请勿使用铜丝短接，应先处理断路或短路故障。",
+              "options": [],
+              "sourceFrame": "autopump/page_027_0069.5.png",
+              "severity": "warning",
+              "confidence": "high"
+            }
+          ],
+          "sourceVideo": "自启动油泵故障.mp4"
+        }
+      ],
+      "introduction": "电机启停故障的诊断逻辑，覆盖调高泵启停、截割启动、破碎电机启动与自启动油泵四类问题。",
+      "safetyNotice": [
+        "本资料仅用于故障诊断参考与培训，不替代设备厂家手册、矿方安全规程及现场技术负责人指令。",
+        "涉及带电测量、短接接触器控制回路、绝缘测试、拆线或更换模块的操作，仅限具备资质且获得授权的人员执行；必须落实停电、验电、放电、闭锁挂牌和防误送电措施。",
+        "资料中的“短接”步骤属于高风险诊断手段，必须先完成安全确认，不得作为可随手执行的常规操作。",
+        "严禁用铜丝替代保险或绕过空气开关、保护回路及联锁。"
+      ]
+    },
+    {
+      "id": "traction",
+      "shortName": "牵引故障",
+      "title": "采煤机系统牵引故障",
+      "schemaVersion": "1.0",
+      "sourceDir": "采煤机系统牵引故障诊断树",
+      "extractionNotes": [],
+      "modules": [
+        {
+          "id": "shearer-system-traction-fault",
+          "index": 1,
+          "name": "采煤机系统牵引故障",
+          "startNode": "q01",
+          "nodes": [
+            {
+              "id": "q01",
+              "type": "question",
+              "text": "采煤机上电后等待显示器进入正常监视画面，观察屏幕上HPC状态是否为绿色？",
+              "options": [
+                {
+                  "label": "绿色",
+                  "next": "q02",
+                  "status": "observed"
+                },
+                {
+                  "label": "红色",
+                  "next": "q25",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P001",
+              "sourceTimestampS": 0.0,
+              "sourceFrame": "source-frames/q01.jpg"
+            },
+            {
+              "id": "q02",
+              "type": "question",
+              "text": "HPC模块状态绿色代表HPC工作正常，和控制系统之间通讯正常。如果遥控器和端头站不能正常操作采煤机，请先使用机身按钮配合处理故障。待机身按钮可以正常操作煤机后再另行处理遥控器或端头站故障。请选择牵引送电方式：1.延时自动送电；2.和油泵电机一同启动。",
+              "options": [
+                {
+                  "label": "1",
+                  "next": "q03",
+                  "status": "observed"
+                },
+                {
+                  "label": "2",
+                  "next": "q23",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P002",
+              "sourceTimestampS": 3.0,
+              "sourceFrame": "source-frames/q02.jpg"
+            },
+            {
+              "id": "q03",
+              "type": "question",
+              "text": "延时自动送电方式：是对变频器前级电压以及牵引电机绝缘进行检测，全部符合要求后自动控制牵引接触器吸合完成牵引送电。经过一段时间后牵引接触器是否自动吸合？可以观察变频器操作键盘是否点亮并正常显示。",
+              "options": [
+                {
+                  "label": "吸合",
+                  "next": "q04",
+                  "status": "observed"
+                },
+                {
+                  "label": "不吸合",
+                  "next": "q15",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P003",
+              "sourceTimestampS": 8.5,
+              "sourceFrame": "source-frames/q03.jpg"
+            },
+            {
+              "id": "q04",
+              "type": "question",
+              "text": "牵引接触器吸合后，请观察显示屏上牵电状态是否为绿色（小屏幕提示牵引系统未送电，请查明原因）？",
+              "options": [
+                {
+                  "label": "红色（有）",
+                  "next": "r01",
+                  "status": "observed"
+                },
+                {
+                  "label": "绿色（无）",
+                  "next": "q05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P004",
+              "sourceTimestampS": 14.0,
+              "sourceFrame": "source-frames/q04.jpg"
+            },
+            {
+              "id": "r01",
+              "type": "result",
+              "text": "牵电状态红色（小屏幕提示牵引系统未送电，请查明原因），此故障为HPC模块未收到牵引接触器吸合的反馈信号。电路结构：电源模块F24V→牵引接触器辅助触点→牵引接触器辅助触点→HPC-JX3.10。请按这个回路找到断开点处理即可。临时处理也可以短接HPC-JX3.10和HPCJX2.1。",
+              "options": [],
+              "sourcePage": "P005",
+              "sourceTimestampS": 20.0,
+              "sourceFrame": "source-frames/r01.jpg"
+            },
+            {
+              "id": "q05",
+              "type": "question",
+              "text": "牵电状态正常。屏幕显示“牵引操作被泵电机闭锁”的采煤机需先启动油泵才可以操作牵引。按下牵启按钮采煤机是否已牵启？",
+              "options": [
+                {
+                  "label": "已牵启",
+                  "next": "q06",
+                  "status": "observed"
+                },
+                {
+                  "label": "没反应",
+                  "next": "q12",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P006",
+              "sourceTimestampS": 23.5,
+              "sourceFrame": "source-frames/q05.jpg"
+            },
+            {
+              "id": "q06",
+              "type": "question",
+              "text": "按下牵启按钮采煤机已牵启，按系统提示按下加速按钮，是否可以正常加速？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q07",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q11",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P007",
+              "sourceTimestampS": 30.5,
+              "sourceFrame": "source-frames/q06.jpg"
+            },
+            {
+              "id": "q07",
+              "type": "question",
+              "text": "按下加速按钮系统可以正常加速，按系统提示按下方向按钮，采煤机是否开始持续牵引？",
+              "options": [
+                {
+                  "label": "已牵引",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "不牵引",
+                  "next": "q08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P008",
+              "sourceTimestampS": 36.5,
+              "sourceFrame": "source-frames/q07.jpg"
+            },
+            {
+              "id": "r02",
+              "type": "result",
+              "text": "采煤机在按下方向按钮后开始持续牵引，采煤机牵引系统工作正常。",
+              "options": [],
+              "sourcePage": "P009",
+              "sourceTimestampS": 41.5,
+              "sourceFrame": "source-frames/r02.jpg"
+            },
+            {
+              "id": "q08",
+              "type": "question",
+              "text": "采煤机在按下方向按钮后，采煤机不牵引有两种情况：1.显示屏仍然显示“请设定牵引方向”；2.显示屏显示牵引方向和设定速度，但采煤机并未实际牵引。",
+              "options": [
+                {
+                  "label": "1",
+                  "next": "r03",
+                  "status": "observed"
+                },
+                {
+                  "label": "2",
+                  "next": "q09",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P010",
+              "sourceTimestampS": 45.0,
+              "sourceFrame": "source-frames/q08.jpg"
+            },
+            {
+              "id": "r03",
+              "type": "result",
+              "text": "在按下方向按钮后，显示屏仍然显示“请设定牵引方向”，原因是方向指令没有进入系统。请按电源模块F+24V→向左（向右）按钮1→向左（向右）按钮2→BOCJX3.3（BOCJX3.4）的顺序检查线路，找到断点处理即可。",
+              "options": [],
+              "sourcePage": "P011",
+              "sourceTimestampS": 49.5,
+              "sourceFrame": "source-frames/r03.jpg"
+            },
+            {
+              "id": "q09",
+              "type": "question",
+              "text": "按下方向按钮后，显示屏显示牵引方向和设定速度，但采煤机没有实际牵引，请到变频器观察窗口观察变频器是否报故障？",
+              "options": [
+                {
+                  "label": "有故障",
+                  "next": "r04",
+                  "status": "observed"
+                },
+                {
+                  "label": "无故障",
+                  "next": "q10",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P012",
+              "sourceTimestampS": 53.0,
+              "sourceFrame": "source-frames/q09.jpg"
+            },
+            {
+              "id": "r04",
+              "type": "result",
+              "text": "牵引操作结束后采煤机不牵引，变频器报故障。可以根据变频器报的故障代码到「故障代码查询 → 变频器故障代码」查看原因及处理方法，部分常见故障可以在牵引故障中查看处理方法。",
+              "options": [],
+              "sourcePage": "P013",
+              "sourceTimestampS": 58.5,
+              "sourceFrame": "source-frames/r04.jpg"
+            },
+            {
+              "id": "q10",
+              "type": "question",
+              "text": "牵引操作结束后采煤机不牵引，变频器没有报故障。请观察变频器控制状态：ACS800变频器操作键盘左上角是否有“L”字样；ACS880变频器左上角是否显示“本地”字样？",
+              "options": [
+                {
+                  "label": "显示",
+                  "next": "r05",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r06",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P014",
+              "sourceTimestampS": 61.0,
+              "sourceFrame": "source-frames/q10.jpg"
+            },
+            {
+              "id": "r05",
+              "type": "result",
+              "text": "ACS800变频器操作键盘左上角有“L”字样；ACS880变频器左上角显示“本地”字样，代表变频器操作权限在本地，即变频器的操作键盘。两种变频器都是按一下LOC键即可切换到远程控制，切换后再尝试牵引操作。",
+              "options": [],
+              "sourcePage": "P015",
+              "sourceTimestampS": 67.0,
+              "sourceFrame": "source-frames/r05.jpg"
+            },
+            {
+              "id": "r06",
+              "type": "result",
+              "text": "ACS800变频器操作键盘左上角没有“L”字样；ACS880变频器左上角显示“远程”字样。可以按下LOC按键切换到本地模式，按下变频器操作键盘运行键，检查变频器是否存在其他问题。检查完切记再按一下LOC键将变频器切换到远程。",
+              "options": [],
+              "sourcePage": "P016",
+              "sourceTimestampS": 70.5,
+              "sourceFrame": "source-frames/r06.jpg"
+            },
+            {
+              "id": "q11",
+              "type": "question",
+              "text": "按下加速按钮，采煤机设定速度没有变化。一般有两个原因：1.加速指令没有进入系统；2.有持续存在的减速指令进入系统。",
+              "options": [
+                {
+                  "label": "1",
+                  "next": "r07",
+                  "status": "observed"
+                },
+                {
+                  "label": "2",
+                  "next": "r08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P017",
+              "sourceTimestampS": 83.0,
+              "sourceFrame": "source-frames/q11.jpg"
+            },
+            {
+              "id": "r07",
+              "type": "result",
+              "text": "在按下加速按钮后，设定速度没有变化，其中一个原因是速度指令没有进入系统。请按电源模块F+24V→加速按钮1→加速按钮2→BOCJX3.5的顺序检查线路，找到断点处理即可。",
+              "options": [],
+              "sourcePage": "P018",
+              "sourceTimestampS": 88.5,
+              "sourceFrame": "source-frames/r07.jpg"
+            },
+            {
+              "id": "r08",
+              "type": "result",
+              "text": "在按下加速按钮后，设定速度没有变化，其中一个原因是有持续的减速指令进入系统。减速指令可能来自远程、机身减速按钮、端头站减速按钮、遥控器减速按钮。请进入按键功能测试中查看减速指令来源，针对处理。",
+              "options": [],
+              "sourcePage": "P019",
+              "sourceTimestampS": 92.0,
+              "sourceFrame": "source-frames/r08.jpg"
+            },
+            {
+              "id": "q12",
+              "type": "question",
+              "text": "按下牵启按钮没有反应，一般有两个原因：1.牵启信号没有进入BOC模块；2.有持续的牵停信号进入BOC模块。Windows屏可通过遥控器进入智能诊断→按键功能测试；其他屏幕可以按显示按钮进入电控箱操作状态界面；查看是否有持续的牵停信号存在？",
+              "options": [
+                {
+                  "label": "有",
+                  "next": "r09",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "q13",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P020",
+              "sourceTimestampS": 99.0,
+              "sourceFrame": "source-frames/q12.jpg"
+            },
+            {
+              "id": "r09",
+              "type": "result",
+              "text": "有持续的牵停信号存在，根据屏幕上显示的牵停信号来源针对处理。电控箱按钮有牵停指令，多数都是牵停按钮卡死；内部保护操作一般是检测到变频器有故障，系统发出的牵停信号。请检查变频器是否有故障，具体故障请到「故障代码查询 → 变频器故障代码」进一步处理。",
+              "options": [],
+              "sourcePage": "P021",
+              "sourceTimestampS": 104.5,
+              "sourceFrame": "source-frames/r09.jpg"
+            },
+            {
+              "id": "q13",
+              "type": "question",
+              "text": "没有牵停信号进入系统，可以尝试在电控箱操作状态界面按下牵启按钮，查看屏幕上牵启是否变成绿色？",
+              "options": [
+                {
+                  "label": "绿色",
+                  "next": "r10",
+                  "status": "observed"
+                },
+                {
+                  "label": "没变化",
+                  "next": "q14",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P022",
+              "sourceTimestampS": 106.5,
+              "sourceFrame": "source-frames/q13.jpg"
+            },
+            {
+              "id": "r10",
+              "type": "result",
+              "text": "按下牵启按钮，屏幕有变化仍然不能牵启，又没有牵停信号进入，请更换主控模块BOC。",
+              "options": [],
+              "sourcePage": "P023",
+              "sourceTimestampS": 115.0,
+              "sourceFrame": "source-frames/r10.jpg"
+            },
+            {
+              "id": "q14",
+              "type": "question",
+              "text": "按下牵启按钮屏幕没有变化，说明按钮信号并没有进入系统。打开主控模块所在电控腔，按下牵启按钮，用万用表测量BOCJX3.1和BOCJX3.9之间是否有24V电压？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r11",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r12",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P024",
+              "sourceTimestampS": 116.5,
+              "sourceFrame": "source-frames/q14.jpg"
+            },
+            {
+              "id": "r11",
+              "type": "result",
+              "text": "在按下牵启按钮后可以测量到24V电压，说明指令已到BOC模块，可能的原因是BOCJX3.1内部已损坏。在确保BOCJX3插头没有问题的前提下请更换BOC模块。",
+              "options": [],
+              "sourcePage": "P025",
+              "sourceTimestampS": 123.0,
+              "sourceFrame": "source-frames/r11.jpg"
+            },
+            {
+              "id": "r12",
+              "type": "result",
+              "text": "按下牵启按钮后，在BOCJX3.1和BOCJX3.9之间测不到24V电压，请按两个支路检查：1.电源模块F24V→牵启按钮1→牵启按钮2→BOCJX3.1；2.电源模块F0V→BOCJX3.9。在上面两条支路检查中找到断点处理即可。",
+              "options": [],
+              "sourcePage": "P026",
+              "sourceTimestampS": 124.0,
+              "sourceFrame": "source-frames/r12.jpg"
+            },
+            {
+              "id": "q15",
+              "type": "question",
+              "text": "HPC状态为绿色，经过一段时间牵引接触器仍然不吸合。请观察屏幕是否有故障提示？",
+              "options": [
+                {
+                  "label": "有故障",
+                  "next": "q16",
+                  "status": "observed"
+                },
+                {
+                  "label": "无故障",
+                  "next": "q19",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P027",
+              "sourceTimestampS": 133.5,
+              "sourceFrame": "source-frames/q15.jpg"
+            },
+            {
+              "id": "q16",
+              "type": "question",
+              "text": "接触器不吸合，请观察显示屏具体的故障提示内容。Windows系统显示屏需使用遥控器进入左侧故障查询查看；其他显示屏可在屏幕直接查看（小字注意观察），或通过显示按钮进入故障查询查看。",
+              "options": [
+                {
+                  "label": "电压异常",
+                  "next": "q17",
+                  "status": "observed"
+                },
+                {
+                  "label": "漏电故障",
+                  "next": "q18",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P028",
+              "sourceTimestampS": 140.0,
+              "sourceFrame": "source-frames/q16.jpg"
+            },
+            {
+              "id": "q17",
+              "type": "question",
+              "text": "系统有电压异常提示，说明系统检测到电压过高或过低或严重的相间不平衡。请检查牵引接触器电源侧电压。对于380V（660V）变频器，欠电压阈值为320V（550V），过电压阈值为450V（750V）。",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r13",
+                  "status": "observed"
+                },
+                {
+                  "label": "异常",
+                  "next": "r14",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P029",
+              "sourceTimestampS": 149.5,
+              "sourceFrame": "source-frames/q17.jpg"
+            },
+            {
+              "id": "r13",
+              "type": "result",
+              "text": "电网供电电压正常，这类故障一般都是由于电压互感器故障造成，可更换电压互感器。如果没有电压互感器，可以将电压互感器电源拆除。临时措施请尽快更换电压互感器。",
+              "options": [],
+              "sourcePage": "P030",
+              "sourceTimestampS": 157.0,
+              "sourceFrame": "source-frames/r13.jpg"
+            },
+            {
+              "id": "r14",
+              "type": "result",
+              "text": "系统有电压异常提示，说明供电电压过高或过低。请检查牵引接触器电源侧电压。对于380V（660V）变频器，欠电压阈值为320V（550V），过电压阈值为450V（750V）。请调整移动变电站输出电压至合适范围。",
+              "options": [],
+              "sourcePage": "P031",
+              "sourceTimestampS": 159.5,
+              "sourceFrame": "source-frames/r14.jpg"
+            },
+            {
+              "id": "q18",
+              "type": "question",
+              "text": "系统有漏电提示，请检查左右牵引电机及电缆的绝缘状况是否漏电？注意：摇绝缘时必须断开与变频器的连接，否则会损坏变频器！！",
+              "options": [
+                {
+                  "label": "漏电",
+                  "next": "r15",
+                  "status": "observed"
+                },
+                {
+                  "label": "绝缘正常",
+                  "next": "r16",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P032",
+              "sourceTimestampS": 165.0,
+              "sourceFrame": "source-frames/q18.jpg"
+            },
+            {
+              "id": "r15",
+              "type": "result",
+              "text": "寻找并处理漏电点。",
+              "options": [],
+              "sourcePage": "P033",
+              "sourceTimestampS": 171.0,
+              "sourceFrame": "source-frames/r15.jpg"
+            },
+            {
+              "id": "r16",
+              "type": "result",
+              "text": "采煤机系统检测到漏电，摇表检测牵引电机以及电缆绝缘良好。一般是漏电检测电路误动作，可能是牵引模块本身或漏电组件造成。可以将HPC-JX5插头拔掉，故障都可以排除。如果仍然显示漏电，就只能更换牵引模块。临时措施：请尽快更换牵引模块HPC或漏电组件。",
+              "options": [],
+              "sourcePage": "P034",
+              "sourceTimestampS": 173.5,
+              "sourceFrame": "source-frames/r16.jpg"
+            },
+            {
+              "id": "q19",
+              "type": "question",
+              "text": "采煤机系统无故障提示、接触器不吸合。可以打开HPC所在的电控腔，使用短接线将HPC-JX2.14和HPC-JX2.16短接，观察接触器是否吸合？（危险电压，注意安全）",
+              "options": [
+                {
+                  "label": "不吸合",
+                  "next": "q20",
+                  "status": "observed"
+                },
+                {
+                  "label": "吸合",
+                  "next": "r21",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P035",
+              "sourceTimestampS": 182.0,
+              "sourceFrame": "source-frames/q19.jpg"
+            },
+            {
+              "id": "q20",
+              "type": "question",
+              "text": "短接HPC-JX2.14和HPC-JX2.16仍然不吸合，请检查控制变压器输出220V（380V的取自牵引变压器）电压是否正常？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q21",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "q22",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P036",
+              "sourceTimestampS": 188.0,
+              "sourceFrame": "source-frames/q20.jpg"
+            },
+            {
+              "id": "q21",
+              "type": "question",
+              "text": "控制变压器输出220V（380V的取自牵引变压器）电压正常，空开（保险管）也正常，请检查电源→接触器线圈→接触器线圈→HPC-JX2.16→HPC-JX2.14→电源。按这个顺序检查是否正常？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r17",
+                  "status": "observed"
+                },
+                {
+                  "label": "异常",
+                  "next": "r18",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P037",
+              "sourceTimestampS": 193.0,
+              "sourceFrame": "source-frames/q21.jpg"
+            },
+            {
+              "id": "r17",
+              "type": "result",
+              "text": "按以上顺序检查线路没有问题，可以确定牵引接触器吸合线圈已损坏，请更换接触器。如果没有接触器，也可以将接触器主触点短接、辅助触点短接恢复生产。临时措施请尽快更换接触器。",
+              "options": [],
+              "sourcePage": "P038",
+              "sourceTimestampS": 198.0,
+              "sourceFrame": "source-frames/r17.jpg"
+            },
+            {
+              "id": "r18",
+              "type": "result",
+              "text": "按以上顺序检查线路，找到断点处理即可。",
+              "options": [],
+              "sourcePage": "P039",
+              "sourceTimestampS": 200.0,
+              "sourceFrame": "source-frames/r18.jpg"
+            },
+            {
+              "id": "q22",
+              "type": "question",
+              "text": "控制变压器输出220V（380V的取自牵引变压器）端口没有电压，请检查控制变压器输入侧380V电压是否正常？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r19",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r20",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P040",
+              "sourceTimestampS": 204.0,
+              "sourceFrame": "source-frames/q22.jpg"
+            },
+            {
+              "id": "r19",
+              "type": "result",
+              "text": "控制变压器输入侧电压正常，输出侧没有电压，基本确定变压器已损坏，请更换变压器。",
+              "options": [],
+              "sourcePage": "P041",
+              "sourceTimestampS": 208.0,
+              "sourceFrame": "source-frames/r19.jpg"
+            },
+            {
+              "id": "r20",
+              "type": "result",
+              "text": "控制变压器输入侧没有电压，请检查输入侧保险（空开）是否跳闸断开。注意：空气开关推上去就跳闸或保险立即烧断时，请勿随意使用铜丝短接，请先处理短路故障。",
+              "options": [],
+              "sourcePage": "P042",
+              "sourceTimestampS": 211.0,
+              "sourceFrame": "source-frames/r20.jpg"
+            },
+            {
+              "id": "r21",
+              "type": "result",
+              "text": "短接HPC-JX2.14和HPC-JX2.16后接触器正常吸合，说明HPC内部继电器没有吸合或触点已损坏。注意：复位按钮卡死、触点接通的情况下也会造成接触器不吸合。请进入系统按键功能测试检查复位按钮状态。在确保HPC-JX2插头和复位按钮没有问题的情况下，请直接更换HPC。",
+              "options": [],
+              "sourcePage": "P043",
+              "sourceTimestampS": 220.5,
+              "sourceFrame": "source-frames/r21.jpg"
+            },
+            {
+              "id": "q23",
+              "type": "question",
+              "text": "请启动油泵电机，按下泵启按钮3～5秒后松手，等待油泵电机启动。油泵电机是否正常启动？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q24",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r22",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P044",
+              "sourceTimestampS": 234.5,
+              "sourceFrame": "source-frames/q23.jpg"
+            },
+            {
+              "id": "q24",
+              "type": "question",
+              "text": "油泵电机正常启动后，牵引接触器也同时吸合。可以观察变频器操作键盘是否点亮并正常显示。请观察显示屏上牵电状态是否为绿色（小屏幕提示牵引系统未送电，请查明原因）？",
+              "options": [
+                {
+                  "label": "红色（有）",
+                  "next": "r01",
+                  "status": "observed"
+                },
+                {
+                  "label": "绿色（无）",
+                  "next": "q05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P045",
+              "sourceTimestampS": 242.5,
+              "sourceFrame": "source-frames/q24.jpg"
+            },
+            {
+              "id": "r22",
+              "type": "result",
+              "text": "油泵电机没有正常启动，请到「引导性故障排查 → 电机启停故障 → 调高泵启停故障」中查找处理。",
+              "options": [],
+              "sourcePage": "P046",
+              "sourceTimestampS": 370.0,
+              "sourceFrame": "source-frames/r22.jpg"
+            },
+            {
+              "id": "q25",
+              "type": "question",
+              "text": "HPC模块红色代表HPC工作异常，和控制系统之间通讯中断。请打开HPC所在的电控箱，查看HPC前端的绿色指示灯是否闪烁？",
+              "options": [
+                {
+                  "label": "闪烁",
+                  "next": "q26",
+                  "status": "observed"
+                },
+                {
+                  "label": "不亮",
+                  "next": "q27",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P047",
+              "sourceTimestampS": 381.0,
+              "sourceFrame": "source-frames/q25.jpg"
+            },
+            {
+              "id": "q26",
+              "type": "question",
+              "text": "HPC模块前端的指示灯闪烁，说明HPC已工作，只是和系统通讯中断。请检查HPCJX1.3到BOCJX1.3、HPCJX1.4到BOCJX1.4之间的通讯线路？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r23",
+                  "status": "observed"
+                },
+                {
+                  "label": "异常",
+                  "next": "r24",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P048",
+              "sourceTimestampS": 392.0,
+              "sourceFrame": "source-frames/q26.jpg"
+            },
+            {
+              "id": "r23",
+              "type": "result",
+              "text": "通讯线路检查正常，在其他模块通讯正常的情况下，在确保HPCJX1插头没有问题的情况下，请更换HPC。",
+              "options": [],
+              "sourcePage": "P049",
+              "sourceTimestampS": 402.0,
+              "sourceFrame": "source-frames/r23.jpg"
+            },
+            {
+              "id": "r24",
+              "type": "result",
+              "text": "通讯线路异常分为两种情况：短路和断路，请酌情处理。",
+              "options": [],
+              "sourcePage": "P050",
+              "sourceTimestampS": 405.5,
+              "sourceFrame": "source-frames/r24.jpg"
+            },
+            {
+              "id": "q27",
+              "type": "question",
+              "text": "HPC模块前端的指示灯不亮，可能的原因有两种：1.没有工作电源；2.HPC模块已损坏。请使用万用表测量HPCJX2.1和HPCJX2.2之间是否有24V电压？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r25",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r26",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P051",
+              "sourceTimestampS": 410.0,
+              "sourceFrame": "source-frames/q27.jpg"
+            },
+            {
+              "id": "r25",
+              "type": "result",
+              "text": "在HPCJX2.1和HPCJX2.2之间可以测到24V电压，在确保HPCJX2插头没有问题的情况下，请直接更换HPC模块。",
+              "options": [],
+              "sourcePage": "P052",
+              "sourceTimestampS": 419.5,
+              "sourceFrame": "source-frames/r25.jpg"
+            },
+            {
+              "id": "r26",
+              "type": "result",
+              "text": "在HPCJX2.1和HPCJX2.2之间不能测到24V电压，请检查非本安电源模块F+24V到HPCJX2.1、F0V到HPCJX2.2之间的线路，找到断点处理即可。",
+              "options": [],
+              "sourcePage": "P053",
+              "sourceTimestampS": 421.5,
+              "sourceFrame": "source-frames/r26.jpg"
+            }
+          ],
+          "sourceVideo": "系统牵引故障.mp4"
+        }
+      ],
+      "introduction": "采煤机送电等待系统就绪后，依次启动油泵电机、牵启、设定速度和设定方向。牵引模块向主变频器（左）发送速度和方向指令，两个变频器通过主从控制方式同步输出一定的转矩。同时，变频器通过 RS485 通讯线向牵引模块发出松闸指令，牵引模块 HPCJX2.5 和 HPCJX2.9 继电器触点闭合，制动电磁阀得电并打开制动器油路。2.5 MPa 油压在推开制动器的同时触发压力继电器动作。压力继电器动作后，常开触点 1 和 3 闭合，本安 +12V 通过压力继电器 1、3 之间的触点到牵引模块 HPCJX3.4，HPCJX3.3 到本安 0V 形成回路，屏幕上显示的“未松闸”变为“已松闸”。牵引模块 HPCJX2.10 和 HPCJX2.11 继电器常开触点闭合，主变频器内部 +24V 通过 HPCJX2.10、HPCJX2.11 之间的触点到主变频器松闸确认端口（默认 DI5），变频器收到松闸确认信号后开始正常运行。变频器从发出松闸指令到收到松闸确认信号的允许时间为 2 秒；超过 2 秒仍未收到确认，主变频器停止运行，并通过 RS485 发出关闭松闸指令端口命令，同时报故障（ACS800：FF74；ACS880：71A3）。松闸确认信号只能在变频器发出松闸指令后的 2 秒内反馈；主变频器未运行、处于待机状态时收到松闸确认信号，也会报故障（ACS800：FF74；ACS880：71A2）。",
+      "safetyNotice": [
+        "本资料仅用于故障诊断参考，不替代矿方安全规程、设备说明书或专业人员判断。涉及 24V、220V、380V/660V 测量、绝缘测试、短接触点、拆装插头等操作时，必须由具备资质的人员执行停电、验电、放电、闭锁挂牌等措施。其中“临时短接”属原文保留的应急措施，不构成可直接执行的操作授权。"
+      ]
+    },
+    {
+      "id": "arm-height",
+      "shortName": "调高故障",
+      "title": "采煤机调高故障诊断树",
+      "schemaVersion": "1.0",
+      "sourceDir": "采煤机调高故障诊断树",
+      "extractionNotes": [
+        "诊断选项“上一步”和页面左上角返回键属于导航，不写入业务诊断选项。",
+        "status=observed 表示原始资料中明确给出跳转；inferred_from_backtracking 表示中间步骤记录不完整，但可由前后条目与选项位置确定；inferred_from_technical_logic 表示原始资料未直接给出，按同页面其他上下文与技术逻辑补齐，使用前建议人工复核。",
+        "status=unresolved_not_recorded 表示原始资料未给出后续步骤；生成程序时应先保留TODO，禁止模型自行编造。",
+        "部分条目在单侧/双侧路径中复用但下一节点不同，结构化文件已按上下文拆成不同逻辑节点。"
+      ],
+      "modules": [
+        {
+          "id": "single_prop_small",
+          "index": 1,
+          "name": "单泵比例阀小煤机",
+          "startNode": "q01",
+          "nodes": [
+            {
+              "id": "q01",
+              "type": "question",
+              "text": "泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？",
+              "options": [
+                {
+                  "label": "单边",
+                  "next": "q02",
+                  "status": "observed"
+                },
+                {
+                  "label": "双侧",
+                  "next": "q05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P003",
+              "sourceTimestampS": 14.9
+            },
+            {
+              "id": "q02",
+              "type": "question",
+              "text": "单个不能操作，说明油液压力正常，用端头站是否能升降不动作的摇臂？无端头站选不能。",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "r01",
+                  "status": "inferred_from_backtracking"
+                },
+                {
+                  "label": "不能",
+                  "next": "q03",
+                  "status": "inferred_from_backtracking"
+                }
+              ],
+              "sourcePage": "P004",
+              "sourceTimestampS": 25.7
+            },
+            {
+              "id": "r01",
+              "type": "result",
+              "text": "端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。",
+              "options": [],
+              "sourcePage": "P005",
+              "sourceTimestampS": 34.1
+            },
+            {
+              "id": "q03",
+              "type": "question",
+              "text": "通过手动比例阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q04",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "r04",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P006",
+              "sourceTimestampS": 49.6
+            },
+            {
+              "id": "q04",
+              "type": "question",
+              "text": "打开PVD模块所在腔体，操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r03",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P007",
+              "sourceTimestampS": 58.9
+            },
+            {
+              "id": "r02",
+              "type": "result",
+              "text": "检查PVD比例阀模块JX2上4、5、6、7号线到后腔接线排线路是否完好；检查后腔接线排到不升降电磁阀的线路是否完好；线路正常请更换不升降的电磁阀。",
+              "options": [],
+              "note": "原页面个别字样疑似存在录入错字，已按技术语义规范化。",
+              "sourcePage": "P008",
+              "sourceTimestampS": 65.0
+            },
+            {
+              "id": "r03",
+              "type": "result",
+              "text": "遥控操作只是单边摇臂不升降，说明模块与主控之间通讯正常。当前确定PVD比例阀控制模块局部端口损坏，请更换PVD比例阀控制模块。",
+              "options": [],
+              "sourcePage": "P009",
+              "sourceTimestampS": 73.7
+            },
+            {
+              "id": "r04",
+              "type": "result",
+              "text": "另一边摇臂可以升降说明油液压力正常。检查不升降摇臂的油缸管路是否挤压变形、漏油；检查油缸内泄或循环；检查平衡阀或液力锁损坏；阀组可能存在故障。",
+              "options": [],
+              "sourcePage": "P010",
+              "sourceTimestampS": 80.8
+            },
+            {
+              "id": "q05",
+              "type": "question",
+              "text": "两边都不升降，通过手动比例阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q06",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q09",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P011",
+              "sourceTimestampS": 93.0
+            },
+            {
+              "id": "q06",
+              "type": "question",
+              "text": "手动比例阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q07",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": null,
+                  "status": "unresolved_not_recorded",
+                  "note": "该选项的后续步骤资料未覆盖，不得自行推断。"
+                }
+              ],
+              "sourcePage": "P012",
+              "sourceTimestampS": 100.1
+            },
+            {
+              "id": "q07",
+              "type": "question",
+              "text": "打开PVD模块所在腔体，测量PVD模块JX1上的1和2号线是否有24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "q08",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": null,
+                  "status": "unresolved_not_recorded",
+                  "note": "该选项的后续步骤资料未覆盖，不得自行推断。"
+                }
+              ],
+              "sourcePage": "P013",
+              "sourceTimestampS": 107.5
+            },
+            {
+              "id": "q08",
+              "type": "question",
+              "text": "操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r05",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r06",
+                  "status": "inferred_from_backtracking"
+                }
+              ],
+              "sourcePage": "P014",
+              "sourceTimestampS": 115.8
+            },
+            {
+              "id": "r05",
+              "type": "result",
+              "text": "说明比例阀模块工作正常；检查PVD比例阀模块JX1的6号公用0V线到后接线腔连接是否存在断路或虚接。",
+              "options": [],
+              "sourcePage": "P015",
+              "sourceTimestampS": 122.2
+            },
+            {
+              "id": "r06",
+              "type": "result",
+              "text": "检查比例阀与SGC通讯模块之间485通讯线路是否完好；确保SGC模块与BOC主控模块之间通讯正常；如线路和通讯均正常，请更换PVD比例控制模块。",
+              "options": [],
+              "sourcePage": "P016",
+              "sourceTimestampS": 125.8
+            },
+            {
+              "id": "q09",
+              "type": "question",
+              "text": "操作手动比例阀，查看高压液压表是否有18MPa左右压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r07",
+                  "status": "observed"
+                },
+                {
+                  "label": "很低",
+                  "next": "r08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P017",
+              "sourceTimestampS": 141.9
+            },
+            {
+              "id": "r07",
+              "type": "result",
+              "text": "高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。",
+              "options": [],
+              "sourcePage": "P018",
+              "sourceTimestampS": 149.5
+            },
+            {
+              "id": "r08",
+              "type": "result",
+              "text": "检查泵箱油量是否足够、油管是否挤压变形；检查齿轮泵与泵电机连接轴花键是否脱落；检查并更换阀组；检查以上问题并恢复高压，确保手动升降摇臂正常。",
+              "options": [],
+              "sourcePage": "P019",
+              "sourceTimestampS": 155.1
+            }
+          ],
+          "sourceVideo": "调高故障单比例阀小煤机.mp4"
+        },
+        {
+          "id": "single_normal_small",
+          "index": 2,
+          "name": "单泵普通阀小煤机",
+          "startNode": "q01",
+          "nodes": [
+            {
+              "id": "q01",
+              "type": "question",
+              "text": "泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？",
+              "options": [
+                {
+                  "label": "单侧",
+                  "next": "q02",
+                  "status": "observed"
+                },
+                {
+                  "label": "双侧",
+                  "next": "q06",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P003",
+              "sourceTimestampS": 14.2
+            },
+            {
+              "id": "q02",
+              "type": "question",
+              "text": "用端头站是否能升降不动作的摇臂？无端头站选不能。",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "r01",
+                  "status": "inferred_from_backtracking"
+                },
+                {
+                  "label": "不能",
+                  "next": "q03",
+                  "status": "inferred_from_backtracking"
+                }
+              ],
+              "sourcePage": "P004",
+              "sourceTimestampS": 23.8
+            },
+            {
+              "id": "r01",
+              "type": "result",
+              "text": "端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。",
+              "options": [],
+              "sourcePage": "P005",
+              "sourceTimestampS": 29.1
+            },
+            {
+              "id": "q03",
+              "type": "question",
+              "text": "通过球形手动操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q04",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "r03",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P006",
+              "sourceTimestampS": 36.2
+            },
+            {
+              "id": "q04",
+              "type": "question",
+              "text": "打开分线盒，用遥控器操作不能升降的摇臂，测量接线排不能升降对应的电磁阀接线点，是否可以量到DC24V？无分线盒请打开后接线腔测量。",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "q05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P007",
+              "sourceTimestampS": 45.8
+            },
+            {
+              "id": "r02",
+              "type": "result",
+              "text": "检查分线盒（后接线腔）到电磁阀线路是否挤压、断线；线路正常请更换电磁阀。",
+              "options": [],
+              "sourcePage": "P008",
+              "sourceTimestampS": 51.8
+            },
+            {
+              "id": "q05",
+              "type": "question",
+              "text": "打开计算机腔，操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应输出的4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。",
+              "options": [
+                {
+                  "label": "导通",
+                  "next": null,
+                  "status": "unresolved_not_recorded",
+                  "note": "该选项在现有资料中没有后续步骤。"
+                },
+                {
+                  "label": "不通",
+                  "next": null,
+                  "status": "unresolved_not_recorded",
+                  "note": "该选项在现有资料中没有后续步骤。"
+                }
+              ],
+              "note": "两个选项在现有资料中均未给出后续步骤。",
+              "sourcePage": "P009",
+              "sourceTimestampS": 58.2
+            },
+            {
+              "id": "r03",
+              "type": "result",
+              "text": "另一边摇臂可以升降说明油液压力正常。检查到油缸管路是否挤压变形、漏油；检查油缸内泄或循环；检查平衡阀或者液力锁损坏；阀组可能存在故障。",
+              "options": [],
+              "sourcePage": "P010",
+              "sourceTimestampS": 75.4
+            },
+            {
+              "id": "q06",
+              "type": "question",
+              "text": "两边都不升降，通过球形手动阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q07",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q13",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P011",
+              "sourceTimestampS": 85.3
+            },
+            {
+              "id": "q07",
+              "type": "question",
+              "text": "球形手动阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q08",
+                  "status": "observed"
+                },
+                {
+                  "label": "低或没有",
+                  "next": "q11",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P012",
+              "sourceTimestampS": 94.8
+            },
+            {
+              "id": "q08",
+              "type": "question",
+              "text": "打开计算机前腔，确认电源保护空开处在合闸状态，测量整流桥输出接线排是否可以量到DC24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "q09",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "q10",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P013",
+              "sourceTimestampS": 104.6
+            },
+            {
+              "id": "q09",
+              "type": "question",
+              "text": "操作遥控器升降，测量BOC主控模块JX2接线排公共点9号与对应升降的4、5、6、7号线之间节点是否有DC24V？",
+              "options": [
+                {
+                  "label": "有",
+                  "next": null,
+                  "status": "unresolved_not_recorded",
+                  "note": "该选项的后续步骤资料未覆盖，不得自行推断。"
+                },
+                {
+                  "label": "无",
+                  "next": null,
+                  "status": "unresolved_not_recorded",
+                  "note": "该选项的后续步骤资料未覆盖，不得自行推断。"
+                }
+              ],
+              "sourcePage": "P014",
+              "sourceTimestampS": 113.9
+            },
+            {
+              "id": "q10",
+              "type": "question",
+              "text": "测量整流桥BR输入AC26V（部分机组为AC28V）输入是否正常？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r04",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P015",
+              "sourceTimestampS": 128.1
+            },
+            {
+              "id": "r04",
+              "type": "result",
+              "text": "检查电源到整流桥线路完好后，更换整流桥BR。",
+              "options": [],
+              "sourcePage": "P016",
+              "sourceTimestampS": 133.6
+            },
+            {
+              "id": "r05",
+              "type": "result",
+              "text": "检查整流桥输入侧空开或保险是否断开；检查输入侧线路是否正常；检查控制变压器的输出，无输出请更换控制变压器。",
+              "options": [],
+              "note": "原始资料中存在同义重复条目，已合并。",
+              "sourcePage": "P017",
+              "sourceTimestampS": 135.9
+            },
+            {
+              "id": "q11",
+              "type": "question",
+              "text": "检查液压油量，调节、清洗或更换低压溢流阀，将压力恢复至2.5MPa；用遥控器操作摇臂是否能动作？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r06",
+                  "status": "observed"
+                },
+                {
+                  "label": "不动",
+                  "next": "q12",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P018",
+              "sourceTimestampS": 147.1
+            },
+            {
+              "id": "r06",
+              "type": "result",
+              "text": "电磁阀控制低压油路，导通推动高压阀杆动作，完成摇臂升降过程。",
+              "options": [],
+              "sourcePage": "P019",
+              "sourceTimestampS": 152.1
+            },
+            {
+              "id": "q12",
+              "type": "question",
+              "text": "低压足够，此时再排查电器问题。打开计算机前腔，确认电源保护空开处在合闸状态，测量整流桥输出接线排是否可以量到DC24V？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q14",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "q10",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P020",
+              "sourceTimestampS": 156.9
+            },
+            {
+              "id": "q14",
+              "type": "question",
+              "text": "有DC24V时操作遥控器升降，测量BOC主控模块JX2接线排公共点9号与对应升降4、5、6、7号线之间节点是否有DC24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r07",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P021",
+              "sourceTimestampS": 164.7
+            },
+            {
+              "id": "r07",
+              "type": "result",
+              "text": "检查整流桥输出侧接线排0V到后接线腔线路；后接线腔到分线盒内线路是否断路和虚接。",
+              "options": [],
+              "sourcePage": "P022",
+              "sourceTimestampS": 169.4
+            },
+            {
+              "id": "r08",
+              "type": "result",
+              "text": "检查整流桥输出侧接线排0V到JX2的9号线是否断线；检查整流桥输出侧24V到JX2的8号线是否完好；以上线路正常且遥控器操作升降时无继电器响声，请更换BOC主控模块。",
+              "options": [],
+              "sourcePage": "P023",
+              "sourceTimestampS": 172.4
+            },
+            {
+              "id": "q13",
+              "type": "question",
+              "text": "操作手动阀，查看高压液压表是否有18MPa左右压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r09",
+                  "status": "observed"
+                },
+                {
+                  "label": "低或没有",
+                  "next": "r10",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P025",
+              "sourceTimestampS": 198.7
+            },
+            {
+              "id": "r09",
+              "type": "result",
+              "text": "高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。",
+              "options": [],
+              "sourcePage": "P026",
+              "sourceTimestampS": 204.5
+            },
+            {
+              "id": "r10",
+              "type": "result",
+              "text": "检查泵箱油量是否足够、油管是否挤压变形；检查齿轮泵与泵电机连接轴花键是否脱落；检查并更换阀组；检查以上问题并恢复高压，确保手动升降摇臂正常。",
+              "options": [],
+              "sourcePage": "P027",
+              "sourceTimestampS": 207.9
+            }
+          ],
+          "sourceVideo": "调高故障单泵普通阀小煤机.mp4"
+        },
+        {
+          "id": "single_normal_large",
+          "index": 3,
+          "name": "单泵普通阀大煤机",
+          "startNode": "q01",
+          "nodes": [
+            {
+              "id": "q01",
+              "type": "question",
+              "text": "泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？",
+              "options": [
+                {
+                  "label": "单侧",
+                  "next": "q02",
+                  "status": "observed"
+                },
+                {
+                  "label": "双侧",
+                  "next": "q06",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P003",
+              "sourceTimestampS": 13.5
+            },
+            {
+              "id": "q02",
+              "type": "question",
+              "text": "单边摇臂不能升降，说明油液压力正常；用端头站是否能升降不动作的摇臂？无端头站选不能。",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "r01",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q03",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P004",
+              "sourceTimestampS": 22.4
+            },
+            {
+              "id": "r01",
+              "type": "result",
+              "text": "端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。",
+              "options": [],
+              "sourcePage": "P005",
+              "sourceTimestampS": 27.5
+            },
+            {
+              "id": "q03",
+              "type": "question",
+              "text": "通过手动换向阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q04",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "r04",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P006",
+              "sourceTimestampS": 32.2
+            },
+            {
+              "id": "q04",
+              "type": "question",
+              "text": "打开分线盒，用遥控器操作不能升降的摇臂，测量接线排不能升降对应电磁阀接线点，是否可以量到DC24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "q05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P007",
+              "sourceTimestampS": 39.4
+            },
+            {
+              "id": "r02",
+              "type": "result",
+              "text": "检查分线盒到电磁阀线路是否挤压、断线；线路正常请更换电磁阀。",
+              "options": [],
+              "sourcePage": "P008",
+              "sourceTimestampS": 43.7
+            },
+            {
+              "id": "q05",
+              "type": "question",
+              "text": "打开计算机腔，操作遥控器升降，测量主控模块JX2接线排公共点8号与对应输出的4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。",
+              "options": [
+                {
+                  "label": "导通",
+                  "next": "r03",
+                  "status": "inferred_from_technical_logic"
+                },
+                {
+                  "label": "不通",
+                  "next": "r05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P009",
+              "sourceTimestampS": 50.0
+            },
+            {
+              "id": "r03",
+              "type": "result",
+              "text": "检查BOC主控模块控制电磁阀到后腔接线排线路是否完好；检查后腔接线排到电磁阀线路是否完好；线路完好请更换电磁阀。",
+              "options": [],
+              "sourcePage": "P010",
+              "sourceTimestampS": 55.8
+            },
+            {
+              "id": "r04",
+              "type": "result",
+              "text": "另一边摇臂可以升降说明油液压力正常。检查到油缸管路是否挤压变形、漏油；检查油缸内泄或循环；检查平衡阀或液力锁损坏；阀组可能存在故障。",
+              "options": [],
+              "sourcePage": "P012",
+              "sourceTimestampS": 65.5
+            },
+            {
+              "id": "r05",
+              "type": "result",
+              "text": "请更换BOC主控模块。",
+              "options": [],
+              "sourcePage": "P011",
+              "sourceTimestampS": 57.7
+            },
+            {
+              "id": "q06",
+              "type": "question",
+              "text": "两边都不升降，通过手动阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q07",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q19",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P013",
+              "sourceTimestampS": 74.6
+            },
+            {
+              "id": "q07",
+              "type": "question",
+              "text": "手动换向阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q08",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或过低",
+                  "next": "q16",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P014",
+              "sourceTimestampS": 82.9
+            },
+            {
+              "id": "q08",
+              "type": "question",
+              "text": "低压正常的情况下，先判断总阀是否动作。操作遥控器升降摇臂，观察总阀阀杆是否动作？",
+              "options": [
+                {
+                  "label": "动作",
+                  "next": "q09",
+                  "status": "observed"
+                },
+                {
+                  "label": "不动",
+                  "next": "q11",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P015",
+              "sourceTimestampS": 90.8
+            },
+            {
+              "id": "q09",
+              "type": "question",
+              "text": "总阀可以动作，说明电磁阀电源正常、低压也完好。排查其他阀动作情况：打开分线盒，用遥控器操作不能升降的摇臂，测量接线排对应电磁阀接线点是否可以量到DC24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "q10",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P016",
+              "sourceTimestampS": 98.0
+            },
+            {
+              "id": "q10",
+              "type": "question",
+              "text": "打开计算机腔，测量BOC主控模块操作遥控器升降时，JX2接线排公共点8号与对应输出4、5、6、7号线之间继电器触点是否导通？",
+              "options": [
+                {
+                  "label": "导通",
+                  "next": "r03",
+                  "status": "inferred_from_technical_logic"
+                },
+                {
+                  "label": "不通",
+                  "next": "r05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P017",
+              "sourceTimestampS": 109.5
+            },
+            {
+              "id": "q11",
+              "type": "question",
+              "text": "打开分线盒，用遥控器操作摇臂升降，测量总阀电磁阀在对应接线排上是否可以量到DC24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r06",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "q12",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P018",
+              "sourceTimestampS": 129.9
+            },
+            {
+              "id": "r06",
+              "type": "result",
+              "text": "检查分线盒到总阀线路，线路正常更换总阀电磁阀；电磁阀线路正常仍不动作请更换阀组。",
+              "options": [],
+              "sourcePage": "P019",
+              "sourceTimestampS": 134.3
+            },
+            {
+              "id": "q12",
+              "type": "question",
+              "text": "打开计算机前腔，确认电源保护空开处在合闸状态，测量整流桥输出接线排是否可以量到DC24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "q13",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "q15",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P020",
+              "sourceTimestampS": 139.8
+            },
+            {
+              "id": "q13",
+              "type": "question",
+              "text": "说明整流桥输出电源正常，测量从整流桥输出侧的DC0V接线排到分线盒内接线排的公共DC0V线路是否通路？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q14",
+                  "status": "observed"
+                },
+                {
+                  "label": "不通",
+                  "next": "r09",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P021",
+              "sourceTimestampS": 147.6
+            },
+            {
+              "id": "q14",
+              "type": "question",
+              "text": "用遥控器轮流操作所有摇臂升降功能，测量EIO主控扩展模块JX2接线排公共点8号与对应总阀控制的3号线之间继电器触点是否都导通？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q15b",
+                  "status": "observed"
+                },
+                {
+                  "label": "不通",
+                  "next": "r08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P022",
+              "sourceTimestampS": 157.4
+            },
+            {
+              "id": "q15b",
+              "type": "question",
+              "text": "可以确定EIO主控扩展模块完好。操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应升降的4、5、6、7号线之间继电器触点是否导通？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r07",
+                  "status": "observed"
+                },
+                {
+                  "label": "不通",
+                  "next": "r05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P023",
+              "sourceTimestampS": 168.6
+            },
+            {
+              "id": "r07",
+              "type": "result",
+              "text": "其他阀不动作：检查整流桥输出侧DC24V、DC0V接线排到BOC主控模块JX2的8号和9号线是否断路或虚接；总阀不动作：检查整流桥输出侧DC24V、DC0V接线排到主控模块JX2相关端子是否断路或虚接。",
+              "options": [],
+              "sourcePage": "P024",
+              "sourceTimestampS": 175.5
+            },
+            {
+              "id": "r08",
+              "type": "result",
+              "text": "检查EIO模块与BOC主控之间CAN通讯线路；确保主控扩展模块供电正常；以上均完好请更换EIO主控扩展模块。",
+              "options": [],
+              "sourcePage": "P025",
+              "sourceTimestampS": 184.3
+            },
+            {
+              "id": "r09",
+              "type": "result",
+              "text": "打开后腔接线腔，检查处理从整流桥输出侧DC0V接线排到后接线腔线路是否断路、虚接；检查处理后接线腔到分线盒内接线排的公共DC0V线路是否断路、虚接。",
+              "options": [],
+              "sourcePage": "P026",
+              "sourceTimestampS": 191.1
+            },
+            {
+              "id": "q15",
+              "type": "question",
+              "text": "测量整流桥BR输入AC26V（部分机组为AC28V）输入是否正常？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r10",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r11",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P027",
+              "sourceTimestampS": 202.3
+            },
+            {
+              "id": "r10",
+              "type": "result",
+              "text": "检查电源到整流桥线路完好后，更换整流桥BR。",
+              "options": [],
+              "sourcePage": "P028",
+              "sourceTimestampS": 211.2
+            },
+            {
+              "id": "r11",
+              "type": "result",
+              "text": "检查整流桥输入侧空开或保险是否断开；检查输入侧线路是否正常；检查控制变压器输出，无输出请更换控制变压器。",
+              "options": [],
+              "sourcePage": "P029",
+              "sourceTimestampS": 213.1
+            },
+            {
+              "id": "q16",
+              "type": "question",
+              "text": "检查液压油量，调节、清洗或更换低压溢流阀，将压力恢复至2.5MPa；用遥控器操作摇臂是否能动作？",
+              "options": [
+                {
+                  "label": "动作",
+                  "next": "r12",
+                  "status": "observed"
+                },
+                {
+                  "label": "不动",
+                  "next": "q17",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P030",
+              "sourceTimestampS": 230.7
+            },
+            {
+              "id": "r12",
+              "type": "result",
+              "text": "电磁阀控制低压油路，导通推动高压阀杆动作，完成摇臂升降过程。",
+              "options": [],
+              "sourcePage": "P031",
+              "sourceTimestampS": 236.7
+            },
+            {
+              "id": "q17",
+              "type": "question",
+              "text": "低压足够，此时再排查电器问题。低压正常的情况下先判断总阀是否动作，操作遥控器升降摇臂，观察总阀阀杆是否动作？",
+              "options": [
+                {
+                  "label": "动作",
+                  "next": "q13",
+                  "status": "observed"
+                },
+                {
+                  "label": "不动",
+                  "next": "q15",
+                  "status": "observed"
+                }
+              ],
+              "note": "该跳转按原始资料的实际路径记录。",
+              "sourcePage": "P032",
+              "sourceTimestampS": 243.0
+            },
+            {
+              "id": "q19",
+              "type": "question",
+              "text": "操作手动阀，查看高压液压表是否有18MPa左右压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r13",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或过低",
+                  "next": "q20",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P033",
+              "sourceTimestampS": 313.0
+            },
+            {
+              "id": "r13",
+              "type": "result",
+              "text": "高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。",
+              "options": [],
+              "sourcePage": "P034",
+              "sourceTimestampS": 319.6
+            },
+            {
+              "id": "q20",
+              "type": "question",
+              "text": "调整或者更换高压溢流阀，将压力恢复至18MPa；操作手动阀，摇臂是否动作？",
+              "options": [
+                {
+                  "label": "动作",
+                  "next": "q21",
+                  "status": "observed"
+                },
+                {
+                  "label": "不动",
+                  "next": null,
+                  "status": "unresolved_not_recorded",
+                  "note": "该选项的后续步骤资料未覆盖，不得自行推断。"
+                }
+              ],
+              "sourcePage": "P035",
+              "sourceTimestampS": 323.2
+            },
+            {
+              "id": "q21",
+              "type": "question",
+              "text": "手动可以动作，但通过遥控器操作仍不能升降，请排查电气问题。低压正常的情况下先判断总阀是否动作：操作遥控器升降摇臂，观察总阀阀杆是否动作？",
+              "options": [
+                {
+                  "label": "动作",
+                  "next": "q09",
+                  "status": "observed"
+                },
+                {
+                  "label": "不动",
+                  "next": "q11",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P036",
+              "sourceTimestampS": 328.3
+            }
+          ],
+          "sourceVideo": "单泵普通阀大煤机.mp4"
+        },
+        {
+          "id": "single_prop_large",
+          "index": 4,
+          "name": "单泵比例阀大煤机",
+          "startNode": "q01",
+          "nodes": [
+            {
+              "id": "q01",
+              "type": "question",
+              "text": "泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？",
+              "options": [
+                {
+                  "label": "单侧",
+                  "next": "q02",
+                  "status": "observed"
+                },
+                {
+                  "label": "双侧",
+                  "next": "q08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P001",
+              "sourceTimestampS": 6.1
+            },
+            {
+              "id": "q02",
+              "type": "question",
+              "text": "用端头站是否能升降不动作的摇臂？无端头站选不能。",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "r01",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q03",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P002",
+              "sourceTimestampS": 15.0
+            },
+            {
+              "id": "r01",
+              "type": "result",
+              "text": "端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。",
+              "options": [],
+              "sourcePage": "P003",
+              "sourceTimestampS": 20.8
+            },
+            {
+              "id": "q03",
+              "type": "question",
+              "text": "通过手动比例阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q04",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "r06",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P004",
+              "sourceTimestampS": 25.2
+            },
+            {
+              "id": "q04",
+              "type": "question",
+              "text": "根据图纸查看，是CIO比例阀控制模块还是PVD比例阀控制模块？",
+              "options": [
+                {
+                  "label": "PVD",
+                  "next": "q05",
+                  "status": "observed"
+                },
+                {
+                  "label": "CIO",
+                  "next": "q06",
+                  "status": "observed"
+                }
+              ],
+              "note": "该页面在单侧与双侧路径中复用，但下一节点不同；结构化数据中已拆分上下文。",
+              "sourcePage": "P005",
+              "sourceTimestampS": 32.1
+            },
+            {
+              "id": "q05",
+              "type": "question",
+              "text": "PVD比例阀模块：打开PVD模块所在腔体，操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？",
+              "options": [
+                {
+                  "label": "没有",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "有24V",
+                  "next": "r03",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P006",
+              "sourceTimestampS": 40.5
+            },
+            {
+              "id": "r02",
+              "type": "result",
+              "text": "遥控操作只是单边摇臂不升降，说明模块与BOC主控之间通讯正常。当前确定PVD比例阀控制模块局部端口损坏，请更换比例阀控制模块。",
+              "options": [],
+              "sourcePage": "P007",
+              "sourceTimestampS": 46.0
+            },
+            {
+              "id": "r03",
+              "type": "result",
+              "text": "检查PVD比例阀模块JX2上4、5、6、7号线到后腔接线排线路是否完好；检查后腔接线排到不升降电磁阀线路是否完好；线路正常请更换不升降的电磁阀。",
+              "options": [],
+              "sourcePage": "P008",
+              "sourceTimestampS": 49.2
+            },
+            {
+              "id": "q06",
+              "type": "question",
+              "text": "打开计算机腔，操作遥控器升降摇臂，测量CIO比例阀模块C1、C2、C3、B1接线点与公共点B7-0V之间是否有DC24V输出？",
+              "options": [
+                {
+                  "label": "没有",
+                  "next": "r04",
+                  "status": "observed"
+                },
+                {
+                  "label": "有24V",
+                  "next": "r05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P009",
+              "sourceTimestampS": 56.8
+            },
+            {
+              "id": "r04",
+              "type": "result",
+              "text": "遥控操作只是单边摇臂不升降，说明模块与BOC主控之间通讯正常。当前确定CIO比例阀控制模块局部端口损坏，请更换比例阀控制模块。",
+              "options": [],
+              "sourcePage": "P010",
+              "sourceTimestampS": 61.8
+            },
+            {
+              "id": "r05",
+              "type": "result",
+              "text": "检查CIO比例阀控制模块到后腔线路是否完好；检查后腔到电磁阀线路是否完好；以上线路完好，请更换不动作的电磁阀。",
+              "options": [],
+              "sourcePage": "P011",
+              "sourceTimestampS": 64.5
+            },
+            {
+              "id": "r06",
+              "type": "result",
+              "text": "另一边摇臂可以升降说明油液压力正常。检查到油缸管路是否挤压变形、漏油；检查油缸内泄或循环；检查平衡阀或者液力锁损坏；阀组可能存在故障。",
+              "options": [],
+              "sourcePage": "P012",
+              "sourceTimestampS": 70.3
+            },
+            {
+              "id": "q08",
+              "type": "question",
+              "text": "两边都不升降，通过手动比例阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q09",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q16",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P013",
+              "sourceTimestampS": 78.3
+            },
+            {
+              "id": "q09",
+              "type": "question",
+              "text": "手动比例阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q10",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或过低",
+                  "next": "r12",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P014",
+              "sourceTimestampS": 86.7
+            },
+            {
+              "id": "q10",
+              "type": "question",
+              "text": "根据图纸查看，是CIO比例阀控制模块还是PVD比例阀控制模块？",
+              "options": [
+                {
+                  "label": "PVD",
+                  "next": "q11",
+                  "status": "observed"
+                },
+                {
+                  "label": "CIO",
+                  "next": "q13",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P005",
+              "sourceTimestampS": 32.1
+            },
+            {
+              "id": "q11",
+              "type": "question",
+              "text": "打开PVD模块所在腔体，测量PVD模块JX1上的1和2号线是否有24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "q12",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r09",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P015",
+              "sourceTimestampS": 101.8
+            },
+            {
+              "id": "q12",
+              "type": "question",
+              "text": "操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r07",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P016",
+              "sourceTimestampS": 111.4
+            },
+            {
+              "id": "r07",
+              "type": "result",
+              "text": "说明比例阀模块工作正常；检查PVD比例阀模块JX1的6号公用0V线到后接线腔连接是否存在断路或虚接。",
+              "options": [],
+              "sourcePage": "P017",
+              "sourceTimestampS": 118.7
+            },
+            {
+              "id": "r08",
+              "type": "result",
+              "text": "检查比例阀与SGC通讯模块之间485通讯线路是否完好；确保SGC模块与BOC主控模块之间通讯正常；如线路和通讯均正常，请更换PVD比例控制模块。",
+              "options": [],
+              "sourcePage": "P018",
+              "sourceTimestampS": 121.0
+            },
+            {
+              "id": "r09",
+              "type": "result",
+              "text": "检查PVD比例阀模块JX1的1和2号线到电源模块线路是否完好；检查电源模块供电电源线路正常，确保电源模块输入输出空开闭合；甩开输出侧，有输入无输出请更换电源模块。",
+              "options": [],
+              "sourcePage": "P019",
+              "sourceTimestampS": 125.0
+            },
+            {
+              "id": "q13",
+              "type": "question",
+              "text": "打开CIO模块所在腔体，测量CIO模块的B5、B8、A1接线点与B7接线是否有24V供电？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q14",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r11",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P020",
+              "sourceTimestampS": 129.1
+            },
+            {
+              "id": "q14",
+              "type": "question",
+              "text": "操作遥控器升降，测量公共端B7与C3（左升）、C2（左降）、C1（右升）、B1（右降）之间是否有24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r10",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r11b",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P021",
+              "sourceTimestampS": 135.2
+            },
+            {
+              "id": "r10",
+              "type": "result",
+              "text": "说明比例阀模块工作正常；检查CIO比例阀模块B7公用0V线到后接线腔线路，以及后腔到分线盒内的连接是否存在断路或虚接。",
+              "options": [],
+              "sourcePage": "P022",
+              "sourceTimestampS": 141.2
+            },
+            {
+              "id": "r11b",
+              "type": "result",
+              "text": "检查CIO比例阀模块与其他模块并联的CAN通讯线是否短路、断路或虚接；线路无问题请更换CIO比例阀控制模块。",
+              "options": [],
+              "sourcePage": "P023",
+              "sourceTimestampS": 144.5
+            },
+            {
+              "id": "r11",
+              "type": "result",
+              "text": "检查CIO模块供电端口到电源模块之间线路是否短路、断路或虚接；检查电源模块供电电源线路正常，确保电源模块输入输出空开闭合；甩开输出侧，有输入无输出请更换电源模块。",
+              "options": [],
+              "sourcePage": "P024",
+              "sourceTimestampS": 148.6
+            },
+            {
+              "id": "r12",
+              "type": "result",
+              "text": "检查阀组是否存在异常，更换阀组。",
+              "options": [],
+              "sourcePage": "P025",
+              "sourceTimestampS": 155.4
+            },
+            {
+              "id": "q16",
+              "type": "question",
+              "text": "操作手动比例阀，查看高压液压表是否有18MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r13",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或过低",
+                  "next": "r14",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P026",
+              "sourceTimestampS": 166.0
+            },
+            {
+              "id": "r13",
+              "type": "result",
+              "text": "高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。",
+              "options": [],
+              "sourcePage": "P027",
+              "sourceTimestampS": 172.4
+            },
+            {
+              "id": "r14",
+              "type": "result",
+              "text": "检查泵箱油量、油管是否挤压变形；检查齿轮泵与泵电机连接轴花键是否脱落；检查并更换阀组；检查以上问题并恢复高压，确保手动升降摇臂正常。",
+              "options": [],
+              "sourcePage": "P028",
+              "sourceTimestampS": 175.1
+            }
+          ],
+          "sourceVideo": "单泵比例阀大煤机.mp4"
+        },
+        {
+          "id": "double_prop",
+          "index": 5,
+          "name": "双泵比例阀煤机",
+          "startNode": "q01",
+          "nodes": [
+            {
+              "id": "q01",
+              "type": "question",
+              "text": "泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？",
+              "options": [
+                {
+                  "label": "单侧",
+                  "next": "q02",
+                  "status": "observed"
+                },
+                {
+                  "label": "双侧",
+                  "next": "q14",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P000",
+              "sourceTimestampS": 4.0
+            },
+            {
+              "id": "q02",
+              "type": "question",
+              "text": "用端头站是否能升降不动作的摇臂？无端头站选不能。",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "r01",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q03",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P001",
+              "sourceTimestampS": 10.4
+            },
+            {
+              "id": "r01",
+              "type": "result",
+              "text": "端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。",
+              "options": [],
+              "sourcePage": "P002",
+              "sourceTimestampS": 13.8
+            },
+            {
+              "id": "q03",
+              "type": "question",
+              "text": "通过手动比例阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q04",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q12",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P003",
+              "sourceTimestampS": 18.2
+            },
+            {
+              "id": "q04",
+              "type": "question",
+              "text": "手动比例阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q05",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或很低",
+                  "next": "r10",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P004",
+              "sourceTimestampS": 23.5
+            },
+            {
+              "id": "q05",
+              "type": "question",
+              "text": "根据图纸查看，比例阀是通过主控模块控制还是比例阀模块控制？",
+              "options": [
+                {
+                  "label": "比例阀",
+                  "next": "q06",
+                  "status": "observed"
+                },
+                {
+                  "label": "BOC",
+                  "next": "q09",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P005",
+              "sourceTimestampS": 29.0
+            },
+            {
+              "id": "q06",
+              "type": "question",
+              "text": "是CIO比例阀控制模块还是PVD比例阀控制模块？",
+              "options": [
+                {
+                  "label": "CIO",
+                  "next": "q07",
+                  "status": "observed"
+                },
+                {
+                  "label": "PVD",
+                  "next": "q08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P006",
+              "sourceTimestampS": 34.5
+            },
+            {
+              "id": "q07",
+              "type": "question",
+              "text": "打开CIO模块所在腔体，升降不动作的摇臂，测量公共端B7与所对应C3（左升）、C2（左降）、C1（右升）、B1（右降）之间是否有24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r03",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P007",
+              "sourceTimestampS": 40.2
+            },
+            {
+              "id": "r02",
+              "type": "result",
+              "text": "检查CIO比例阀控制模块到后腔线路是否完好；检查后腔到电磁阀线路是否完好；以上线路完好请更换不动作的电磁阀。",
+              "options": [],
+              "sourcePage": "P008",
+              "sourceTimestampS": 44.4
+            },
+            {
+              "id": "r03",
+              "type": "result",
+              "text": "更换CIO比例阀控制模块。",
+              "options": [],
+              "sourcePage": "P009",
+              "sourceTimestampS": 46.1
+            },
+            {
+              "id": "q08",
+              "type": "question",
+              "text": "打开PVD模块所在腔体，操作不升降的摇臂，测量PVD模块JX1的6号线与升降对应JX2的4、5、6、7号线点位之间是否量到24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r04",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": null,
+                  "status": "unresolved_not_recorded",
+                  "note": "该选项的后续步骤资料未覆盖，不得自行推断。"
+                }
+              ],
+              "sourcePage": "P010",
+              "sourceTimestampS": 52.1
+            },
+            {
+              "id": "r04",
+              "type": "result",
+              "text": "检查PVD比例阀模块JX2上4、5、6、7号线到后腔接线排线路是否完好；检查后腔接线排到不升降电磁阀线路是否完好；线路正常请更换不升降的电磁阀。",
+              "options": [],
+              "sourcePage": "P011",
+              "sourceTimestampS": 55.7
+            },
+            {
+              "id": "q09",
+              "type": "question",
+              "text": "打开计算机前腔，根据图纸测量BOC主控模块JX2的8号和9号线上是否有DC24V电源？（个别煤机为DC12V）",
+              "options": [
+                {
+                  "label": "有",
+                  "next": "q10",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r07",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P012",
+              "sourceTimestampS": 64.8
+            },
+            {
+              "id": "q10",
+              "type": "question",
+              "text": "打开计算机前腔，操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应升降4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。",
+              "options": [
+                {
+                  "label": "导通",
+                  "next": "r05",
+                  "status": "observed"
+                },
+                {
+                  "label": "不通",
+                  "next": "r06",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P013",
+              "sourceTimestampS": 70.0
+            },
+            {
+              "id": "r05",
+              "type": "result",
+              "text": "检查主BOC控制模块控制电磁阀到后腔接线排线路是否完好；检查后腔接线排到电磁阀线路是否完好；线路完好请更换电磁阀。",
+              "options": [],
+              "sourcePage": "P014",
+              "sourceTimestampS": 73.4
+            },
+            {
+              "id": "r06",
+              "type": "result",
+              "text": "主控模块损坏，请更换BOC主控模块。",
+              "options": [],
+              "sourcePage": "P015",
+              "sourceTimestampS": 75.8
+            },
+            {
+              "id": "r07",
+              "type": "result",
+              "text": "检查输入侧和输出侧空开是否正常，确保输入电源线路完好；如空开频繁跳开或保险频繁烧坏，线路上存在短路；确保电磁阀电源模块输入正常后，请更换电磁阀电源模块。",
+              "options": [],
+              "sourcePage": "P016",
+              "sourceTimestampS": 79.6
+            },
+            {
+              "id": "r10",
+              "type": "result",
+              "text": "确保低压压力，检查阀组是否存在异常，更换阀组。",
+              "options": [],
+              "sourcePage": "P017",
+              "sourceTimestampS": 86.2
+            },
+            {
+              "id": "q12",
+              "type": "question",
+              "text": "确保油量，操作手动比例阀，查看高压液压表是否有18MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r08",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或很低",
+                  "next": "r09",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P018",
+              "sourceTimestampS": 93.6
+            },
+            {
+              "id": "r08",
+              "type": "result",
+              "text": "高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。",
+              "options": [],
+              "sourcePage": "P019",
+              "sourceTimestampS": 98.7
+            },
+            {
+              "id": "r09",
+              "type": "result",
+              "text": "检查泵箱油量、油管是否挤压变形；检查齿轮泵与泵电机连接轴花键是否脱落；检查并更换阀组；阀组可能存在故障。",
+              "options": [],
+              "sourcePage": "P020",
+              "sourceTimestampS": 100.8
+            },
+            {
+              "id": "q14",
+              "type": "question",
+              "text": "两边都不升降，通过手动比例阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q15",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "r17",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P021",
+              "sourceTimestampS": 108.2
+            },
+            {
+              "id": "q15",
+              "type": "question",
+              "text": "根据图纸查看，比例阀是通过BOC主控模块控制还是比例阀模块控制？",
+              "options": [
+                {
+                  "label": "比例阀",
+                  "next": "q16",
+                  "status": "observed"
+                },
+                {
+                  "label": "BOC",
+                  "next": "q09_double",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P022",
+              "sourceTimestampS": 114.3
+            },
+            {
+              "id": "q16",
+              "type": "question",
+              "text": "是CIO比例阀控制模块还是PVD比例阀控制模块？",
+              "options": [
+                {
+                  "label": "CIO",
+                  "next": "q17",
+                  "status": "observed"
+                },
+                {
+                  "label": "PVD",
+                  "next": "q19",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P006",
+              "sourceTimestampS": 34.5
+            },
+            {
+              "id": "q17",
+              "type": "question",
+              "text": "打开CIO模块所在腔体，测量CIO模块的B5、B8、A1接线点与B7接线是否有24V供电？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "q18",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r14",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P028",
+              "sourceTimestampS": 148.9
+            },
+            {
+              "id": "q18",
+              "type": "question",
+              "text": "操作遥控器升降，测量公共端B7与C3（左升）、C2（左降）、C1（右升）、B1（右降）之间是否有24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r11",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r14",
+                  "status": "inferred_from_recorded_backtracking"
+                }
+              ],
+              "sourcePage": "P029",
+              "sourceTimestampS": 153.7
+            },
+            {
+              "id": "r11",
+              "type": "result",
+              "text": "说明比例阀模块工作正常；检查CIO比例阀模块B7公用0V线到后接线腔线路，以及后腔到分线盒内的连接是否存在断路或虚接。",
+              "options": [],
+              "sourcePage": "P030",
+              "sourceTimestampS": 157.4
+            },
+            {
+              "id": "r14",
+              "type": "result",
+              "text": "检查CIO模块供电端口到电源模块之间线路是否短路、断路或虚接；检查电源模块供电电源线路正常，确保电源模块输入输出空开闭合；甩开输出侧，有输入无输出请更换电源模块。",
+              "options": [],
+              "sourcePage": "P031",
+              "sourceTimestampS": 162.4
+            },
+            {
+              "id": "q19",
+              "type": "question",
+              "text": "打开PVD模块所在腔体，测量PVD模块JX1上的1和2号线是否有24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "q20",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r16",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P023",
+              "sourceTimestampS": 125.4
+            },
+            {
+              "id": "q20",
+              "type": "question",
+              "text": "操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r12",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r13",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P024",
+              "sourceTimestampS": 130.4
+            },
+            {
+              "id": "r12",
+              "type": "result",
+              "text": "说明比例阀模块工作正常；检查PVD比例阀模块JX1的6号公用0V线到后接线腔连接是否存在断路或虚接。",
+              "options": [],
+              "sourcePage": "P025",
+              "sourceTimestampS": 133.9
+            },
+            {
+              "id": "r13",
+              "type": "result",
+              "text": "检查比例阀与SGC通讯模块之间485通讯线路是否完好；确保SGC模块与BOC主控模块之间通讯正常；如线路和通讯均正常，请更换PVD比例控制模块。",
+              "options": [],
+              "sourcePage": "P026",
+              "sourceTimestampS": 137.2
+            },
+            {
+              "id": "r16",
+              "type": "result",
+              "text": "检查PVD比例阀模块JX1的1和2号线到电源模块线路是否完好；检查电源模块供电电源线路正常，确保电源模块输入输出空开闭合；甩开输出侧，有输入无输出请更换电源模块。",
+              "options": [],
+              "sourcePage": "P027",
+              "sourceTimestampS": 142.0
+            },
+            {
+              "id": "r15",
+              "type": "result",
+              "text": "检查BOC主控模块到后接线腔线路是否断路、虚接；检查后接线腔到电磁阀线路，线路正常请更换电磁阀或阀组。",
+              "options": [],
+              "sourcePage": "P032",
+              "sourceTimestampS": 181.0
+            },
+            {
+              "id": "r17",
+              "type": "result",
+              "text": "请注意两个泵电机是否反转，检查组合开关隔离手把方向是否打反；两边阀组同时出问题概率很小，检查高压压力，恢复手动升降操作后再排查电气问题。",
+              "options": [],
+              "sourcePage": "P033",
+              "sourceTimestampS": 195.5
+            },
+            {
+              "id": "q10_double",
+              "type": "question",
+              "text": "打开计算机前腔，操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应升降4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。",
+              "options": [
+                {
+                  "label": "导通",
+                  "next": "r15",
+                  "status": "observed"
+                },
+                {
+                  "label": "不通",
+                  "next": "r06",
+                  "status": "observed"
+                }
+              ],
+              "note": "双侧路径共用同一条目，已按上下文拆分。",
+              "sourcePage": "P013",
+              "sourceTimestampS": 70.0
+            },
+            {
+              "id": "q09_double",
+              "type": "question",
+              "text": "打开计算机前腔，根据图纸测量BOC主控模块JX2的8号和9号线上是否有DC24V电源？（个别煤机为DC12V）",
+              "options": [
+                {
+                  "label": "有",
+                  "next": "q10_double",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r07",
+                  "status": "observed"
+                }
+              ],
+              "note": "双侧路径共用同一条目，已按上下文拆分。",
+              "sourcePage": "P012",
+              "sourceTimestampS": 64.8
+            }
+          ],
+          "sourceVideo": "双泵比例阀煤机.mp4"
+        },
+        {
+          "id": "double_normal",
+          "index": 6,
+          "name": "双泵普通阀煤机",
+          "startNode": "q01",
+          "nodes": [
+            {
+              "id": "q01",
+              "type": "question",
+              "text": "泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？",
+              "options": [
+                {
+                  "label": "单侧",
+                  "next": "q02",
+                  "status": "observed"
+                },
+                {
+                  "label": "双侧",
+                  "next": "q10",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P000",
+              "sourceTimestampS": 8.9
+            },
+            {
+              "id": "q02",
+              "type": "question",
+              "text": "单边摇臂不能升降，用端头站是否能升降不动作的摇臂？无端头站选不能。",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "r01",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q03",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P001",
+              "sourceTimestampS": 20.6
+            },
+            {
+              "id": "r01",
+              "type": "result",
+              "text": "端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。",
+              "options": [],
+              "sourcePage": "P002",
+              "sourceTimestampS": 23.9
+            },
+            {
+              "id": "q03",
+              "type": "question",
+              "text": "通过手动换向阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q04",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "q08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P003",
+              "sourceTimestampS": 28.3
+            },
+            {
+              "id": "q04",
+              "type": "question",
+              "text": "手动阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q05",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或很低",
+                  "next": "q07",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P004",
+              "sourceTimestampS": 35.3
+            },
+            {
+              "id": "q05",
+              "type": "question",
+              "text": "打开分线盒，操作不升降的摇臂，测量对应故障摇臂接线排端子是否能量到DC24V？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "q06",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P005",
+              "sourceTimestampS": 43.2
+            },
+            {
+              "id": "r02",
+              "type": "result",
+              "text": "检查分线盒接线排到电磁阀线路是否完好；线路完好请更换电磁阀。",
+              "options": [],
+              "sourcePage": "P006",
+              "sourceTimestampS": 48.1
+            },
+            {
+              "id": "q06",
+              "type": "question",
+              "text": "打开计算机腔，操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应输出4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。",
+              "options": [
+                {
+                  "label": "导通",
+                  "next": "r03",
+                  "status": "observed"
+                },
+                {
+                  "label": "不通",
+                  "next": "r04",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P007",
+              "sourceTimestampS": 52.3
+            },
+            {
+              "id": "r03",
+              "type": "result",
+              "text": "检查BOC主控模块控制电磁阀到后腔接线排线路是否完好；检查后腔接线排到分线盒线路是否完好；线路完好请更换电磁阀。",
+              "options": [],
+              "sourcePage": "P008",
+              "sourceTimestampS": 56.6
+            },
+            {
+              "id": "r04",
+              "type": "result",
+              "text": "请更换BOC主控模块。",
+              "options": [],
+              "sourcePage": "P009",
+              "sourceTimestampS": 58.5
+            },
+            {
+              "id": "q07",
+              "type": "question",
+              "text": "确保泵箱液位足量，清洗或者更换低压溢流阀后，低压是否恢复为2.5MPa？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q07b",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或很低",
+                  "next": "r05",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P010",
+              "sourceTimestampS": 71.0
+            },
+            {
+              "id": "q07b",
+              "type": "question",
+              "text": "操作遥控器升降仍无法升降，请排查电气故障。打开分线盒，操作不能升降的摇臂，测量对应接线排是否能量到DC24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "q06",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P011",
+              "sourceTimestampS": 77.8
+            },
+            {
+              "id": "r05",
+              "type": "result",
+              "text": "双联泵请检查小齿轮泵吸油管路和出油管路是否堵塞，检查小泵是否异常；排查阀组故障后再试。",
+              "options": [],
+              "sourcePage": "P012",
+              "sourceTimestampS": 106.3
+            },
+            {
+              "id": "q08",
+              "type": "question",
+              "text": "确保油量，操作手动阀，查看高压液压表是否有18MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r06",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或很低",
+                  "next": "q09",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P013",
+              "sourceTimestampS": 116.0
+            },
+            {
+              "id": "r06",
+              "type": "result",
+              "text": "检查油管与油缸连接是否良好、确保无漏油；检查或更换齿轮泵；检查更换平衡阀或液力锁堵塞。",
+              "options": [],
+              "sourcePage": "P014",
+              "sourceTimestampS": 120.2
+            },
+            {
+              "id": "q09",
+              "type": "question",
+              "text": "调整或者更换高压溢流阀，将压力恢复至18MPa；操作手动阀，摇臂是否动作？",
+              "options": [
+                {
+                  "label": "动作",
+                  "next": "q09b",
+                  "status": "observed"
+                },
+                {
+                  "label": "不动",
+                  "next": null,
+                  "status": "unresolved_not_recorded",
+                  "note": "该选项的后续步骤资料未覆盖，不得自行推断。"
+                }
+              ],
+              "sourcePage": "P015",
+              "sourceTimestampS": 124.0
+            },
+            {
+              "id": "q09b",
+              "type": "question",
+              "text": "如果手动可以动作，但是通过遥控器操作仍不能升降，请排查电气问题。打开分线盒，操作不能升降的摇臂，测量对应接线排是否能量到DC24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r02",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "q06",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P016",
+              "sourceTimestampS": 129.2
+            },
+            {
+              "id": "q10",
+              "type": "question",
+              "text": "两边都不升降，通过手动阀操作是否能升降不动作的摇臂？",
+              "options": [
+                {
+                  "label": "可以",
+                  "next": "q11",
+                  "status": "observed"
+                },
+                {
+                  "label": "不能",
+                  "next": "r11",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P017",
+              "sourceTimestampS": 156.2
+            },
+            {
+              "id": "q11",
+              "type": "question",
+              "text": "手动阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q12",
+                  "status": "observed"
+                },
+                {
+                  "label": "无或很低",
+                  "next": "r10",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P004",
+              "sourceTimestampS": 35.3
+            },
+            {
+              "id": "q12",
+              "type": "question",
+              "text": "打开计算机前腔，确认电源保护空开处在合闸状态，测量整流桥输出接线排是否可以量到DC24V？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "q13",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "q14",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P018",
+              "sourceTimestampS": 172.1
+            },
+            {
+              "id": "q13",
+              "type": "question",
+              "text": "操作遥控器升降，测量BOC主控模块JX2接线排公共点9号与对应升降4、5、6、7号线之间节点是否有DC24V？",
+              "options": [
+                {
+                  "label": "有24V",
+                  "next": "r07",
+                  "status": "observed"
+                },
+                {
+                  "label": "无",
+                  "next": "r08",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P019",
+              "sourceTimestampS": 179.4
+            },
+            {
+              "id": "r07",
+              "type": "result",
+              "text": "检查整流桥输出侧接线排0V到后接线腔线路；后接线腔到分线盒内线路是否断路和虚接。",
+              "options": [],
+              "sourcePage": "P020",
+              "sourceTimestampS": 183.7
+            },
+            {
+              "id": "r08",
+              "type": "result",
+              "text": "检查整流桥输出侧0V到JX2的9号线是否断线；检查整流桥输出侧24V到JX2的8号线是否完好；以上线路正常且遥控器操作升降时无继电器响声，请更换BOC主控模块。",
+              "options": [],
+              "sourcePage": "P021",
+              "sourceTimestampS": 185.6
+            },
+            {
+              "id": "q14",
+              "type": "question",
+              "text": "测量整流桥BR输入AC26V（部分机组为AC28V）输入是否正常？",
+              "options": [
+                {
+                  "label": "正常",
+                  "next": "r09",
+                  "status": "observed"
+                },
+                {
+                  "label": "没有",
+                  "next": "r09b",
+                  "status": "observed"
+                }
+              ],
+              "sourcePage": "P022",
+              "sourceTimestampS": 191.9
+            },
+            {
+              "id": "r09",
+              "type": "result",
+              "text": "检查电源到整流桥线路完好后，更换整流桥BR。",
+              "options": [],
+              "sourcePage": "P023",
+              "sourceTimestampS": 195.2
+            },
+            {
+              "id": "r09b",
+              "type": "result",
+              "text": "检查整流桥输入侧空开或保险是否断开；检查输入侧线路是否正常；检查控制变压器输出，无输出请更换控制变压器。",
+              "options": [],
+              "sourcePage": "P024",
+              "sourceTimestampS": 196.8
+            },
+            {
+              "id": "r10",
+              "type": "result",
+              "text": "检查液压油量，调节、清洗或更换低压溢流阀，将压力恢复至2.5MPa；用遥控器操作摇臂仍不能升降时，请排查电气问题。",
+              "options": [],
+              "sourcePage": "P025",
+              "sourceTimestampS": 201.0
+            },
+            {
+              "id": "r11",
+              "type": "result",
+              "text": "两边液压系统同时出问题的概率很小。请注意两个泵电机是否反转，检查组合开关隔离手把方向是否打反；确保手动可以升降摇臂后再排查电气问题。",
+              "options": [],
+              "sourcePage": "P026",
+              "sourceTimestampS": 204.6
+            }
+          ],
+          "sourceVideo": "双泵普通阀电机.mp4"
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import type { SettingsSnapshot } from "@shearer/contracts";
+import { ConnectionStatusSchema, type SettingsSnapshot } from "@shearer/contracts";
 import { type DatabaseSync } from "node:sqlite";
 import { createSettingsSnapshot } from "../mock";
 import { initializeSqlite } from "./sqlite";
@@ -93,10 +93,22 @@ export const readSettingsFromSqlite = (
 
   const snapshot = createSettingsSnapshot();
   const rowMap = new Map(rows.map((row) => [row.config_key, row.config_value]));
+  const storedConnection = ConnectionStatusSchema.partial().safeParse(
+    readSystemConfigValue(rowMap, SETTINGS_KEYS.connection, {}),
+  );
 
   return {
     connected: readSystemConfigValue(rowMap, SETTINGS_KEYS.connected, snapshot.connected),
-    connection: readSystemConfigValue(rowMap, SETTINGS_KEYS.connection, snapshot.connection),
+    connection: {
+      ...snapshot.connection,
+      // 旧库只有 HPC/MOC/BOC；新增模块未记录时显示无数据，并保留已有状态。
+      axi: "offline",
+      wcr: "offline",
+      sgc: "offline",
+      bp1: "offline",
+      bp2: "offline",
+      ...(storedConnection.success ? storedConnection.data : {}),
+    },
     workFaceFields: readSystemConfigValue(
       rowMap,
       SETTINGS_KEYS.workFaceFields,

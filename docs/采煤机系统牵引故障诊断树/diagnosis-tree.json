@@ -1,0 +1,1080 @@
+{
+  "schema_version": "1.0",
+  "system": {
+    "id": "shearer-system-traction-fault",
+    "title": "采煤机系统牵引故障",
+    "source_video": "系统牵引故障.mp4",
+    "video_duration_sec": 427.333,
+    "start_node": "q01",
+    "question_node_count": 27,
+    "result_node_count": 26,
+    "introduction": "采煤机送电等待系统就绪后，依次启动油泵电机、牵启、设定速度和设定方向。牵引模块向主变频器（左）发送速度和方向指令，两个变频器通过主从控制方式同步输出一定的转矩。同时，变频器通过 RS485 通讯线向牵引模块发出松闸指令，牵引模块 HPCJX2.5 和 HPCJX2.9 继电器触点闭合，制动电磁阀得电并打开制动器油路。2.5 MPa 油压在推开制动器的同时触发压力继电器动作。压力继电器动作后，常开触点 1 和 3 闭合，本安 +12V 通过压力继电器 1、3 之间的触点到牵引模块 HPCJX3.4，HPCJX3.3 到本安 0V 形成回路，屏幕上显示的“未松闸”变为“已松闸”。牵引模块 HPCJX2.10 和 HPCJX2.11 继电器常开触点闭合，主变频器内部 +24V 通过 HPCJX2.10、HPCJX2.11 之间的触点到主变频器松闸确认端口（默认 DI5），变频器收到松闸确认信号后开始正常运行。变频器从发出松闸指令到收到松闸确认信号的允许时间为 2 秒；超过 2 秒仍未收到确认，主变频器停止运行，并通过 RS485 发出关闭松闸指令端口命令，同时报故障（ACS800：FF74；ACS880：71A3）。松闸确认信号只能在变频器发出松闸指令后的 2 秒内反馈；主变频器未运行、处于待机状态时收到松闸确认信号，也会报故障（ACS800：FF74；ACS880：71A2）。",
+    "safety_notice": "本资料用于复刻原小程序的诊断逻辑，不替代矿方安全规程、设备说明书或专业人员判断。涉及 24V、220V、380V/660V 测量、绝缘测试、短接触点、拆装插头等操作时，必须由具备资质的人员执行停电、验电、放电、闭锁挂牌等措施。原页面中的“临时短接”内容仅按录屏原文保留，不应被 AI 或小程序视为可直接执行的操作授权。"
+  },
+  "navigation": {
+    "previous_button_label": "上一步",
+    "previous_behavior": "history_stack",
+    "note": "“上一步”是统一导航操作，不属于诊断业务选项。"
+  },
+  "nodes": {
+    "q01": {
+      "type": "question",
+      "text": "采煤机上电后等待显示器进入正常监视画面，观察屏幕上HPC状态是否为绿色？",
+      "source": {
+        "page": "P001",
+        "timestamp_sec": 0.0,
+        "other_observed_timestamps_sec": [
+          380.5,
+          426.5
+        ],
+        "frame": "source-frames/q01.jpg",
+        "source_cluster": "C000",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "绿色",
+          "next": "q02",
+          "status": "observed"
+        },
+        {
+          "label": "红色",
+          "next": "q25",
+          "status": "observed"
+        }
+      ]
+    },
+    "q02": {
+      "type": "question",
+      "text": "HPC模块状态绿色代表HPC工作正常，和控制系统之间通讯正常。如果遥控器和端头站不能正常操作采煤机，请先使用机身按钮配合处理故障。待机身按钮可以正常操作煤机后再另行处理遥控器或端头站故障。请选择牵引送电方式：1.延时自动送电；2.和油泵电机一同启动。",
+      "source": {
+        "page": "P002",
+        "timestamp_sec": 3.0,
+        "other_observed_timestamps_sec": [
+          234.0
+        ],
+        "frame": "source-frames/q02.jpg",
+        "source_cluster": "C001",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "1",
+          "next": "q03",
+          "status": "observed"
+        },
+        {
+          "label": "2",
+          "next": "q23",
+          "status": "observed"
+        }
+      ]
+    },
+    "q03": {
+      "type": "question",
+      "text": "延时自动送电方式：是对变频器前级电压以及牵引电机绝缘进行检测，全部符合要求后自动控制牵引接触器吸合完成牵引送电。经过一段时间后牵引接触器是否自动吸合？可以观察变频器操作键盘是否点亮并正常显示。",
+      "source": {
+        "page": "P003",
+        "timestamp_sec": 8.5,
+        "other_observed_timestamps_sec": [
+          225.5
+        ],
+        "frame": "source-frames/q03.jpg",
+        "source_cluster": "C002",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "吸合",
+          "next": "q04",
+          "status": "observed"
+        },
+        {
+          "label": "不吸合",
+          "next": "q15",
+          "status": "observed"
+        }
+      ]
+    },
+    "q04": {
+      "type": "question",
+      "text": "牵引接触器吸合后，请观察显示屏上牵电状态是否为绿色（小屏幕提示牵引系统未送电，请查明原因）？",
+      "source": {
+        "page": "P004",
+        "timestamp_sec": 14.0,
+        "other_observed_timestamps_sec": [
+          130.0
+        ],
+        "frame": "source-frames/q04.jpg",
+        "source_cluster": "C003",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "红色（有）",
+          "next": "r01",
+          "status": "observed"
+        },
+        {
+          "label": "绿色（无）",
+          "next": "q05",
+          "status": "observed"
+        }
+      ]
+    },
+    "r01": {
+      "type": "result",
+      "text": "牵电状态红色（小屏幕提示牵引系统未送电，请查明原因），此故障为HPC模块未收到牵引接触器吸合的反馈信号。电路结构：电源模块F24V→牵引接触器辅助触点→牵引接触器辅助触点→HPC-JX3.10。请按这个回路找到断开点处理即可。临时处理也可以短接HPC-JX3.10和HPCJX2.1。",
+      "source": {
+        "page": "P005",
+        "timestamp_sec": 20.0,
+        "other_observed_timestamps_sec": [
+          248.5
+        ],
+        "frame": "source-frames/r01.jpg",
+        "source_cluster": "C004",
+        "confidence": "observed"
+      }
+    },
+    "q05": {
+      "type": "question",
+      "text": "牵电状态正常。屏幕显示“牵引操作被泵电机闭锁”的采煤机需先启动油泵才可以操作牵引。按下牵启按钮采煤机是否已牵启？",
+      "source": {
+        "page": "P006",
+        "timestamp_sec": 23.5,
+        "other_observed_timestamps_sec": [
+          97.0,
+          129.0,
+          252.0,
+          322.5,
+          363.5
+        ],
+        "frame": "source-frames/q05.jpg",
+        "source_cluster": "C005",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "已牵启",
+          "next": "q06",
+          "status": "observed"
+        },
+        {
+          "label": "没反应",
+          "next": "q12",
+          "status": "observed"
+        }
+      ]
+    },
+    "q06": {
+      "type": "question",
+      "text": "按下牵启按钮采煤机已牵启，按系统提示按下加速按钮，是否可以正常加速？",
+      "source": {
+        "page": "P007",
+        "timestamp_sec": 30.5,
+        "other_observed_timestamps_sec": [
+          81.5,
+          258.0,
+          304.5
+        ],
+        "frame": "source-frames/q06.jpg",
+        "source_cluster": "C006",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "可以",
+          "next": "q07",
+          "status": "observed"
+        },
+        {
+          "label": "不能",
+          "next": "q11",
+          "status": "observed"
+        }
+      ]
+    },
+    "q07": {
+      "type": "question",
+      "text": "按下加速按钮系统可以正常加速，按系统提示按下方向按钮，采煤机是否开始持续牵引？",
+      "source": {
+        "page": "P008",
+        "timestamp_sec": 36.5,
+        "other_observed_timestamps_sec": [
+          79.0,
+          263.5,
+          303.5
+        ],
+        "frame": "source-frames/q07.jpg",
+        "source_cluster": "C007",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "已牵引",
+          "next": "r02",
+          "status": "observed"
+        },
+        {
+          "label": "不牵引",
+          "next": "q08",
+          "status": "observed"
+        }
+      ]
+    },
+    "r02": {
+      "type": "result",
+      "text": "采煤机在按下方向按钮后开始持续牵引，采煤机牵引系统工作正常。",
+      "source": {
+        "page": "P009",
+        "timestamp_sec": 41.5,
+        "other_observed_timestamps_sec": [
+          43.0,
+          268.5
+        ],
+        "frame": "source-frames/r02.jpg",
+        "source_cluster": "C008",
+        "confidence": "observed"
+      }
+    },
+    "q08": {
+      "type": "question",
+      "text": "采煤机在按下方向按钮后，采煤机不牵引有两种情况：1.显示屏仍然显示“请设定牵引方向”；2.显示屏显示牵引方向和设定速度，但采煤机并未实际牵引。",
+      "source": {
+        "page": "P010",
+        "timestamp_sec": 45.0,
+        "other_observed_timestamps_sec": [
+          51.5,
+          76.5,
+          271.5
+        ],
+        "frame": "source-frames/q08.jpg",
+        "source_cluster": "C010",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "1",
+          "next": "r03",
+          "status": "observed"
+        },
+        {
+          "label": "2",
+          "next": "q09",
+          "status": "observed"
+        }
+      ]
+    },
+    "r03": {
+      "type": "result",
+      "text": "在按下方向按钮后，显示屏仍然显示“请设定牵引方向”，原因是方向指令没有进入系统。请按电源模块F+24V→向左（向右）按钮1→向左（向右）按钮2→BOCJX3.3（BOCJX3.4）的顺序检查线路，找到断点处理即可。",
+      "source": {
+        "page": "P011",
+        "timestamp_sec": 49.5,
+        "other_observed_timestamps_sec": [
+          275.5
+        ],
+        "frame": "source-frames/r03.jpg",
+        "source_cluster": "C011",
+        "confidence": "observed"
+      }
+    },
+    "q09": {
+      "type": "question",
+      "text": "按下方向按钮后，显示屏显示牵引方向和设定速度，但采煤机没有实际牵引，请到变频器观察窗口观察变频器是否报故障？",
+      "source": {
+        "page": "P012",
+        "timestamp_sec": 53.0,
+        "other_observed_timestamps_sec": [
+          278.5,
+          288.0,
+          301.0
+        ],
+        "frame": "source-frames/q09.jpg",
+        "source_cluster": "C012",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "有故障",
+          "next": "r04",
+          "status": "observed"
+        },
+        {
+          "label": "无故障",
+          "next": "q10",
+          "status": "observed"
+        }
+      ]
+    },
+    "r04": {
+      "type": "result",
+      "text": "牵引操作结束后采煤机不牵引，变频器报故障。可以根据变频器报的故障代码到本小程序变频器部分查看原因及处理方法，部分常见故障可以在牵引故障中查看处理方法。",
+      "source": {
+        "page": "P013",
+        "timestamp_sec": 58.5,
+        "other_observed_timestamps_sec": [
+          284.5
+        ],
+        "frame": "source-frames/r04.jpg",
+        "source_cluster": "C013",
+        "confidence": "observed"
+      }
+    },
+    "q10": {
+      "type": "question",
+      "text": "牵引操作结束后采煤机不牵引，变频器没有报故障。请观察变频器控制状态：ACS800变频器操作键盘左上角是否有“L”字样；ACS880变频器左上角是否显示“本地”字样？",
+      "source": {
+        "page": "P014",
+        "timestamp_sec": 61.0,
+        "other_observed_timestamps_sec": [
+          289.0
+        ],
+        "frame": "source-frames/q10.jpg",
+        "source_cluster": "C014",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "显示",
+          "next": "r05",
+          "status": "observed"
+        },
+        {
+          "label": "没有",
+          "next": "r06",
+          "status": "observed"
+        }
+      ]
+    },
+    "r05": {
+      "type": "result",
+      "text": "ACS800变频器操作键盘左上角有“L”字样；ACS880变频器左上角显示“本地”字样，代表变频器操作权限在本地，即变频器的操作键盘。两种变频器都是按一下LOC键即可切换到远程控制，切换后再尝试牵引操作。",
+      "source": {
+        "page": "P015",
+        "timestamp_sec": 67.0,
+        "other_observed_timestamps_sec": [
+          294.5
+        ],
+        "frame": "source-frames/r05.jpg",
+        "source_cluster": "C015",
+        "confidence": "observed"
+      }
+    },
+    "r06": {
+      "type": "result",
+      "text": "ACS800变频器操作键盘左上角没有“L”字样；ACS880变频器左上角显示“远程”字样。可以按下LOC按键切换到本地模式，按下变频器操作键盘运行键，检查变频器是否存在其他问题。检查完切记再按一下LOC键将变频器切换到远程。",
+      "source": {
+        "page": "P016",
+        "timestamp_sec": 70.5,
+        "other_observed_timestamps_sec": [
+          298.0
+        ],
+        "frame": "source-frames/r06.jpg",
+        "source_cluster": "C016",
+        "confidence": "observed"
+      }
+    },
+    "q11": {
+      "type": "question",
+      "text": "按下加速按钮，采煤机设定速度没有变化。一般有两个原因：1.加速指令没有进入系统；2.有持续存在的减速指令进入系统。",
+      "source": {
+        "page": "P017",
+        "timestamp_sec": 83.0,
+        "other_observed_timestamps_sec": [
+          308.0
+        ],
+        "frame": "source-frames/q11.jpg",
+        "source_cluster": "C017",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "1",
+          "next": "r07",
+          "status": "observed"
+        },
+        {
+          "label": "2",
+          "next": "r08",
+          "status": "observed"
+        }
+      ]
+    },
+    "r07": {
+      "type": "result",
+      "text": "在按下加速按钮后，设定速度没有变化，其中一个原因是速度指令没有进入系统。请按电源模块F+24V→加速按钮1→加速按钮2→BOCJX3.5的顺序检查线路，找到断点处理即可。",
+      "source": {
+        "page": "P018",
+        "timestamp_sec": 88.5,
+        "other_observed_timestamps_sec": [
+          312.5
+        ],
+        "frame": "source-frames/r07.jpg",
+        "source_cluster": "C018",
+        "confidence": "observed"
+      }
+    },
+    "r08": {
+      "type": "result",
+      "text": "在按下加速按钮后，设定速度没有变化，其中一个原因是有持续的减速指令进入系统。减速指令可能来自远程、机身减速按钮、端头站减速按钮、遥控器减速按钮。请进入按键功能测试中查看减速指令来源，针对处理。",
+      "source": {
+        "page": "P019",
+        "timestamp_sec": 92.0,
+        "other_observed_timestamps_sec": [
+          316.5
+        ],
+        "frame": "source-frames/r08.jpg",
+        "source_cluster": "C019",
+        "confidence": "observed"
+      }
+    },
+    "q12": {
+      "type": "question",
+      "text": "按下牵启按钮没有反应，一般有两个原因：1.牵启信号没有进入BOC模块；2.有持续的牵停信号进入BOC模块。Windows屏可通过遥控器进入智能诊断→按键功能测试；其他屏幕可以按显示按钮进入电控箱操作状态界面；查看是否有持续的牵停信号存在？",
+      "source": {
+        "page": "P020",
+        "timestamp_sec": 99.0,
+        "other_observed_timestamps_sec": [
+          324.0
+        ],
+        "frame": "source-frames/q12.jpg",
+        "source_cluster": "C020",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "有",
+          "next": "r09",
+          "status": "observed"
+        },
+        {
+          "label": "无",
+          "next": "q13",
+          "status": "observed"
+        }
+      ]
+    },
+    "r09": {
+      "type": "result",
+      "text": "有持续的牵停信号存在，根据屏幕上显示的牵停信号来源针对处理。电控箱按钮有牵停指令，多数都是牵停按钮卡死；内部保护操作一般是检测到变频器有故障，系统发出的牵停信号。请检查变频器是否有故障，具体故障请参考本小程序变频器部分进一步处理。",
+      "source": {
+        "page": "P021",
+        "timestamp_sec": 104.5,
+        "other_observed_timestamps_sec": [
+          329.0
+        ],
+        "frame": "source-frames/r09.jpg",
+        "source_cluster": "C021",
+        "confidence": "observed"
+      }
+    },
+    "q13": {
+      "type": "question",
+      "text": "没有牵停信号进入系统，可以尝试在电控箱操作状态界面按下牵启按钮，查看屏幕上牵启是否变成绿色？",
+      "source": {
+        "page": "P022",
+        "timestamp_sec": 106.5,
+        "other_observed_timestamps_sec": [
+          332.5,
+          340.5,
+          360.0
+        ],
+        "frame": "source-frames/q13.jpg",
+        "source_cluster": "C022",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "绿色",
+          "next": "r10",
+          "status": "observed"
+        },
+        {
+          "label": "没变化",
+          "next": "q14",
+          "status": "observed"
+        }
+      ]
+    },
+    "r10": {
+      "type": "result",
+      "text": "按下牵启按钮，屏幕有变化仍然不能牵启，又没有牵停信号进入，请更换主控模块BOC。",
+      "source": {
+        "page": "P023",
+        "timestamp_sec": 115.0,
+        "other_observed_timestamps_sec": [
+          337.5
+        ],
+        "frame": "source-frames/r10.jpg",
+        "source_cluster": "C023",
+        "confidence": "observed"
+      }
+    },
+    "q14": {
+      "type": "question",
+      "text": "按下牵启按钮屏幕没有变化，说明按钮信号并没有进入系统。打开主控模块所在电控腔，按下牵启按钮，用万用表测量BOCJX3.1和BOCJX3.9之间是否有24V电压？",
+      "source": {
+        "page": "P024",
+        "timestamp_sec": 116.5,
+        "other_observed_timestamps_sec": [
+          345.5,
+          358.5
+        ],
+        "frame": "source-frames/q14.jpg",
+        "source_cluster": "C025",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "有24V",
+          "next": "r11",
+          "status": "observed"
+        },
+        {
+          "label": "没有",
+          "next": "r12",
+          "status": "observed"
+        }
+      ]
+    },
+    "r11": {
+      "type": "result",
+      "text": "在按下牵启按钮后可以测量到24V电压，说明指令已到BOC模块，可能的原因是BOCJX3.1内部已损坏。在确保BOCJX3插头没有问题的前提下请更换BOC模块。",
+      "source": {
+        "page": "P025",
+        "timestamp_sec": 123.0,
+        "other_observed_timestamps_sec": [
+          352.0
+        ],
+        "frame": "source-frames/r11.jpg",
+        "source_cluster": "C027",
+        "confidence": "observed"
+      }
+    },
+    "r12": {
+      "type": "result",
+      "text": "按下牵启按钮后，在BOCJX3.1和BOCJX3.9之间测不到24V电压，请按两个支路检查：1.电源模块F24V→牵启按钮1→牵启按钮2→BOCJX3.1；2.电源模块F0V→BOCJX3.9。在上面两条支路检查中找到断点处理即可。",
+      "source": {
+        "page": "P026",
+        "timestamp_sec": 124.0,
+        "other_observed_timestamps_sec": [
+          355.0
+        ],
+        "frame": "source-frames/r12.jpg",
+        "source_cluster": "C028",
+        "confidence": "observed"
+      }
+    },
+    "q15": {
+      "type": "question",
+      "text": "HPC状态为绿色，经过一段时间牵引接触器仍然不吸合。请观察屏幕是否有故障提示？",
+      "source": {
+        "page": "P027",
+        "timestamp_sec": 133.5,
+        "other_observed_timestamps_sec": [
+          181.0,
+          224.0
+        ],
+        "frame": "source-frames/q15.jpg",
+        "source_cluster": "C029",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "有故障",
+          "next": "q16",
+          "status": "observed"
+        },
+        {
+          "label": "无故障",
+          "next": "q19",
+          "status": "observed"
+        }
+      ]
+    },
+    "q16": {
+      "type": "question",
+      "text": "接触器不吸合，请观察显示屏具体的故障提示内容。Windows系统显示屏需使用遥控器进入左侧故障查询查看；其他显示屏可在屏幕直接查看（小字注意观察），或通过显示按钮进入故障查询查看。",
+      "source": {
+        "page": "P028",
+        "timestamp_sec": 140.0,
+        "other_observed_timestamps_sec": [
+          163.5,
+          179.0
+        ],
+        "frame": "source-frames/q16.jpg",
+        "source_cluster": "C030",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "电压异常",
+          "next": "q17",
+          "status": "observed"
+        },
+        {
+          "label": "漏电故障",
+          "next": "q18",
+          "status": "observed"
+        }
+      ]
+    },
+    "q17": {
+      "type": "question",
+      "text": "系统有电压异常提示，说明系统检测到电压过高或过低或严重的相间不平衡。请检查牵引接触器电源侧电压。对于380V（660V）变频器，欠电压阈值为320V（550V），过电压阈值为450V（750V）。",
+      "source": {
+        "page": "P029",
+        "timestamp_sec": 149.5,
+        "other_observed_timestamps_sec": [
+          157.5,
+          161.5
+        ],
+        "frame": "source-frames/q17.jpg",
+        "source_cluster": "C031",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "正常",
+          "next": "r13",
+          "status": "observed"
+        },
+        {
+          "label": "异常",
+          "next": "r14",
+          "status": "observed"
+        }
+      ]
+    },
+    "r13": {
+      "type": "result",
+      "text": "电网供电电压正常，这类故障一般都是由于电压互感器故障造成，可更换电压互感器。如果没有电压互感器，可以将电压互感器电源拆除。临时措施请尽快更换电压互感器。",
+      "source": {
+        "page": "P030",
+        "timestamp_sec": 157.0,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r13.jpg",
+        "source_cluster": "C032",
+        "confidence": "observed"
+      }
+    },
+    "r14": {
+      "type": "result",
+      "text": "系统有电压异常提示，说明供电电压过高或过低。请检查牵引接触器电源侧电压。对于380V（660V）变频器，欠电压阈值为320V（550V），过电压阈值为450V（750V）。请调整移动变电站输出电压至合适范围。",
+      "source": {
+        "page": "P031",
+        "timestamp_sec": 159.5,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r14.jpg",
+        "source_cluster": "C033",
+        "confidence": "observed"
+      }
+    },
+    "q18": {
+      "type": "question",
+      "text": "系统有漏电提示，请检查左右牵引电机及电缆的绝缘状况是否漏电？注意：摇绝缘时必须断开与变频器的连接，否则会损坏变频器！！",
+      "source": {
+        "page": "P032",
+        "timestamp_sec": 165.0,
+        "other_observed_timestamps_sec": [
+          172.5,
+          176.5
+        ],
+        "frame": "source-frames/q18.jpg",
+        "source_cluster": "C034",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "漏电",
+          "next": "r15",
+          "status": "observed"
+        },
+        {
+          "label": "绝缘正常",
+          "next": "r16",
+          "status": "observed"
+        }
+      ]
+    },
+    "r15": {
+      "type": "result",
+      "text": "寻找并处理漏电点。",
+      "source": {
+        "page": "P033",
+        "timestamp_sec": 171.0,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r15.jpg",
+        "source_cluster": "C035",
+        "confidence": "observed"
+      }
+    },
+    "r16": {
+      "type": "result",
+      "text": "采煤机系统检测到漏电，摇表检测牵引电机以及电缆绝缘良好。一般是漏电检测电路误动作，可能是牵引模块本身或漏电组件造成。可以将HPC-JX5插头拔掉，故障都可以排除。如果仍然显示漏电，就只能更换牵引模块。临时措施：请尽快更换牵引模块HPC或漏电组件。",
+      "source": {
+        "page": "P034",
+        "timestamp_sec": 173.5,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r16.jpg",
+        "source_cluster": "C037",
+        "confidence": "observed"
+      }
+    },
+    "q19": {
+      "type": "question",
+      "text": "采煤机系统无故障提示、接触器不吸合。可以打开HPC所在的电控腔，使用短接线将HPC-JX2.14和HPC-JX2.16短接，观察接触器是否吸合？（危险电压，注意安全）",
+      "source": {
+        "page": "P035",
+        "timestamp_sec": 182.0,
+        "other_observed_timestamps_sec": [
+          217.0,
+          222.5
+        ],
+        "frame": "source-frames/q19.jpg",
+        "source_cluster": "C038",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "不吸合",
+          "next": "q20",
+          "status": "observed"
+        },
+        {
+          "label": "吸合",
+          "next": "r21",
+          "status": "observed"
+        }
+      ]
+    },
+    "q20": {
+      "type": "question",
+      "text": "短接HPC-JX2.14和HPC-JX2.16仍然不吸合，请检查控制变压器输出220V（380V的取自牵引变压器）电压是否正常？",
+      "source": {
+        "page": "P036",
+        "timestamp_sec": 188.0,
+        "other_observed_timestamps_sec": [
+          214.5
+        ],
+        "frame": "source-frames/q20.jpg",
+        "source_cluster": "C039",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "正常",
+          "next": "q21",
+          "status": "observed"
+        },
+        {
+          "label": "没有",
+          "next": "q22",
+          "status": "observed"
+        }
+      ]
+    },
+    "q21": {
+      "type": "question",
+      "text": "控制变压器输出220V（380V的取自牵引变压器）电压正常，空开（保险管）也正常，请检查电源→接触器线圈→接触器线圈→HPC-JX2.16→HPC-JX2.14→电源。按这个顺序检查是否正常？",
+      "source": {
+        "page": "P037",
+        "timestamp_sec": 193.0,
+        "other_observed_timestamps_sec": [
+          199.0,
+          202.0
+        ],
+        "frame": "source-frames/q21.jpg",
+        "source_cluster": "C040",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "正常",
+          "next": "r17",
+          "status": "observed"
+        },
+        {
+          "label": "异常",
+          "next": "r18",
+          "status": "observed"
+        }
+      ]
+    },
+    "r17": {
+      "type": "result",
+      "text": "按以上顺序检查线路没有问题，可以确定牵引接触器吸合线圈已损坏，请更换接触器。如果没有接触器，也可以将接触器主触点短接、辅助触点短接恢复生产。临时措施请尽快更换接触器。",
+      "source": {
+        "page": "P038",
+        "timestamp_sec": 198.0,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r17.jpg",
+        "source_cluster": "C041",
+        "confidence": "observed"
+      }
+    },
+    "r18": {
+      "type": "result",
+      "text": "按以上顺序检查线路，找到断点处理即可。",
+      "source": {
+        "page": "P039",
+        "timestamp_sec": 200.0,
+        "other_observed_timestamps_sec": [
+          200.5
+        ],
+        "frame": "source-frames/r18.jpg",
+        "source_cluster": "C042",
+        "confidence": "observed"
+      }
+    },
+    "q22": {
+      "type": "question",
+      "text": "控制变压器输出220V（380V的取自牵引变压器）端口没有电压，请检查控制变压器输入侧380V电压是否正常？",
+      "source": {
+        "page": "P040",
+        "timestamp_sec": 204.0,
+        "other_observed_timestamps_sec": [
+          207.5
+        ],
+        "frame": "source-frames/q22.jpg",
+        "source_cluster": "C045",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "正常",
+          "next": "r19",
+          "status": "observed"
+        },
+        {
+          "label": "无",
+          "next": "r20",
+          "status": "observed"
+        }
+      ]
+    },
+    "r19": {
+      "type": "result",
+      "text": "控制变压器输入侧电压正常，输出侧没有电压，基本确定变压器已损坏，请更换变压器。",
+      "source": {
+        "page": "P041",
+        "timestamp_sec": 208.0,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r19.jpg",
+        "source_cluster": "C047",
+        "confidence": "observed"
+      }
+    },
+    "r20": {
+      "type": "result",
+      "text": "控制变压器输入侧没有电压，请检查输入侧保险（空开）是否跳闸断开。注意：空气开关推上去就跳闸或保险立即烧断时，请勿随意使用铜丝短接，请先处理短路故障。",
+      "source": {
+        "page": "P042",
+        "timestamp_sec": 211.0,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r20.jpg",
+        "source_cluster": "C048",
+        "confidence": "observed"
+      }
+    },
+    "r21": {
+      "type": "result",
+      "text": "短接HPC-JX2.14和HPC-JX2.16后接触器正常吸合，说明HPC内部继电器没有吸合或触点已损坏。注意：复位按钮卡死、触点接通的情况下也会造成接触器不吸合。请进入系统按键功能测试检查复位按钮状态。在确保HPC-JX2插头和复位按钮没有问题的情况下，请直接更换HPC。",
+      "source": {
+        "page": "P043",
+        "timestamp_sec": 220.5,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r21.jpg",
+        "source_cluster": "C049",
+        "confidence": "observed"
+      }
+    },
+    "q23": {
+      "type": "question",
+      "text": "请启动油泵电机，按下泵启按钮3～5秒后松手，等待油泵电机启动。油泵电机是否正常启动？",
+      "source": {
+        "page": "P044",
+        "timestamp_sec": 234.5,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/q23.jpg",
+        "source_cluster": "C051",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "正常",
+          "next": "q24",
+          "status": "observed"
+        },
+        {
+          "label": "没有",
+          "next": "r22",
+          "status": "observed"
+        }
+      ]
+    },
+    "q24": {
+      "type": "question",
+      "text": "油泵电机正常启动后，牵引接触器也同时吸合。可以观察变频器操作键盘是否点亮并正常显示。请观察显示屏上牵电状态是否为绿色（小屏幕提示牵引系统未送电，请查明原因）？",
+      "source": {
+        "page": "P045",
+        "timestamp_sec": 242.5,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/q24.jpg",
+        "source_cluster": "C052",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "红色（有）",
+          "next": "r01",
+          "status": "observed"
+        },
+        {
+          "label": "绿色（无）",
+          "next": "q05",
+          "status": "observed"
+        }
+      ]
+    },
+    "r22": {
+      "type": "result",
+      "text": "油泵电机没有正常启动，请到本小程序“电机启停→调高泵启停故障”中查找处理。",
+      "source": {
+        "page": "P046",
+        "timestamp_sec": 370.0,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r22.jpg",
+        "source_cluster": "C056",
+        "confidence": "observed"
+      }
+    },
+    "q25": {
+      "type": "question",
+      "text": "HPC模块红色代表HPC工作异常，和控制系统之间通讯中断。请打开HPC所在的电控箱，查看HPC前端的绿色指示灯是否闪烁？",
+      "source": {
+        "page": "P047",
+        "timestamp_sec": 381.0,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/q25.jpg",
+        "source_cluster": "C058",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "闪烁",
+          "next": "q26",
+          "status": "observed"
+        },
+        {
+          "label": "不亮",
+          "next": "q27",
+          "status": "observed"
+        }
+      ]
+    },
+    "q26": {
+      "type": "question",
+      "text": "HPC模块前端的指示灯闪烁，说明HPC已工作，只是和系统通讯中断。请检查HPCJX1.3到BOCJX1.3、HPCJX1.4到BOCJX1.4之间的通讯线路？",
+      "source": {
+        "page": "P048",
+        "timestamp_sec": 392.0,
+        "other_observed_timestamps_sec": [
+          404.5
+        ],
+        "frame": "source-frames/q26.jpg",
+        "source_cluster": "C059",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "正常",
+          "next": "r23",
+          "status": "observed"
+        },
+        {
+          "label": "异常",
+          "next": "r24",
+          "status": "observed"
+        }
+      ]
+    },
+    "r23": {
+      "type": "result",
+      "text": "通讯线路检查正常，在其他模块通讯正常的情况下，在确保HPCJX1插头没有问题的情况下，请更换HPC。",
+      "source": {
+        "page": "P049",
+        "timestamp_sec": 402.0,
+        "other_observed_timestamps_sec": [
+          402.5
+        ],
+        "frame": "source-frames/r23.jpg",
+        "source_cluster": "C060",
+        "confidence": "observed"
+      }
+    },
+    "r24": {
+      "type": "result",
+      "text": "通讯线路异常分为两种情况：短路和断路，请酌情处理。",
+      "source": {
+        "page": "P050",
+        "timestamp_sec": 405.5,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r24.jpg",
+        "source_cluster": "C062",
+        "confidence": "observed"
+      }
+    },
+    "q27": {
+      "type": "question",
+      "text": "HPC模块前端的指示灯不亮，可能的原因有两种：1.没有工作电源；2.HPC模块已损坏。请使用万用表测量HPCJX2.1和HPCJX2.2之间是否有24V电压？",
+      "source": {
+        "page": "P051",
+        "timestamp_sec": 410.0,
+        "other_observed_timestamps_sec": [
+          424.5
+        ],
+        "frame": "source-frames/q27.jpg",
+        "source_cluster": "C063",
+        "confidence": "observed"
+      },
+      "options": [
+        {
+          "label": "有24V",
+          "next": "r25",
+          "status": "observed"
+        },
+        {
+          "label": "没有",
+          "next": "r26",
+          "status": "observed"
+        }
+      ]
+    },
+    "r25": {
+      "type": "result",
+      "text": "在HPCJX2.1和HPCJX2.2之间可以测到24V电压，在确保HPCJX2插头没有问题的情况下，请直接更换HPC模块。",
+      "source": {
+        "page": "P052",
+        "timestamp_sec": 419.5,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r25.jpg",
+        "source_cluster": "C064",
+        "confidence": "observed"
+      }
+    },
+    "r26": {
+      "type": "result",
+      "text": "在HPCJX2.1和HPCJX2.2之间不能测到24V电压，请检查非本安电源模块F+24V到HPCJX2.1、F0V到HPCJX2.2之间的线路，找到断点处理即可。",
+      "source": {
+        "page": "P053",
+        "timestamp_sec": 421.5,
+        "other_observed_timestamps_sec": [],
+        "frame": "source-frames/r26.jpg",
+        "source_cluster": "C065",
+        "confidence": "observed"
+      }
+    }
+  }
+}

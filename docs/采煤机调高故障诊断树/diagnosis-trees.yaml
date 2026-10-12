@@ -1,0 +1,1563 @@
+schema_version: '1.0'
+title: 采煤机调高故障诊断树（由六段录屏提取）
+extraction_notes:
+- 诊断选项“上一步”和页面左上角返回键属于导航，不写入业务诊断选项。
+- status=observed 表示录屏中直接看到跳转；inferred_from_backtracking 表示录屏快速返回导致中间页不足一秒，但可由前后页面和按钮位置确定；inferred_from_technical_logic 表示录屏未直接展示，按同页面其他上下文与技术逻辑补齐，使用前建议人工复核。
+- status=unresolved_not_recorded 表示录屏没有展示下一页，或点击后原小程序未跳转；生成程序时应先保留TODO，禁止模型自行编造。
+- 部分可视页面在单侧/双侧路径中复用但下一节点不同，结构化文件已按上下文拆成不同逻辑节点。
+modules:
+- id: single_prop_small
+  index: 1
+  name: 单泵比例阀小煤机
+  source_video: 调高故障单比例阀小煤机.mp4
+  start_node: q01
+  nodes:
+    q01:
+      type: question
+      text: 泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？
+      options:
+      - label: 单边
+        next: q02
+        status: observed
+      - label: 双侧
+        next: q05
+        status: observed
+      source_page: P003
+      source_timestamp_s: 14.9
+    q02:
+      type: question
+      text: 单个不能操作，说明油液压力正常，用端头站是否能升降不动作的摇臂？无端头站选不能。
+      options:
+      - label: 可以
+        next: r01
+        status: inferred_from_backtracking
+      - label: 不能
+        next: q03
+        status: inferred_from_backtracking
+      source_page: P004
+      source_timestamp_s: 25.7
+    r01:
+      type: result
+      text: 端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。
+      source_page: P005
+      source_timestamp_s: 34.1
+    q03:
+      type: question
+      text: 通过手动比例阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q04
+        status: observed
+      - label: 不能
+        next: r04
+        status: observed
+      source_page: P006
+      source_timestamp_s: 49.6
+    q04:
+      type: question
+      text: 打开PVD模块所在腔体，操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？
+      options:
+      - label: 有24V
+        next: r02
+        status: observed
+      - label: 无
+        next: r03
+        status: observed
+      source_page: P007
+      source_timestamp_s: 58.9
+    r02:
+      type: result
+      text: 检查PVD比例阀模块JX2上4、5、6、7号线到后腔接线排线路是否完好；检查后腔接线排到不升降电磁阀的线路是否完好；线路正常请更换不升降的电磁阀。
+      source_page: P008
+      note: 原页面个别字样疑似存在录入错字，已按技术语义规范化。
+      source_timestamp_s: 65.0
+    r03:
+      type: result
+      text: 遥控操作只是单边摇臂不升降，说明模块与主控之间通讯正常。当前确定PVD比例阀控制模块局部端口损坏，请更换PVD比例阀控制模块。
+      source_page: P009
+      source_timestamp_s: 73.7
+    r04:
+      type: result
+      text: 另一边摇臂可以升降说明油液压力正常。检查不升降摇臂的油缸管路是否挤压变形、漏油；检查油缸内泄或循环；检查平衡阀或液力锁损坏；阀组可能存在故障。
+      source_page: P010
+      source_timestamp_s: 80.8
+    q05:
+      type: question
+      text: 两边都不升降，通过手动比例阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q06
+        status: observed
+      - label: 不能
+        next: q09
+        status: observed
+      source_page: P011
+      source_timestamp_s: 93.0
+    q06:
+      type: question
+      text: 手动比例阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？
+      options:
+      - label: 正常
+        next: q07
+        status: observed
+      - label: 没有
+        next: null
+        status: unresolved_not_recorded
+        note: 录屏中未展示该选项的下一页，禁止由模型自行猜测。
+      source_page: P012
+      source_timestamp_s: 100.1
+    q07:
+      type: question
+      text: 打开PVD模块所在腔体，测量PVD模块JX1上的1和2号线是否有24V？
+      options:
+      - label: 有24V
+        next: q08
+        status: observed
+      - label: 无
+        next: null
+        status: unresolved_not_recorded
+        note: 录屏中未展示该选项的下一页，禁止由模型自行猜测。
+      source_page: P013
+      source_timestamp_s: 107.5
+    q08:
+      type: question
+      text: 操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？
+      options:
+      - label: 有24V
+        next: r05
+        status: observed
+      - label: 无
+        next: r06
+        status: inferred_from_backtracking
+      source_page: P014
+      source_timestamp_s: 115.8
+    r05:
+      type: result
+      text: 说明比例阀模块工作正常；检查PVD比例阀模块JX1的6号公用0V线到后接线腔连接是否存在断路或虚接。
+      source_page: P015
+      source_timestamp_s: 122.2
+    r06:
+      type: result
+      text: 检查比例阀与SGC通讯模块之间485通讯线路是否完好；确保SGC模块与BOC主控模块之间通讯正常；如线路和通讯均正常，请更换PVD比例控制模块。
+      source_page: P016
+      source_timestamp_s: 125.8
+    q09:
+      type: question
+      text: 操作手动比例阀，查看高压液压表是否有18MPa左右压力？
+      options:
+      - label: 正常
+        next: r07
+        status: observed
+      - label: 很低
+        next: r08
+        status: observed
+      source_page: P017
+      source_timestamp_s: 141.9
+    r07:
+      type: result
+      text: 高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。
+      source_page: P018
+      source_timestamp_s: 149.5
+    r08:
+      type: result
+      text: 检查泵箱油量是否足够、油管是否挤压变形；检查齿轮泵与泵电机连接轴花键是否脱落；检查并更换阀组；检查以上问题并恢复高压，确保手动升降摇臂正常。
+      source_page: P019
+      source_timestamp_s: 155.1
+- id: single_normal_small
+  index: 2
+  name: 单泵普通阀小煤机
+  source_video: 调高故障单泵普通阀小煤机.mp4
+  start_node: q01
+  nodes:
+    q01:
+      type: question
+      text: 泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？
+      options:
+      - label: 单侧
+        next: q02
+        status: observed
+      - label: 双侧
+        next: q06
+        status: observed
+      source_page: P003
+      source_timestamp_s: 14.2
+    q02:
+      type: question
+      text: 用端头站是否能升降不动作的摇臂？无端头站选不能。
+      options:
+      - label: 可以
+        next: r01
+        status: inferred_from_backtracking
+      - label: 不能
+        next: q03
+        status: inferred_from_backtracking
+      source_page: P004
+      source_timestamp_s: 23.8
+    r01:
+      type: result
+      text: 端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。
+      source_page: P005
+      source_timestamp_s: 29.1
+    q03:
+      type: question
+      text: 通过球形手动操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q04
+        status: observed
+      - label: 不能
+        next: r03
+        status: observed
+      source_page: P006
+      source_timestamp_s: 36.2
+    q04:
+      type: question
+      text: 打开分线盒，用遥控器操作不能升降的摇臂，测量接线排不能升降对应的电磁阀接线点，是否可以量到DC24V？无分线盒请打开后接线腔测量。
+      options:
+      - label: 有24V
+        next: r02
+        status: observed
+      - label: 无
+        next: q05
+        status: observed
+      source_page: P007
+      source_timestamp_s: 45.8
+    r02:
+      type: result
+      text: 检查分线盒（后接线腔）到电磁阀线路是否挤压、断线；线路正常请更换电磁阀。
+      source_page: P008
+      source_timestamp_s: 51.8
+    q05:
+      type: question
+      text: 打开计算机腔，操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应输出的4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。
+      options:
+      - label: 导通
+        next: null
+        status: unresolved_not_recorded
+        note: 录屏中点击后页面未发生跳转。
+      - label: 不通
+        next: null
+        status: unresolved_not_recorded
+        note: 录屏中点击后页面未发生跳转。
+      source_page: P009
+      note: 原小程序在录屏中对两个选项均未发生页面跳转。
+      source_timestamp_s: 58.2
+    r03:
+      type: result
+      text: 另一边摇臂可以升降说明油液压力正常。检查到油缸管路是否挤压变形、漏油；检查油缸内泄或循环；检查平衡阀或者液力锁损坏；阀组可能存在故障。
+      source_page: P010
+      source_timestamp_s: 75.4
+    q06:
+      type: question
+      text: 两边都不升降，通过球形手动阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q07
+        status: observed
+      - label: 不能
+        next: q13
+        status: observed
+      source_page: P011
+      source_timestamp_s: 85.3
+    q07:
+      type: question
+      text: 球形手动阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？
+      options:
+      - label: 正常
+        next: q08
+        status: observed
+      - label: 低或没有
+        next: q11
+        status: observed
+      source_page: P012
+      source_timestamp_s: 94.8
+    q08:
+      type: question
+      text: 打开计算机前腔，确认电源保护空开处在合闸状态，测量整流桥输出接线排是否可以量到DC24V？
+      options:
+      - label: 有24V
+        next: q09
+        status: observed
+      - label: 没有
+        next: q10
+        status: observed
+      source_page: P013
+      source_timestamp_s: 104.6
+    q09:
+      type: question
+      text: 操作遥控器升降，测量BOC主控模块JX2接线排公共点9号与对应升降的4、5、6、7号线之间节点是否有DC24V？
+      options:
+      - label: 有
+        next: null
+        status: unresolved_not_recorded
+        note: 录屏中未展示该选项的下一页，禁止由模型自行猜测。
+      - label: 无
+        next: null
+        status: unresolved_not_recorded
+        note: 录屏中未展示该选项的下一页，禁止由模型自行猜测。
+      source_page: P014
+      source_timestamp_s: 113.9
+    q10:
+      type: question
+      text: 测量整流桥BR输入AC26V（部分机组为AC28V）输入是否正常？
+      options:
+      - label: 正常
+        next: r04
+        status: observed
+      - label: 没有
+        next: r05
+        status: observed
+      source_page: P015
+      source_timestamp_s: 128.1
+    r04:
+      type: result
+      text: 检查电源到整流桥线路完好后，更换整流桥BR。
+      source_page: P016
+      source_timestamp_s: 133.6
+    r05:
+      type: result
+      text: 检查整流桥输入侧空开或保险是否断开；检查输入侧线路是否正常；检查控制变压器的输出，无输出请更换控制变压器。
+      source_page: P017
+      note: 录屏中P024出现了同义重复页面，已合并。
+      source_timestamp_s: 135.9
+    q11:
+      type: question
+      text: 检查液压油量，调节、清洗或更换低压溢流阀，将压力恢复至2.5MPa；用遥控器操作摇臂是否能动作？
+      options:
+      - label: 正常
+        next: r06
+        status: observed
+      - label: 不动
+        next: q12
+        status: observed
+      source_page: P018
+      source_timestamp_s: 147.1
+    r06:
+      type: result
+      text: 电磁阀控制低压油路，导通推动高压阀杆动作，完成摇臂升降过程。
+      source_page: P019
+      source_timestamp_s: 152.1
+    q12:
+      type: question
+      text: 低压足够，此时再排查电器问题。打开计算机前腔，确认电源保护空开处在合闸状态，测量整流桥输出接线排是否可以量到DC24V？
+      options:
+      - label: 可以
+        next: q14
+        status: observed
+      - label: 没有
+        next: q10
+        status: observed
+      source_page: P020
+      source_timestamp_s: 156.9
+    q14:
+      type: question
+      text: 有DC24V时操作遥控器升降，测量BOC主控模块JX2接线排公共点9号与对应升降4、5、6、7号线之间节点是否有DC24V？
+      options:
+      - label: 有24V
+        next: r07
+        status: observed
+      - label: 无
+        next: r08
+        status: observed
+      source_page: P021
+      source_timestamp_s: 164.7
+    r07:
+      type: result
+      text: 检查整流桥输出侧接线排0V到后接线腔线路；后接线腔到分线盒内线路是否断路和虚接。
+      source_page: P022
+      source_timestamp_s: 169.4
+    r08:
+      type: result
+      text: 检查整流桥输出侧接线排0V到JX2的9号线是否断线；检查整流桥输出侧24V到JX2的8号线是否完好；以上线路正常且遥控器操作升降时无继电器响声，请更换BOC主控模块。
+      source_page: P023
+      source_timestamp_s: 172.4
+    q13:
+      type: question
+      text: 操作手动阀，查看高压液压表是否有18MPa左右压力？
+      options:
+      - label: 正常
+        next: r09
+        status: observed
+      - label: 低或没有
+        next: r10
+        status: observed
+      source_page: P025
+      source_timestamp_s: 198.7
+    r09:
+      type: result
+      text: 高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。
+      source_page: P026
+      source_timestamp_s: 204.5
+    r10:
+      type: result
+      text: 检查泵箱油量是否足够、油管是否挤压变形；检查齿轮泵与泵电机连接轴花键是否脱落；检查并更换阀组；检查以上问题并恢复高压，确保手动升降摇臂正常。
+      source_page: P027
+      source_timestamp_s: 207.9
+- id: single_normal_large
+  index: 3
+  name: 单泵普通阀大煤机
+  source_video: 单泵普通阀大煤机.mp4
+  start_node: q01
+  nodes:
+    q01:
+      type: question
+      text: 泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？
+      options:
+      - label: 单侧
+        next: q02
+        status: observed
+      - label: 双侧
+        next: q06
+        status: observed
+      source_page: P003
+      source_timestamp_s: 13.5
+    q02:
+      type: question
+      text: 单边摇臂不能升降，说明油液压力正常；用端头站是否能升降不动作的摇臂？无端头站选不能。
+      options:
+      - label: 可以
+        next: r01
+        status: observed
+      - label: 不能
+        next: q03
+        status: observed
+      source_page: P004
+      source_timestamp_s: 22.4
+    r01:
+      type: result
+      text: 端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。
+      source_page: P005
+      source_timestamp_s: 27.5
+    q03:
+      type: question
+      text: 通过手动换向阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q04
+        status: observed
+      - label: 不能
+        next: r04
+        status: observed
+      source_page: P006
+      source_timestamp_s: 32.2
+    q04:
+      type: question
+      text: 打开分线盒，用遥控器操作不能升降的摇臂，测量接线排不能升降对应电磁阀接线点，是否可以量到DC24V？
+      options:
+      - label: 有24V
+        next: r02
+        status: observed
+      - label: 没有
+        next: q05
+        status: observed
+      source_page: P007
+      source_timestamp_s: 39.4
+    r02:
+      type: result
+      text: 检查分线盒到电磁阀线路是否挤压、断线；线路正常请更换电磁阀。
+      source_page: P008
+      source_timestamp_s: 43.7
+    q05:
+      type: question
+      text: 打开计算机腔，操作遥控器升降，测量主控模块JX2接线排公共点8号与对应输出的4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。
+      options:
+      - label: 导通
+        next: r03
+        status: inferred_from_technical_logic
+      - label: 不通
+        next: r05
+        status: observed
+      source_page: P009
+      source_timestamp_s: 50.0
+    r03:
+      type: result
+      text: 检查BOC主控模块控制电磁阀到后腔接线排线路是否完好；检查后腔接线排到电磁阀线路是否完好；线路完好请更换电磁阀。
+      source_page: P010
+      source_timestamp_s: 55.8
+    r04:
+      type: result
+      text: 另一边摇臂可以升降说明油液压力正常。检查到油缸管路是否挤压变形、漏油；检查油缸内泄或循环；检查平衡阀或液力锁损坏；阀组可能存在故障。
+      source_page: P012
+      source_timestamp_s: 65.5
+    r05:
+      type: result
+      text: 请更换BOC主控模块。
+      source_page: P011
+      source_timestamp_s: 57.7
+    q06:
+      type: question
+      text: 两边都不升降，通过手动阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q07
+        status: observed
+      - label: 不能
+        next: q19
+        status: observed
+      source_page: P013
+      source_timestamp_s: 74.6
+    q07:
+      type: question
+      text: 手动换向阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？
+      options:
+      - label: 正常
+        next: q08
+        status: observed
+      - label: 无或过低
+        next: q16
+        status: observed
+      source_page: P014
+      source_timestamp_s: 82.9
+    q08:
+      type: question
+      text: 低压正常的情况下，先判断总阀是否动作。操作遥控器升降摇臂，观察总阀阀杆是否动作？
+      options:
+      - label: 动作
+        next: q09
+        status: observed
+      - label: 不动
+        next: q11
+        status: observed
+      source_page: P015
+      source_timestamp_s: 90.8
+    q09:
+      type: question
+      text: 总阀可以动作，说明电磁阀电源正常、低压也完好。排查其他阀动作情况：打开分线盒，用遥控器操作不能升降的摇臂，测量接线排对应电磁阀接线点是否可以量到DC24V？
+      options:
+      - label: 有24V
+        next: r02
+        status: observed
+      - label: 无
+        next: q10
+        status: observed
+      source_page: P016
+      source_timestamp_s: 98.0
+    q10:
+      type: question
+      text: 打开计算机腔，测量BOC主控模块操作遥控器升降时，JX2接线排公共点8号与对应输出4、5、6、7号线之间继电器触点是否导通？
+      options:
+      - label: 导通
+        next: r03
+        status: inferred_from_technical_logic
+      - label: 不通
+        next: r05
+        status: observed
+      source_page: P017
+      source_timestamp_s: 109.5
+    q11:
+      type: question
+      text: 打开分线盒，用遥控器操作摇臂升降，测量总阀电磁阀在对应接线排上是否可以量到DC24V？
+      options:
+      - label: 有24V
+        next: r06
+        status: observed
+      - label: 无
+        next: q12
+        status: observed
+      source_page: P018
+      source_timestamp_s: 129.9
+    r06:
+      type: result
+      text: 检查分线盒到总阀线路，线路正常更换总阀电磁阀；电磁阀线路正常仍不动作请更换阀组。
+      source_page: P019
+      source_timestamp_s: 134.3
+    q12:
+      type: question
+      text: 打开计算机前腔，确认电源保护空开处在合闸状态，测量整流桥输出接线排是否可以量到DC24V？
+      options:
+      - label: 有24V
+        next: q13
+        status: observed
+      - label: 无
+        next: q15
+        status: observed
+      source_page: P020
+      source_timestamp_s: 139.8
+    q13:
+      type: question
+      text: 说明整流桥输出电源正常，测量从整流桥输出侧的DC0V接线排到分线盒内接线排的公共DC0V线路是否通路？
+      options:
+      - label: 正常
+        next: q14
+        status: observed
+      - label: 不通
+        next: r09
+        status: observed
+      source_page: P021
+      source_timestamp_s: 147.6
+    q14:
+      type: question
+      text: 用遥控器轮流操作所有摇臂升降功能，测量EIO主控扩展模块JX2接线排公共点8号与对应总阀控制的3号线之间继电器触点是否都导通？
+      options:
+      - label: 正常
+        next: q15b
+        status: observed
+      - label: 不通
+        next: r08
+        status: observed
+      source_page: P022
+      source_timestamp_s: 157.4
+    q15b:
+      type: question
+      text: 可以确定EIO主控扩展模块完好。操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应升降的4、5、6、7号线之间继电器触点是否导通？
+      options:
+      - label: 正常
+        next: r07
+        status: observed
+      - label: 不通
+        next: r05
+        status: observed
+      source_page: P023
+      source_timestamp_s: 168.6
+    r07:
+      type: result
+      text: 其他阀不动作：检查整流桥输出侧DC24V、DC0V接线排到BOC主控模块JX2的8号和9号线是否断路或虚接；总阀不动作：检查整流桥输出侧DC24V、DC0V接线排到主控模块JX2相关端子是否断路或虚接。
+      source_page: P024
+      source_timestamp_s: 175.5
+    r08:
+      type: result
+      text: 检查EIO模块与BOC主控之间CAN通讯线路；确保主控扩展模块供电正常；以上均完好请更换EIO主控扩展模块。
+      source_page: P025
+      source_timestamp_s: 184.3
+    r09:
+      type: result
+      text: 打开后腔接线腔，检查处理从整流桥输出侧DC0V接线排到后接线腔线路是否断路、虚接；检查处理后接线腔到分线盒内接线排的公共DC0V线路是否断路、虚接。
+      source_page: P026
+      source_timestamp_s: 191.1
+    q15:
+      type: question
+      text: 测量整流桥BR输入AC26V（部分机组为AC28V）输入是否正常？
+      options:
+      - label: 正常
+        next: r10
+        status: observed
+      - label: 无
+        next: r11
+        status: observed
+      source_page: P027
+      source_timestamp_s: 202.3
+    r10:
+      type: result
+      text: 检查电源到整流桥线路完好后，更换整流桥BR。
+      source_page: P028
+      source_timestamp_s: 211.2
+    r11:
+      type: result
+      text: 检查整流桥输入侧空开或保险是否断开；检查输入侧线路是否正常；检查控制变压器输出，无输出请更换控制变压器。
+      source_page: P029
+      source_timestamp_s: 213.1
+    q16:
+      type: question
+      text: 检查液压油量，调节、清洗或更换低压溢流阀，将压力恢复至2.5MPa；用遥控器操作摇臂是否能动作？
+      options:
+      - label: 动作
+        next: r12
+        status: observed
+      - label: 不动
+        next: q17
+        status: observed
+      source_page: P030
+      source_timestamp_s: 230.7
+    r12:
+      type: result
+      text: 电磁阀控制低压油路，导通推动高压阀杆动作，完成摇臂升降过程。
+      source_page: P031
+      source_timestamp_s: 236.7
+    q17:
+      type: question
+      text: 低压足够，此时再排查电器问题。低压正常的情况下先判断总阀是否动作，操作遥控器升降摇臂，观察总阀阀杆是否动作？
+      options:
+      - label: 动作
+        next: q13
+        status: observed
+      - label: 不动
+        next: q15
+        status: observed
+      source_page: P032
+      note: 该跳转按录屏实际路径记录。
+      source_timestamp_s: 243.0
+    q19:
+      type: question
+      text: 操作手动阀，查看高压液压表是否有18MPa左右压力？
+      options:
+      - label: 正常
+        next: r13
+        status: observed
+      - label: 无或过低
+        next: q20
+        status: observed
+      source_page: P033
+      source_timestamp_s: 313.0
+    r13:
+      type: result
+      text: 高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。
+      source_page: P034
+      source_timestamp_s: 319.6
+    q20:
+      type: question
+      text: 调整或者更换高压溢流阀，将压力恢复至18MPa；操作手动阀，摇臂是否动作？
+      options:
+      - label: 动作
+        next: q21
+        status: observed
+      - label: 不动
+        next: null
+        status: unresolved_not_recorded
+        note: 录屏中未展示该选项的下一页，禁止由模型自行猜测。
+      source_page: P035
+      source_timestamp_s: 323.2
+    q21:
+      type: question
+      text: 手动可以动作，但通过遥控器操作仍不能升降，请排查电气问题。低压正常的情况下先判断总阀是否动作：操作遥控器升降摇臂，观察总阀阀杆是否动作？
+      options:
+      - label: 动作
+        next: q09
+        status: observed
+      - label: 不动
+        next: q11
+        status: observed
+      source_page: P036
+      source_timestamp_s: 328.3
+- id: single_prop_large
+  index: 4
+  name: 单泵比例阀大煤机
+  source_video: 单泵比例阀大煤机.mp4
+  start_node: q01
+  nodes:
+    q01:
+      type: question
+      text: 泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？
+      options:
+      - label: 单侧
+        next: q02
+        status: observed
+      - label: 双侧
+        next: q08
+        status: observed
+      source_page: P001
+      source_timestamp_s: 6.1
+    q02:
+      type: question
+      text: 用端头站是否能升降不动作的摇臂？无端头站选不能。
+      options:
+      - label: 可以
+        next: r01
+        status: observed
+      - label: 不能
+        next: q03
+        status: observed
+      source_page: P002
+      source_timestamp_s: 15.0
+    r01:
+      type: result
+      text: 端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。
+      source_page: P003
+      source_timestamp_s: 20.8
+    q03:
+      type: question
+      text: 通过手动比例阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q04
+        status: observed
+      - label: 不能
+        next: r06
+        status: observed
+      source_page: P004
+      source_timestamp_s: 25.2
+    q04:
+      type: question
+      text: 根据图纸查看，是CIO比例阀控制模块还是PVD比例阀控制模块？
+      options:
+      - label: PVD
+        next: q05
+        status: observed
+      - label: CIO
+        next: q06
+        status: observed
+      source_page: P005
+      note: 该页面在单侧与双侧路径中复用，但下一节点不同；结构化数据中已拆分上下文。
+      source_timestamp_s: 32.1
+    q05:
+      type: question
+      text: PVD比例阀模块：打开PVD模块所在腔体，操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？
+      options:
+      - label: 没有
+        next: r02
+        status: observed
+      - label: 有24V
+        next: r03
+        status: observed
+      source_page: P006
+      source_timestamp_s: 40.5
+    r02:
+      type: result
+      text: 遥控操作只是单边摇臂不升降，说明模块与BOC主控之间通讯正常。当前确定PVD比例阀控制模块局部端口损坏，请更换比例阀控制模块。
+      source_page: P007
+      source_timestamp_s: 46.0
+    r03:
+      type: result
+      text: 检查PVD比例阀模块JX2上4、5、6、7号线到后腔接线排线路是否完好；检查后腔接线排到不升降电磁阀线路是否完好；线路正常请更换不升降的电磁阀。
+      source_page: P008
+      source_timestamp_s: 49.2
+    q06:
+      type: question
+      text: 打开计算机腔，操作遥控器升降摇臂，测量CIO比例阀模块C1、C2、C3、B1接线点与公共点B7-0V之间是否有DC24V输出？
+      options:
+      - label: 没有
+        next: r04
+        status: observed
+      - label: 有24V
+        next: r05
+        status: observed
+      source_page: P009
+      source_timestamp_s: 56.8
+    r04:
+      type: result
+      text: 遥控操作只是单边摇臂不升降，说明模块与BOC主控之间通讯正常。当前确定CIO比例阀控制模块局部端口损坏，请更换比例阀控制模块。
+      source_page: P010
+      source_timestamp_s: 61.8
+    r05:
+      type: result
+      text: 检查CIO比例阀控制模块到后腔线路是否完好；检查后腔到电磁阀线路是否完好；以上线路完好，请更换不动作的电磁阀。
+      source_page: P011
+      source_timestamp_s: 64.5
+    r06:
+      type: result
+      text: 另一边摇臂可以升降说明油液压力正常。检查到油缸管路是否挤压变形、漏油；检查油缸内泄或循环；检查平衡阀或者液力锁损坏；阀组可能存在故障。
+      source_page: P012
+      source_timestamp_s: 70.3
+    q08:
+      type: question
+      text: 两边都不升降，通过手动比例阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q09
+        status: observed
+      - label: 不能
+        next: q16
+        status: observed
+      source_page: P013
+      source_timestamp_s: 78.3
+    q09:
+      type: question
+      text: 手动比例阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？
+      options:
+      - label: 正常
+        next: q10
+        status: observed
+      - label: 无或过低
+        next: r12
+        status: observed
+      source_page: P014
+      source_timestamp_s: 86.7
+    q10:
+      type: question
+      text: 根据图纸查看，是CIO比例阀控制模块还是PVD比例阀控制模块？
+      options:
+      - label: PVD
+        next: q11
+        status: observed
+      - label: CIO
+        next: q13
+        status: observed
+      source_page: P005
+      source_timestamp_s: 32.1
+    q11:
+      type: question
+      text: 打开PVD模块所在腔体，测量PVD模块JX1上的1和2号线是否有24V？
+      options:
+      - label: 有24V
+        next: q12
+        status: observed
+      - label: 无
+        next: r09
+        status: observed
+      source_page: P015
+      source_timestamp_s: 101.8
+    q12:
+      type: question
+      text: 操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？
+      options:
+      - label: 有24V
+        next: r07
+        status: observed
+      - label: 没有
+        next: r08
+        status: observed
+      source_page: P016
+      source_timestamp_s: 111.4
+    r07:
+      type: result
+      text: 说明比例阀模块工作正常；检查PVD比例阀模块JX1的6号公用0V线到后接线腔连接是否存在断路或虚接。
+      source_page: P017
+      source_timestamp_s: 118.7
+    r08:
+      type: result
+      text: 检查比例阀与SGC通讯模块之间485通讯线路是否完好；确保SGC模块与BOC主控模块之间通讯正常；如线路和通讯均正常，请更换PVD比例控制模块。
+      source_page: P018
+      source_timestamp_s: 121.0
+    r09:
+      type: result
+      text: 检查PVD比例阀模块JX1的1和2号线到电源模块线路是否完好；检查电源模块供电电源线路正常，确保电源模块输入输出空开闭合；甩开输出侧，有输入无输出请更换电源模块。
+      source_page: P019
+      source_timestamp_s: 125.0
+    q13:
+      type: question
+      text: 打开CIO模块所在腔体，测量CIO模块的B5、B8、A1接线点与B7接线是否有24V供电？
+      options:
+      - label: 正常
+        next: q14
+        status: observed
+      - label: 没有
+        next: r11
+        status: observed
+      source_page: P020
+      source_timestamp_s: 129.1
+    q14:
+      type: question
+      text: 操作遥控器升降，测量公共端B7与C3（左升）、C2（左降）、C1（右升）、B1（右降）之间是否有24V？
+      options:
+      - label: 有24V
+        next: r10
+        status: observed
+      - label: 无
+        next: r11b
+        status: observed
+      source_page: P021
+      source_timestamp_s: 135.2
+    r10:
+      type: result
+      text: 说明比例阀模块工作正常；检查CIO比例阀模块B7公用0V线到后接线腔线路，以及后腔到分线盒内的连接是否存在断路或虚接。
+      source_page: P022
+      source_timestamp_s: 141.2
+    r11b:
+      type: result
+      text: 检查CIO比例阀模块与其他模块并联的CAN通讯线是否短路、断路或虚接；线路无问题请更换CIO比例阀控制模块。
+      source_page: P023
+      source_timestamp_s: 144.5
+    r11:
+      type: result
+      text: 检查CIO模块供电端口到电源模块之间线路是否短路、断路或虚接；检查电源模块供电电源线路正常，确保电源模块输入输出空开闭合；甩开输出侧，有输入无输出请更换电源模块。
+      source_page: P024
+      source_timestamp_s: 148.6
+    r12:
+      type: result
+      text: 检查阀组是否存在异常，更换阀组。
+      source_page: P025
+      source_timestamp_s: 155.4
+    q16:
+      type: question
+      text: 操作手动比例阀，查看高压液压表是否有18MPa压力？
+      options:
+      - label: 正常
+        next: r13
+        status: observed
+      - label: 无或过低
+        next: r14
+        status: observed
+      source_page: P026
+      source_timestamp_s: 166.0
+    r13:
+      type: result
+      text: 高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。
+      source_page: P027
+      source_timestamp_s: 172.4
+    r14:
+      type: result
+      text: 检查泵箱油量、油管是否挤压变形；检查齿轮泵与泵电机连接轴花键是否脱落；检查并更换阀组；检查以上问题并恢复高压，确保手动升降摇臂正常。
+      source_page: P028
+      source_timestamp_s: 175.1
+- id: double_prop
+  index: 5
+  name: 双泵比例阀煤机
+  source_video: 双泵比例阀煤机.mp4
+  start_node: q01
+  nodes:
+    q01:
+      type: question
+      text: 泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？
+      options:
+      - label: 单侧
+        next: q02
+        status: observed
+      - label: 双侧
+        next: q14
+        status: observed
+      source_page: P000
+      source_timestamp_s: 4.0
+    q02:
+      type: question
+      text: 用端头站是否能升降不动作的摇臂？无端头站选不能。
+      options:
+      - label: 可以
+        next: r01
+        status: observed
+      - label: 不能
+        next: q03
+        status: observed
+      source_page: P001
+      source_timestamp_s: 10.4
+    r01:
+      type: result
+      text: 端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。
+      source_page: P002
+      source_timestamp_s: 13.8
+    q03:
+      type: question
+      text: 通过手动比例阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q04
+        status: observed
+      - label: 不能
+        next: q12
+        status: observed
+      source_page: P003
+      source_timestamp_s: 18.2
+    q04:
+      type: question
+      text: 手动比例阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？
+      options:
+      - label: 正常
+        next: q05
+        status: observed
+      - label: 无或很低
+        next: r10
+        status: observed
+      source_page: P004
+      source_timestamp_s: 23.5
+    q05:
+      type: question
+      text: 根据图纸查看，比例阀是通过主控模块控制还是比例阀模块控制？
+      options:
+      - label: 比例阀
+        next: q06
+        status: observed
+      - label: BOC
+        next: q09
+        status: observed
+      source_page: P005
+      source_timestamp_s: 29.0
+    q06:
+      type: question
+      text: 是CIO比例阀控制模块还是PVD比例阀控制模块？
+      options:
+      - label: CIO
+        next: q07
+        status: observed
+      - label: PVD
+        next: q08
+        status: observed
+      source_page: P006
+      source_timestamp_s: 34.5
+    q07:
+      type: question
+      text: 打开CIO模块所在腔体，升降不动作的摇臂，测量公共端B7与所对应C3（左升）、C2（左降）、C1（右升）、B1（右降）之间是否有24V？
+      options:
+      - label: 有24V
+        next: r02
+        status: observed
+      - label: 没有
+        next: r03
+        status: observed
+      source_page: P007
+      source_timestamp_s: 40.2
+    r02:
+      type: result
+      text: 检查CIO比例阀控制模块到后腔线路是否完好；检查后腔到电磁阀线路是否完好；以上线路完好请更换不动作的电磁阀。
+      source_page: P008
+      source_timestamp_s: 44.4
+    r03:
+      type: result
+      text: 更换CIO比例阀控制模块。
+      source_page: P009
+      source_timestamp_s: 46.1
+    q08:
+      type: question
+      text: 打开PVD模块所在腔体，操作不升降的摇臂，测量PVD模块JX1的6号线与升降对应JX2的4、5、6、7号线点位之间是否量到24V？
+      options:
+      - label: 有24V
+        next: r04
+        status: observed
+      - label: 没有
+        next: null
+        status: unresolved_not_recorded
+        note: 录屏中未展示该选项的下一页，禁止由模型自行猜测。
+      source_page: P010
+      source_timestamp_s: 52.1
+    r04:
+      type: result
+      text: 检查PVD比例阀模块JX2上4、5、6、7号线到后腔接线排线路是否完好；检查后腔接线排到不升降电磁阀线路是否完好；线路正常请更换不升降的电磁阀。
+      source_page: P011
+      source_timestamp_s: 55.7
+    q09:
+      type: question
+      text: 打开计算机前腔，根据图纸测量BOC主控模块JX2的8号和9号线上是否有DC24V电源？（个别煤机为DC12V）
+      options:
+      - label: 有
+        next: q10
+        status: observed
+      - label: 无
+        next: r07
+        status: observed
+      source_page: P012
+      source_timestamp_s: 64.8
+    q10:
+      type: question
+      text: 打开计算机前腔，操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应升降4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。
+      options:
+      - label: 导通
+        next: r05
+        status: observed
+      - label: 不通
+        next: r06
+        status: observed
+      source_page: P013
+      source_timestamp_s: 70.0
+    r05:
+      type: result
+      text: 检查主BOC控制模块控制电磁阀到后腔接线排线路是否完好；检查后腔接线排到电磁阀线路是否完好；线路完好请更换电磁阀。
+      source_page: P014
+      source_timestamp_s: 73.4
+    r06:
+      type: result
+      text: 主控模块损坏，请更换BOC主控模块。
+      source_page: P015
+      source_timestamp_s: 75.8
+    r07:
+      type: result
+      text: 检查输入侧和输出侧空开是否正常，确保输入电源线路完好；如空开频繁跳开或保险频繁烧坏，线路上存在短路；确保电磁阀电源模块输入正常后，请更换电磁阀电源模块。
+      source_page: P016
+      source_timestamp_s: 79.6
+    r10:
+      type: result
+      text: 确保低压压力，检查阀组是否存在异常，更换阀组。
+      source_page: P017
+      source_timestamp_s: 86.2
+    q12:
+      type: question
+      text: 确保油量，操作手动比例阀，查看高压液压表是否有18MPa压力？
+      options:
+      - label: 正常
+        next: r08
+        status: observed
+      - label: 无或很低
+        next: r09
+        status: observed
+      source_page: P018
+      source_timestamp_s: 93.6
+    r08:
+      type: result
+      text: 高压有压力但不升降，最大可能是阀组问题，检查并更换阀组；不能排除两边液力锁或平衡阀同时损坏的情况。
+      source_page: P019
+      source_timestamp_s: 98.7
+    r09:
+      type: result
+      text: 检查泵箱油量、油管是否挤压变形；检查齿轮泵与泵电机连接轴花键是否脱落；检查并更换阀组；阀组可能存在故障。
+      source_page: P020
+      source_timestamp_s: 100.8
+    q14:
+      type: question
+      text: 两边都不升降，通过手动比例阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q15
+        status: observed
+      - label: 不能
+        next: r17
+        status: observed
+      source_page: P021
+      source_timestamp_s: 108.2
+    q15:
+      type: question
+      text: 根据图纸查看，比例阀是通过BOC主控模块控制还是比例阀模块控制？
+      options:
+      - label: 比例阀
+        next: q16
+        status: observed
+      - label: BOC
+        next: q09_double
+        status: observed
+      source_page: P022
+      source_timestamp_s: 114.3
+    q16:
+      type: question
+      text: 是CIO比例阀控制模块还是PVD比例阀控制模块？
+      options:
+      - label: CIO
+        next: q17
+        status: observed
+      - label: PVD
+        next: q19
+        status: observed
+      source_page: P006
+      source_timestamp_s: 34.5
+    q17:
+      type: question
+      text: 打开CIO模块所在腔体，测量CIO模块的B5、B8、A1接线点与B7接线是否有24V供电？
+      options:
+      - label: 有24V
+        next: q18
+        status: observed
+      - label: 无
+        next: r14
+        status: observed
+      source_page: P028
+      source_timestamp_s: 148.9
+    q18:
+      type: question
+      text: 操作遥控器升降，测量公共端B7与C3（左升）、C2（左降）、C1（右升）、B1（右降）之间是否有24V？
+      options:
+      - label: 有24V
+        next: r11
+        status: observed
+      - label: 无
+        next: r14
+        status: inferred_from_recorded_backtracking
+      source_page: P029
+      source_timestamp_s: 153.7
+    r11:
+      type: result
+      text: 说明比例阀模块工作正常；检查CIO比例阀模块B7公用0V线到后接线腔线路，以及后腔到分线盒内的连接是否存在断路或虚接。
+      source_page: P030
+      source_timestamp_s: 157.4
+    r14:
+      type: result
+      text: 检查CIO模块供电端口到电源模块之间线路是否短路、断路或虚接；检查电源模块供电电源线路正常，确保电源模块输入输出空开闭合；甩开输出侧，有输入无输出请更换电源模块。
+      source_page: P031
+      source_timestamp_s: 162.4
+    q19:
+      type: question
+      text: 打开PVD模块所在腔体，测量PVD模块JX1上的1和2号线是否有24V？
+      options:
+      - label: 有24V
+        next: q20
+        status: observed
+      - label: 无
+        next: r16
+        status: observed
+      source_page: P023
+      source_timestamp_s: 125.4
+    q20:
+      type: question
+      text: 操作遥控器升降摇臂，测量PVD模块JX1的6号线与JX2的4、5、6、7号线对应点位之间是否量到24V？
+      options:
+      - label: 有24V
+        next: r12
+        status: observed
+      - label: 没有
+        next: r13
+        status: observed
+      source_page: P024
+      source_timestamp_s: 130.4
+    r12:
+      type: result
+      text: 说明比例阀模块工作正常；检查PVD比例阀模块JX1的6号公用0V线到后接线腔连接是否存在断路或虚接。
+      source_page: P025
+      source_timestamp_s: 133.9
+    r13:
+      type: result
+      text: 检查比例阀与SGC通讯模块之间485通讯线路是否完好；确保SGC模块与BOC主控模块之间通讯正常；如线路和通讯均正常，请更换PVD比例控制模块。
+      source_page: P026
+      source_timestamp_s: 137.2
+    r16:
+      type: result
+      text: 检查PVD比例阀模块JX1的1和2号线到电源模块线路是否完好；检查电源模块供电电源线路正常，确保电源模块输入输出空开闭合；甩开输出侧，有输入无输出请更换电源模块。
+      source_page: P027
+      source_timestamp_s: 142.0
+    r15:
+      type: result
+      text: 检查BOC主控模块到后接线腔线路是否断路、虚接；检查后接线腔到电磁阀线路，线路正常请更换电磁阀或阀组。
+      source_page: P032
+      source_timestamp_s: 181.0
+    r17:
+      type: result
+      text: 请注意两个泵电机是否反转，检查组合开关隔离手把方向是否打反；两边阀组同时出问题概率很小，检查高压压力，恢复手动升降操作后再排查电气问题。
+      source_page: P033
+      source_timestamp_s: 195.5
+    q10_double:
+      type: question
+      text: 打开计算机前腔，操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应升降4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。
+      options:
+      - label: 导通
+        next: r15
+        status: observed
+      - label: 不通
+        next: r06
+        status: observed
+      source_page: P013
+      note: 双侧路径中的同一可视页面，按录屏上下文拆分。
+      source_timestamp_s: 70.0
+    q09_double:
+      type: question
+      text: 打开计算机前腔，根据图纸测量BOC主控模块JX2的8号和9号线上是否有DC24V电源？（个别煤机为DC12V）
+      options:
+      - label: 有
+        next: q10_double
+        status: observed
+      - label: 无
+        next: r07
+        status: observed
+      source_page: P012
+      note: 双侧路径中的同一可视页面，按录屏上下文拆分。
+      source_timestamp_s: 64.8
+- id: double_normal
+  index: 6
+  name: 双泵普通阀煤机
+  source_video: 双泵普通阀电机.mp4
+  start_node: q01
+  nodes:
+    q01:
+      type: question
+      text: 泵电机启动后，遥控器操作摇臂不升降时，是单个摇臂不升降还是两边摇臂都不升降？
+      options:
+      - label: 单侧
+        next: q02
+        status: observed
+      - label: 双侧
+        next: q10
+        status: observed
+      source_page: P000
+      source_timestamp_s: 8.9
+    q02:
+      type: question
+      text: 单边摇臂不能升降，用端头站是否能升降不动作的摇臂？无端头站选不能。
+      options:
+      - label: 可以
+        next: r01
+        status: observed
+      - label: 不能
+        next: q03
+        status: observed
+      source_page: P001
+      source_timestamp_s: 20.6
+    r01:
+      type: result
+      text: 端头站可以升降说明主控输出控制电磁阀动作正常，由此判断遥控器与接收模块通讯正常，遥控器内部存在部分功能损坏，请更换遥控器。
+      source_page: P002
+      source_timestamp_s: 23.9
+    q03:
+      type: question
+      text: 通过手动换向阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q04
+        status: observed
+      - label: 不能
+        next: q08
+        status: observed
+      source_page: P003
+      source_timestamp_s: 28.3
+    q04:
+      type: question
+      text: 手动阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？
+      options:
+      - label: 正常
+        next: q05
+        status: observed
+      - label: 无或很低
+        next: q07
+        status: observed
+      source_page: P004
+      source_timestamp_s: 35.3
+    q05:
+      type: question
+      text: 打开分线盒，操作不升降的摇臂，测量对应故障摇臂接线排端子是否能量到DC24V？
+      options:
+      - label: 正常
+        next: r02
+        status: observed
+      - label: 没有
+        next: q06
+        status: observed
+      source_page: P005
+      source_timestamp_s: 43.2
+    r02:
+      type: result
+      text: 检查分线盒接线排到电磁阀线路是否完好；线路完好请更换电磁阀。
+      source_page: P006
+      source_timestamp_s: 48.1
+    q06:
+      type: question
+      text: 打开计算机腔，操作遥控器升降，测量BOC主控模块JX2接线排公共点8号与对应输出4、5、6、7号线之间继电器触点是否导通？导通时会有继电器动作的声音。
+      options:
+      - label: 导通
+        next: r03
+        status: observed
+      - label: 不通
+        next: r04
+        status: observed
+      source_page: P007
+      source_timestamp_s: 52.3
+    r03:
+      type: result
+      text: 检查BOC主控模块控制电磁阀到后腔接线排线路是否完好；检查后腔接线排到分线盒线路是否完好；线路完好请更换电磁阀。
+      source_page: P008
+      source_timestamp_s: 56.6
+    r04:
+      type: result
+      text: 请更换BOC主控模块。
+      source_page: P009
+      source_timestamp_s: 58.5
+    q07:
+      type: question
+      text: 确保泵箱液位足量，清洗或者更换低压溢流阀后，低压是否恢复为2.5MPa？
+      options:
+      - label: 正常
+        next: q07b
+        status: observed
+      - label: 无或很低
+        next: r05
+        status: observed
+      source_page: P010
+      source_timestamp_s: 71.0
+    q07b:
+      type: question
+      text: 操作遥控器升降仍无法升降，请排查电气故障。打开分线盒，操作不能升降的摇臂，测量对应接线排是否能量到DC24V？
+      options:
+      - label: 有24V
+        next: r02
+        status: observed
+      - label: 无
+        next: q06
+        status: observed
+      source_page: P011
+      source_timestamp_s: 77.8
+    r05:
+      type: result
+      text: 双联泵请检查小齿轮泵吸油管路和出油管路是否堵塞，检查小泵是否异常；排查阀组故障后再试。
+      source_page: P012
+      source_timestamp_s: 106.3
+    q08:
+      type: question
+      text: 确保油量，操作手动阀，查看高压液压表是否有18MPa压力？
+      options:
+      - label: 正常
+        next: r06
+        status: observed
+      - label: 无或很低
+        next: q09
+        status: observed
+      source_page: P013
+      source_timestamp_s: 116.0
+    r06:
+      type: result
+      text: 检查油管与油缸连接是否良好、确保无漏油；检查或更换齿轮泵；检查更换平衡阀或液力锁堵塞。
+      source_page: P014
+      source_timestamp_s: 120.2
+    q09:
+      type: question
+      text: 调整或者更换高压溢流阀，将压力恢复至18MPa；操作手动阀，摇臂是否动作？
+      options:
+      - label: 动作
+        next: q09b
+        status: observed
+      - label: 不动
+        next: null
+        status: unresolved_not_recorded
+        note: 录屏中未展示该选项的下一页，禁止由模型自行猜测。
+      source_page: P015
+      source_timestamp_s: 124.0
+    q09b:
+      type: question
+      text: 如果手动可以动作，但是通过遥控器操作仍不能升降，请排查电气问题。打开分线盒，操作不能升降的摇臂，测量对应接线排是否能量到DC24V？
+      options:
+      - label: 有24V
+        next: r02
+        status: observed
+      - label: 无
+        next: q06
+        status: observed
+      source_page: P016
+      source_timestamp_s: 129.2
+    q10:
+      type: question
+      text: 两边都不升降，通过手动阀操作是否能升降不动作的摇臂？
+      options:
+      - label: 可以
+        next: q11
+        status: observed
+      - label: 不能
+        next: r11
+        status: observed
+      source_page: P017
+      source_timestamp_s: 156.2
+    q11:
+      type: question
+      text: 手动阀能动作，可以确定高压油压和油缸油路完好，此时观察低压油压是否有2.5MPa压力？
+      options:
+      - label: 正常
+        next: q12
+        status: observed
+      - label: 无或很低
+        next: r10
+        status: observed
+      source_page: P004
+      source_timestamp_s: 35.3
+    q12:
+      type: question
+      text: 打开计算机前腔，确认电源保护空开处在合闸状态，测量整流桥输出接线排是否可以量到DC24V？
+      options:
+      - label: 正常
+        next: q13
+        status: observed
+      - label: 没有
+        next: q14
+        status: observed
+      source_page: P018
+      source_timestamp_s: 172.1
+    q13:
+      type: question
+      text: 操作遥控器升降，测量BOC主控模块JX2接线排公共点9号与对应升降4、5、6、7号线之间节点是否有DC24V？
+      options:
+      - label: 有24V
+        next: r07
+        status: observed
+      - label: 无
+        next: r08
+        status: observed
+      source_page: P019
+      source_timestamp_s: 179.4
+    r07:
+      type: result
+      text: 检查整流桥输出侧接线排0V到后接线腔线路；后接线腔到分线盒内线路是否断路和虚接。
+      source_page: P020
+      source_timestamp_s: 183.7
+    r08:
+      type: result
+      text: 检查整流桥输出侧0V到JX2的9号线是否断线；检查整流桥输出侧24V到JX2的8号线是否完好；以上线路正常且遥控器操作升降时无继电器响声，请更换BOC主控模块。
+      source_page: P021
+      source_timestamp_s: 185.6
+    q14:
+      type: question
+      text: 测量整流桥BR输入AC26V（部分机组为AC28V）输入是否正常？
+      options:
+      - label: 正常
+        next: r09
+        status: observed
+      - label: 没有
+        next: r09b
+        status: observed
+      source_page: P022
+      source_timestamp_s: 191.9
+    r09:
+      type: result
+      text: 检查电源到整流桥线路完好后，更换整流桥BR。
+      source_page: P023
+      source_timestamp_s: 195.2
+    r09b:
+      type: result
+      text: 检查整流桥输入侧空开或保险是否断开；检查输入侧线路是否正常；检查控制变压器输出，无输出请更换控制变压器。
+      source_page: P024
+      source_timestamp_s: 196.8
+    r10:
+      type: result
+      text: 检查液压油量，调节、清洗或更换低压溢流阀，将压力恢复至2.5MPa；用遥控器操作摇臂仍不能升降时，请排查电气问题。
+      source_page: P025
+      source_timestamp_s: 201.0
+    r11:
+      type: result
+      text: 两边液压系统同时出问题的概率很小。请注意两个泵电机是否反转，检查组合开关隔离手把方向是否打反；确保手动可以升降摇臂后再排查电气问题。
+      source_page: P026
+      source_timestamp_s: 204.6

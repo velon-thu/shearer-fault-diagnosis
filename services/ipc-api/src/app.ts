@@ -3,7 +3,10 @@ import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import {
   ApiErrorResponseSchema,
+  ArmEvidenceQuerySchema,
+  ArmEvidenceSchema,
   DataWindowSchema,
+  DiagnosisTreesResponseSchema,
   DowntimeQuerySchema,
   DowntimeResponseSchema,
   FaultRulesResponseSchema,
@@ -30,6 +33,7 @@ import {
   HomeSummarySchema,
   KnowledgeAssetsResponseSchema,
   LiveMessageSchema,
+  MotorEvidenceSchema,
   PumpAnalysisQuerySchema,
   PumpAnalysisResponseSchema,
   RankingsQuerySchema,
@@ -44,6 +48,7 @@ import {
   ShmLiveResponseSchema,
   TractionAnalysisQuerySchema,
   TractionAnalysisResponseSchema,
+  TractionEvidenceSchema,
   WeeklyEventSchema,
   createApiSuccessResponseSchema,
 } from "@shearer/contracts";
@@ -53,6 +58,7 @@ import {
   logoutMockAuth,
 } from "./mock";
 import { initializeSqlite } from "./db/sqlite";
+import { readDiagnosisTrees } from "./diagnosis/trees";
 import { readShmLive } from "./shm/live";
 import {
   DataplaneDataSourceAdapter,
@@ -87,6 +93,13 @@ const PumpAnalysisApiResponseSchema = createApiSuccessResponseSchema(PumpAnalysi
 const SettingsSnapshotApiResponseSchema = createApiSuccessResponseSchema(SettingsSnapshotSchema);
 const TractionAnalysisApiResponseSchema = createApiSuccessResponseSchema(TractionAnalysisResponseSchema);
 const HealthApiResponseSchema = createApiSuccessResponseSchema(HealthResponseSchema);
+const DiagnosisTreesApiResponseSchema = createApiSuccessResponseSchema(DiagnosisTreesResponseSchema);
+const ArmEvidenceApiResponseSchema = createApiSuccessResponseSchema(ArmEvidenceSchema);
+const TractionEvidenceApiResponseSchema = createApiSuccessResponseSchema(TractionEvidenceSchema);
+const MotorEvidenceApiResponseSchema = createApiSuccessResponseSchema(MotorEvidenceSchema);
+
+// 证据窗口缺省 2 小时：短了没样本，长了会把上个班的操作混进来
+const EVIDENCE_DEFAULT_WINDOW_MS = 2 * 60 * 60 * 1000;
 const ShmLiveApiResponseSchema = createApiSuccessResponseSchema(ShmLiveResponseSchema);
 
 const getBearerToken = (authorizationHeader?: string) => {
@@ -334,11 +347,14 @@ export const buildApp = ({
   );
 
   app.get("/api/freeze-frame", async (request) => {
-    const ts = Number((request.query as Record<string, string>).ts);
+    const query = request.query as Record<string, string>;
+    const ts = Number(query.ts);
+    // 同一秒常常并发好几条故障，点的是哪条只有前端知道，别让后端靠时间猜
+    const name = typeof query.name === "string" && query.name.length > 0 ? query.name : undefined;
 
     return FreezeFrameApiResponseSchema.parse({
       success: true,
-      data: await adapter.getFreezeFrame(Number.isFinite(ts) ? ts : Date.now()),
+      data: await adapter.getFreezeFrame(Number.isFinite(ts) ? ts : Date.now(), name),
     });
   });
 
@@ -348,6 +364,44 @@ export const buildApp = ({
       data: await adapter.getHealthReport(),
     }),
   );
+
+  // 引导性诊断树：原样下发 docs 里那几棵树，前端只做渲染与导航
+  app.get("/api/diagnosis-trees", async () =>
+    DiagnosisTreesApiResponseSchema.parse({
+      success: true,
+      data: readDiagnosisTrees(),
+    }),
+  );
+
+  // 调高证据：诊断树节点旁边挂的数据旁证（三段定位 / 来源分布 / 效率基线 / 机型收敛）
+  app.get("/api/diagnosis/arm-evidence", async (request) => {
+    const { window } = ArmEvidenceQuerySchema.parse(request.query);
+
+    return ArmEvidenceApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getArmEvidence(window ?? EVIDENCE_DEFAULT_WINDOW_MS),
+    });
+  });
+
+  // 牵引证据：系统状态板 / 三段链 / 指令来源 / 变频器 / 松闸链
+  app.get("/api/diagnosis/traction-evidence", async (request) => {
+    const { window } = ArmEvidenceQuerySchema.parse(request.query);
+
+    return TractionEvidenceApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getTractionEvidence(window ?? EVIDENCE_DEFAULT_WINDOW_MS),
+    });
+  });
+
+  // 电机启停证据：四台电机的启动链五位 / 停启指令来源 / 相关激活故障
+  app.get("/api/diagnosis/motor-evidence", async (request) => {
+    const { window } = ArmEvidenceQuerySchema.parse(request.query);
+
+    return MotorEvidenceApiResponseSchema.parse({
+      success: true,
+      data: await adapter.getMotorEvidence(window ?? EVIDENCE_DEFAULT_WINDOW_MS),
+    });
+  });
 
   app.get("/api/event-timeline", async (request) => {
     const { from, to } = TimelineQuerySchema.parse(request.query);

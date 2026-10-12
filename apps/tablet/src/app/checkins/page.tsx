@@ -8,22 +8,9 @@ import {
 } from "@shearer/contracts";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const CheckinsApiResponseSchema = createApiSuccessResponseSchema(CheckinsResponseSchema);
-
-const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-  const { protocol, hostname, port } = window.location;
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-  return `${protocol}//${window.location.host}`;
-};
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const dateKey = (d: Date) =>
@@ -156,7 +143,7 @@ export default function CheckinsPage() {
   const todayText = dateKey(new Date());
 
   return (
-    <AppShell hideFloatingHome={showCalendar} shellState={shellState} title="日常检修打卡">
+    <AppShell shellState={shellState} title="日常检修打卡">
       <section className="page active">
         {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 

@@ -1,4 +1,5 @@
 import type {
+  ArmEvidence,
   BootstrapResponse,
   DataWindow,
   DowntimeResponse,
@@ -27,8 +28,10 @@ import type {
   SensorSummary,
   SensorTrendPoint,
   SettingsSnapshot,
+  MotorEvidence,
   TractionAnalysisRange,
   TractionAnalysisResponse,
+  TractionEvidence,
   WeeklyEvent,
 } from "@shearer/contracts";
 
@@ -66,9 +69,12 @@ export interface DataSourceAdapter {
   getLiveFaults(limit?: number): Promise<LiveFault[]>;
   getDowntime(fromMs?: number, toMs?: number): Promise<DowntimeResponse>;
   getMachineStatus(): Promise<MachineStatus>;
-  getFreezeFrame(tsMs: number): Promise<FreezeFrame>;
+  getFreezeFrame(tsMs: number, faultName?: string): Promise<FreezeFrame>;
   getHealthReport(): Promise<HealthReport>;
   getEventTimeline(fromMs: number, toMs: number): Promise<TimelineResponse>;
+  getArmEvidence(windowMs: number): Promise<ArmEvidence>;
+  getTractionEvidence(windowMs: number): Promise<TractionEvidence>;
+  getMotorEvidence(windowMs: number): Promise<MotorEvidence>;
   getCheckins(): Promise<CheckinsResponse>;
   saveCheckin(payload: CheckinsSubmitRequest): Promise<CheckinsResponse>;
   getKnowledgeAssets(): Promise<KnowledgeAssetsResponse>;

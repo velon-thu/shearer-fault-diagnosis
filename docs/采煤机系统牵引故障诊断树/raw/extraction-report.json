@@ -1,0 +1,19 @@
+{
+  "video": "系统牵引故障.mp4",
+  "duration_sec": 427.333,
+  "resolution": [
+    572,
+    1080
+  ],
+  "question_nodes": 27,
+  "result_nodes": 26,
+  "root_to_result_paths": 38,
+  "unresolved_branches": 0,
+  "method": "stable-frame segmentation + visual review + timeline/backtracking verification",
+  "notes": [
+    "重复出现的相同页面已合并为同一个逻辑节点。",
+    "录屏中的“上一步”已作为统一导航行为剥离。",
+    "诊断跳转均由录屏直接确认。",
+    "部分标点和单位空格已规范化，设备端子编号与故障码保持原意。"
+  ]
+}

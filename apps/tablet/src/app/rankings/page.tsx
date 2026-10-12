@@ -10,29 +10,13 @@ import {
 } from "@shearer/contracts";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
+import { splitHandle } from "@/lib/fault-text";
 import { DualRangeSlider } from "@/components/dual-range-slider";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const RankingsApiResponseSchema = createApiSuccessResponseSchema(RankingsResponseSchema);
 const DataWindowApiResponseSchema = createApiSuccessResponseSchema(DataWindowSchema);
 const FaultRulesApiResponseSchema = createApiSuccessResponseSchema(FaultRulesResponseSchema);
-
-const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-
-  const { protocol, hostname, port } = window.location;
-
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-
-  return `${protocol}//${window.location.host}`;
-};
 
 const FAULT_PREFS_KEY = "shearer.faults.prefs";
 
@@ -74,13 +58,6 @@ const TYPE_TEXT = ["提示", "警告", "停机"];
 const KIND_TEXT: Record<number, string> = {
   1: "变频器", 2: "电机", 3: "模块", 4: "传感器", 5: "自动化", 6: "内部", 7: "来源",
 };
-
-// handle 形如 "1.xxx。2.xxx。3.xxx。" → 拆成建议条目
-const splitHandle = (handle?: string): string[] =>
-  (handle ?? "")
-    .split(/\d+[.、]/)
-    .map((part) => part.trim())
-    .filter(Boolean);
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -240,7 +217,18 @@ export default function RankingsPage() {
   }, [faultRules, faultSearch]);
 
   return (
-    <AppShell hideFloatingHome={view === "settings"} shellState={shellState} title="近期故障排名">
+    <AppShell
+      back={
+        view === "settings"
+          ? { label: "排名", onClick: () => setView("list") }
+          : view === "list"
+            ? { label: "选择时间段", onClick: () => setView("range") }
+            : undefined
+      }
+      shellState={shellState}
+      title="近期故障排名"
+      viewTitle={view === "settings" ? "故障设置" : view === "list" ? "排名" : "选择时间段"}
+    >
       <section className="page active">
         {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
@@ -289,12 +277,6 @@ export default function RankingsPage() {
         ) : view === "settings" ? (
           /* ===== 故障设置：搜索 + 显示/隐藏 ===== */
           <>
-            <div className="sensor-detail-head">
-              <button className="sensor-back-btn" onClick={() => setView("list")} type="button">
-                ‹ 返回排名
-              </button>
-              <h1 className="sensor-detail-title">故障设置</h1>
-            </div>
             <input
               className="sensor-search"
               onChange={(event) => setFaultSearch(event.target.value)}
@@ -329,9 +311,6 @@ export default function RankingsPage() {
           /* ===== 排名列表：普通故障总排名（按占比） ===== */
           <>
             <div className="sensor-topbar">
-              <button className="sensor-back-btn" onClick={() => setView("range")} type="button">
-                重新选择时间
-              </button>
               <span className="range-picker-current">
                 {fmtDateTime(fromMs)} → {fmtDateTime(toMs)}
               </span>

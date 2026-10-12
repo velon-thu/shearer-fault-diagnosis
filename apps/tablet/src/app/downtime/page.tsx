@@ -9,28 +9,12 @@ import {
 } from "@shearer/contracts";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
+import { splitHandle } from "@/lib/fault-text";
 import { DualRangeSlider, fmtSliderDateTime } from "@/components/dual-range-slider";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const DataWindowApiResponseSchema = createApiSuccessResponseSchema(DataWindowSchema);
 const DowntimeApiResponseSchema = createApiSuccessResponseSchema(DowntimeResponseSchema);
-
-const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-
-  const { protocol, hostname, port } = window.location;
-
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-
-  return `${protocol}//${window.location.host}`;
-};
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -64,13 +48,6 @@ const SEG_STYLE: Record<string, { label: string; color: string }> = {
 
 const segKey = (seg: DowntimeSegment) =>
   seg.state === "stopped" ? `stopped-${seg.cause ?? "idle"}` : seg.state;
-
-// handle 形如 "1.xxx。2.xxx。" → 拆条
-const splitHandle = (handle: string): string[] =>
-  handle
-    .split(/\d+[.、](?=[^\d])/)
-    .map((part) => part.trim())
-    .filter(Boolean);
 
 type ViewMode = "range" | "result";
 
@@ -147,7 +124,12 @@ export default function DowntimePage() {
   const span = data ? data.toMs - data.fromMs : 1;
 
   return (
-    <AppShell hideFloatingHome={detail !== null} shellState={shellState} title="停机分析">
+    <AppShell
+      back={view === "result" ? { label: "选择时间段", onClick: () => setView("range") } : undefined}
+      shellState={shellState}
+      title="停机分析"
+      viewTitle={view === "result" ? "分析结果" : "选择时间段"}
+    >
       <section className="page active">
         {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
@@ -195,9 +177,6 @@ export default function DowntimePage() {
         ) : (
           <>
             <div className="sensor-topbar">
-              <button className="sensor-back-btn" onClick={() => setView("range")} type="button">
-                重新选择时间
-              </button>
               <span className="range-picker-current">
                 {fmtSliderDateTime(fromMs)} → {fmtSliderDateTime(toMs)}
               </span>

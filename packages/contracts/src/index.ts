@@ -286,6 +286,17 @@ export const SettingsVersionHistoryItemSchema = z.object({
   desc: z.string(),
 });
 
+// 数据源实况：库在哪、多大、覆盖到什么时候、采集还在不在跑
+export const SettingsDataSourceSchema = z.object({
+  dbPath: z.string(),
+  dbSizeMb: z.number().nullable(),
+  fromMs: z.number().nullable(),
+  toMs: z.number().nullable(),
+  lagMs: z.number().nullable(),
+  collecting: z.boolean(),
+  tables: z.array(z.object({ name: z.string(), rows: z.number() })),
+  trees: z.array(z.object({ name: z.string(), modules: z.number(), nodes: z.number() })),
+});
 export const SettingsSnapshotSchema = z.object({
   connected: z.boolean(),
   connection: ConnectionStatusSchema,
@@ -293,6 +304,9 @@ export const SettingsSnapshotSchema = z.object({
   machineFields: z.array(KeyValueFieldSchema),
   versionHistoryData: z.array(SettingsVersionHistoryItemSchema),
   networkInfoData: z.array(KeyValueFieldSchema),
+  // 下面两组是工控机上真实读出来的，不是配置里写死的
+  runtimeInfo: z.array(KeyValueFieldSchema).optional(),
+  dataSource: SettingsDataSourceSchema.optional(),
 });
 
 // ===== 共享内存监视（/api/shm/live） =====
@@ -425,10 +439,45 @@ export const FreezeFrameSignalSchema = z.object({
   name: z.string(),
   unit: z.string(),
   points: z.array(z.object({ ts: z.number(), value: z.number() })),
+  // 故障时刻前后各 1 分钟的均值对比，用来判断这一路有没有跟着变
+  beforeAvg: z.number().nullable(),
+  afterAvg: z.number().nullable(),
+  changePct: z.number().nullable(),
+  // none=没明显变化 / drop-zero=掉到零 / drop=下降 / surge=上升 / invalid=测点无效
+  change: z.enum(["none", "drop-zero", "drop", "surge", "invalid"]),
+  changeText: z.string(),
+});
+export const FreezeFrameOperationSchema = z.object({
+  ts: z.number(),
+  offsetMs: z.number(), // 相对故障时刻，负数=故障前
+  source: z.string(), // 左遥控器 / 电控箱按钮 / 系统输出 …
+  op: z.string(),
+  input: z.boolean(), // true=人按的，false=主控输出
+});
+export const FreezeFrameEventSchema = z.object({
+  ts: z.number(),
+  offsetMs: z.number(),
+  kind: z.enum(["fault", "clear", "state"]),
+  text: z.string(),
+  tone: z.enum(["stop", "warn", "ok", "state"]),
+});
+export const FreezeFrameSummarySchema = z.object({
+  headline: z.string(), // 一句话结论
+  findings: z.array(z.string()), // 曲线上看到的
+  context: z.array(z.string()), // 前后的操作与其他异常
+  caveats: z.array(z.string()), // 数据说不准的地方，宁可写明
 });
 export const FreezeFrameSchema = z.object({
   ts: z.number(), // 故障时刻
+  fromMs: z.number(),
+  toMs: z.number(),
+  faultName: z.string().nullable(),
+  // 同一秒一起报出来的其他故障：现场常见一按停机十几条齐发，得让人看见
+  concurrentFaults: z.array(z.string()),
   signals: z.array(FreezeFrameSignalSchema),
+  operations: z.array(FreezeFrameOperationSchema),
+  events: z.array(FreezeFrameEventSchema),
+  summary: FreezeFrameSummarySchema,
 });
 
 // ===== 一键体检 =====
@@ -440,10 +489,21 @@ export const HealthSymmetrySchema = z.object({
   diffText: z.string(),
   judge: z.enum(["normal", "attention", "invalid"]),
 });
+// 体检分项：每项独立满分，扣分要说得出理由，前端逐项展开
+export const HealthCheckItemSchema = z.object({
+  key: z.string(),
+  name: z.string(),
+  status: z.enum(["ok", "attention", "bad", "skipped"]),
+  score: z.number(), // 实得分
+  maxScore: z.number(),
+  summary: z.string(),
+  details: z.array(z.string()),
+});
 export const HealthReportSchema = z.object({
   scannedAt: z.number(),
   score: z.number(),
   grade: z.enum(["优", "良", "注意", "异常"]),
+  items: z.array(HealthCheckItemSchema),
   modules: z.array(z.object({ name: z.string(), ok: z.boolean() })),
   sensors: z.object({
     total: z.number(),
@@ -452,7 +512,235 @@ export const HealthReportSchema = z.object({
     invalid: z.array(z.object({ name: z.string(), state: z.string() })),
   }),
   activeFaults: z.array(z.object({ name: z.string(), type: z.number(), occurTs: z.number() })),
+  // 由未配备/无效测点引发的常驻报警：单列出来，不参与扣分
+  suspectFaults: z.array(z.object({ name: z.string(), reason: z.string() })),
   symmetry: z.array(HealthSymmetrySchema),
+  dataLagMs: z.number().nullable(), // 库内最新数据距now，判数据链路是否在跑
+});
+
+// ===== 引导性诊断树 =====
+// 数据源是 docs/*诊断树*/diagnosis-trees.yaml，经 tools/build-diagnosis-trees.py
+// 原样搬运成 JSON。这里的字段与 YAML 一一对应，后端不做任何裁剪或改写。
+export const DiagnosisOptionStatusSchema = z.enum([
+  "observed", // 录屏中直接看到跳转
+  "recorded", // 同上，电机启停树的写法
+  "inferred_from_backtracking",
+  "inferred_from_recorded_backtracking",
+  "inferred_from_technical_logic",
+  "unresolved_not_recorded", // 录屏未展示下一页：前端显示待补录，禁止编造
+]);
+export const DiagnosisOptionSchema = z.object({
+  label: z.string(),
+  next: z.string().nullable(),
+  status: DiagnosisOptionStatusSchema,
+  note: z.string().optional(),
+});
+export const DiagnosisNodeSchema = z.object({
+  id: z.string(),
+  type: z.enum(["question", "result"]),
+  text: z.string(),
+  options: z.array(DiagnosisOptionSchema),
+  note: z.string().optional(),
+  sourcePage: z.string().optional(),
+  sourceTimestampS: z.number().optional(),
+  sourceFrame: z.string().optional(),
+  severity: z.string().optional(), // 结论节点的分级：diagnosis / warning
+  confidence: z.string().optional(),
+});
+export const DiagnosisModuleSchema = z.object({
+  id: z.string(),
+  index: z.number().int(),
+  name: z.string(),
+  startNode: z.string(),
+  sourceVideo: z.string().optional(),
+  nodes: z.array(DiagnosisNodeSchema),
+});
+export const DiagnosisTreeSchema = z.object({
+  id: z.string(), // arm-height / traction / motor-start-stop
+  shortName: z.string(),
+  title: z.string(),
+  schemaVersion: z.string(),
+  sourceDir: z.string(),
+  extractionNotes: z.array(z.string()),
+  // 部分树带原理说明与安全须知，前端在第一问展示（须知按条目给，逐条列出）
+  introduction: z.string().optional(),
+  safetyNotice: z.array(z.string()).optional(),
+  modules: z.array(DiagnosisModuleSchema),
+});
+export const DiagnosisTreesResponseSchema = z.object({
+  generatedAt: z.string(),
+  trees: z.array(DiagnosisTreeSchema),
+});
+
+// ===== 调高证据（诊断树的数据侧旁证） =====
+// 判定口径统一：三段 = 指令段（输入侧按下）→ 输出段（主控输出）→ 效果段（采高变化）。
+export const ArmEvidenceVerdictSchema = z.enum([
+  "ok", // 三段全通，摇臂动了
+  "no-motion", // 主控已输出但采高不动 → 输出继电器之后
+  "chain-broken", // 有输入无输出 → 遥控器/接收模块/主控
+  "no-command", // 窗口内没有该侧升降指令，判不了
+  "sensor-invalid", // 采高测点无效，效果段不可判
+]);
+export const ArmEvidenceSourceSchema = z.object({
+  source: z.string(), // 左遥控器 / 右端头站 / 自动截割 / 上位机 …
+  count: z.number().int().nonnegative(),
+  movedCount: z.number().int().nonnegative(),
+  lastTs: z.number().nullable(),
+});
+export const ArmEvidenceSideSchema = z.object({
+  side: z.enum(["left", "right"]),
+  label: z.string(),
+  inputCount: z.number().int().nonnegative(),
+  outputCount: z.number().int().nonnegative(),
+  matchedCount: z.number().int().nonnegative(), // 输入后 2s 内有对应输出
+  matchedRatePct: z.number().nullable(),
+  movedCount: z.number().int().nonnegative(), // 输出后 8s 内采高有变化
+  movedRatePct: z.number().nullable(),
+  medianDeltaM: z.number().nullable(), // 单次指令位移中位数
+  heightValid: z.boolean(),
+  verdict: ArmEvidenceVerdictSchema,
+  verdictText: z.string(),
+  sources: z.array(ArmEvidenceSourceSchema),
+  baselineMovedRatePct: z.number().nullable(), // 全库基线
+  baselineMedianDeltaM: z.number().nullable(),
+  efficiencyPct: z.number().nullable(), // 窗口位移 / 基线位移
+});
+export const ArmEvidenceProfileSchema = z.object({
+  candidates: z.array(
+    z.object({
+      moduleId: z.string(),
+      name: z.string(),
+      reasons: z.array(z.string()),
+    }),
+  ),
+  facts: z.array(z.object({ label: z.string(), value: z.string() })),
+});
+export const ArmEvidenceSchema = z.object({
+  fromMs: z.number(),
+  toMs: z.number(),
+  windowLabel: z.string(),
+  pump: z.object({
+    running: z.boolean(),
+    contactorOn: z.boolean(),
+    lastChangeTs: z.number().nullable(),
+    text: z.string(),
+  }),
+  sides: z.array(ArmEvidenceSideSchema),
+  sideVerdict: z.enum(["both", "left", "right", "none", "unknown"]),
+  sideVerdictText: z.string(),
+  modules: z.array(z.object({ name: z.string(), ok: z.boolean(), note: z.string() })),
+  profile: ArmEvidenceProfileSchema,
+  // 诊断树里问到、但本机确实没有测点的项：宁可写明"请现场实测"，不许拿别的数糊弄
+  unavailable: z.array(z.object({ topic: z.string(), reason: z.string() })),
+});
+export const ArmEvidenceQuerySchema = z.object({
+  window: z.coerce.number().int().positive().optional(), // 毫秒，缺省 2 小时
+});
+
+// ===== 牵引证据（系统牵引故障诊断树的数据侧） =====
+// 三段口径同调高：指令段（输入按下）→ 输出段（主控输出）→ 效果段（实测速度变化）。
+export const TractionStateSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+  // true=正常 / false=异常 / null=该位无效或判不了，前端据此上色
+  ok: z.boolean().nullable(),
+  note: z.string().optional(),
+});
+export const TractionCommandSourceSchema = z.object({
+  op: z.string(), // 牵停 / 减速 / 牵启 …
+  totalCount: z.number().int().nonnegative(),
+  sources: z.array(
+    z.object({
+      source: z.string(),
+      count: z.number().int().nonnegative(),
+      lastTs: z.number().nullable(),
+    }),
+  ),
+});
+export const TractionInverterSchema = z.object({
+  name: z.string(),
+  busVoltageV: z.number().nullable(),
+  outputFreqHz: z.number().nullable(),
+  outputTorquePct: z.number().nullable(),
+  igbtTemp: z.number().nullable(),
+  running: z.boolean().nullable(),
+  extFault: z.boolean().nullable(),
+  invalidTags: z.array(z.string()), // 读数恒定判为无效的测点，明说别当证据用
+});
+export const TractionEvidenceSchema = z.object({
+  fromMs: z.number(),
+  toMs: z.number(),
+  windowLabel: z.string(),
+  states: z.array(TractionStateSchema),
+  chain: z.object({
+    inputCount: z.number().int().nonnegative(),
+    outputCount: z.number().int().nonnegative(),
+    matchedCount: z.number().int().nonnegative(),
+    matchedRatePct: z.number().nullable(),
+    movedCount: z.number().int().nonnegative(),
+    movedRatePct: z.number().nullable(),
+    maxSpeedMmin: z.number().nullable(),
+    speedValid: z.boolean(),
+    verdict: ArmEvidenceVerdictSchema,
+    verdictText: z.string(),
+  }),
+  commandSources: z.array(TractionCommandSourceSchema),
+  inverters: z.array(TractionInverterSchema),
+  brake: z.object({
+    cmd: z.boolean().nullable(),
+    ack: z.boolean().nullable(),
+    released: z.boolean().nullable(),
+    // 松闸确认位与实际运行状态互相矛盾时判为不可信，宁可不给结论
+    trustworthy: z.boolean(),
+    text: z.string(),
+  }),
+  activeFaults: z.array(
+    z.object({ name: z.string(), type: z.number(), occurTs: z.number() }),
+  ),
+  loadBalance: z.array(
+    z.object({ label: z.string(), left: z.number(), right: z.number(), unit: z.string() }),
+  ),
+  unavailable: z.array(z.object({ topic: z.string(), reason: z.string() })),
+});
+
+// ===== 电机启停证据（电机启停故障诊断树的数据侧） =====
+// 启动链就是共享内存里的五个状态位：启动预警 → 启动过程中 → 接触器吸合 → 运行中，
+// 外加一个漏电闭锁。诊断树问的"断在哪一环"，这条链逐位都能答。
+export const MotorStageSchema = z.object({
+  label: z.string(), // 启动预警 / 启动过程中 / 接触器吸合 / 运行中 / 漏电闭锁
+  on: z.boolean().nullable(), // null = 该位读不到
+  lastOnTs: z.number().nullable(), // 窗口内最后一次置起的时刻
+  onCount: z.number().int().nonnegative(), // 窗口内置起次数
+});
+export const MotorUnitSchema = z.object({
+  id: z.string(), // pump / left-cutter / right-cutter / crusher
+  name: z.string(),
+  installed: z.boolean(), // 五位全程为 0 视为未配备/未接
+  stages: z.array(MotorStageSchema),
+  // 启动链断点：ok / never-started / start-failed / not-holding / leak-locked / not-installed / no-data
+  verdict: z.string(),
+  verdictText: z.string(),
+  runSeconds: z.number().nullable(), // 窗口内累计运行时长
+  restartCount: z.number().int().nonnegative(), // 窗口内"起来又掉"的次数
+  currentA: z.number().nullable(),
+  loadPct: z.number().nullable(),
+  tempC: z.number().nullable(),
+});
+export const MotorEvidenceSchema = z.object({
+  fromMs: z.number(),
+  toMs: z.number(),
+  windowLabel: z.string(),
+  motors: z.array(MotorUnitSchema),
+  // 树里反复问的"停止信号来自哪里"，按操作来源分组
+  stopSources: z.array(TractionCommandSourceSchema),
+  startSources: z.array(TractionCommandSourceSchema),
+  activeFaults: z.array(
+    z.object({ name: z.string(), type: z.number(), occurTs: z.number() }),
+  ),
+  moduleOk: z.array(z.object({ name: z.string(), ok: z.boolean() })),
+  // 树里直接问到的系统标志位，如"牵引被泵电机闭锁"提示
+  flags: z.array(z.object({ label: z.string(), on: z.boolean().nullable() })),
+  unavailable: z.array(z.object({ topic: z.string(), reason: z.string() })),
 });
 
 // ===== 事件关联时间线 =====
@@ -575,8 +863,31 @@ export type FaultRuleItem = z.infer<typeof FaultRuleItemSchema>;
 export type InternalFaultRules = z.infer<typeof InternalFaultRulesSchema>;
 export type LiveFault = z.infer<typeof LiveFaultSchema>;
 export type MachineStatus = z.infer<typeof MachineStatusSchema>;
+export type FreezeFrameSignal = z.infer<typeof FreezeFrameSignalSchema>;
+export type FreezeFrameOperation = z.infer<typeof FreezeFrameOperationSchema>;
+export type FreezeFrameEvent = z.infer<typeof FreezeFrameEventSchema>;
+export type FreezeFrameSummary = z.infer<typeof FreezeFrameSummarySchema>;
 export type FreezeFrame = z.infer<typeof FreezeFrameSchema>;
+export type HealthCheckItem = z.infer<typeof HealthCheckItemSchema>;
 export type HealthReport = z.infer<typeof HealthReportSchema>;
+export type DiagnosisOptionStatus = z.infer<typeof DiagnosisOptionStatusSchema>;
+export type DiagnosisOption = z.infer<typeof DiagnosisOptionSchema>;
+export type DiagnosisNode = z.infer<typeof DiagnosisNodeSchema>;
+export type DiagnosisModule = z.infer<typeof DiagnosisModuleSchema>;
+export type DiagnosisTree = z.infer<typeof DiagnosisTreeSchema>;
+export type DiagnosisTreesResponse = z.infer<typeof DiagnosisTreesResponseSchema>;
+export type ArmEvidenceVerdict = z.infer<typeof ArmEvidenceVerdictSchema>;
+export type ArmEvidenceSource = z.infer<typeof ArmEvidenceSourceSchema>;
+export type ArmEvidenceSide = z.infer<typeof ArmEvidenceSideSchema>;
+export type ArmEvidenceProfile = z.infer<typeof ArmEvidenceProfileSchema>;
+export type ArmEvidence = z.infer<typeof ArmEvidenceSchema>;
+export type TractionState = z.infer<typeof TractionStateSchema>;
+export type TractionCommandSource = z.infer<typeof TractionCommandSourceSchema>;
+export type TractionInverter = z.infer<typeof TractionInverterSchema>;
+export type TractionEvidence = z.infer<typeof TractionEvidenceSchema>;
+export type MotorStage = z.infer<typeof MotorStageSchema>;
+export type MotorUnit = z.infer<typeof MotorUnitSchema>;
+export type MotorEvidence = z.infer<typeof MotorEvidenceSchema>;
 export type TimelineEvent = z.infer<typeof TimelineEventSchema>;
 export type TimelineResponse = z.infer<typeof TimelineResponseSchema>;
 export type DowntimeSegment = z.infer<typeof DowntimeSegmentSchema>;
@@ -599,6 +910,7 @@ export type AuthLoginResponse = z.infer<typeof AuthLoginResponseSchema>;
 export type AuthMeResponse = z.infer<typeof AuthMeResponseSchema>;
 export type AuthLogoutResponse = z.infer<typeof AuthLogoutResponseSchema>;
 export type SettingsVersionHistoryItem = z.infer<typeof SettingsVersionHistoryItemSchema>;
+export type SettingsDataSource = z.infer<typeof SettingsDataSourceSchema>;
 export type SettingsSnapshot = z.infer<typeof SettingsSnapshotSchema>;
 export type KeyValueField = z.infer<typeof KeyValueFieldSchema>;
 export type FaultCategory = z.infer<typeof FaultCategorySchema>;

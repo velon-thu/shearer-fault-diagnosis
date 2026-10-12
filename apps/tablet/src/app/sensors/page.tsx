@@ -12,28 +12,11 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
 import { SensorTrendChart } from "@/components/sensor-trend-chart";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const SensorSummariesApiResponseSchema = createApiSuccessResponseSchema(SensorSummarySchema.array());
 const SensorDetailApiResponseSchema = createApiSuccessResponseSchema(SensorDetailSchema);
 const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendPointSchema.array());
-
-const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-
-  const { protocol, hostname, port } = window.location;
-
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-
-  return `${protocol}//${window.location.host}`;
-};
 
 // 类型页顺序（合并分组：压力/流量/油位、速度/位置；其余归"其他"）
 const TYPE_ORDER = [
@@ -251,7 +234,25 @@ export default function SensorsPage() {
   }, [summaries]);
 
   return (
-    <AppShell hideFloatingHome={view === "detail"} shellState={shellState} title="传感器">
+    <AppShell
+      back={
+        view === "overview"
+          ? undefined
+          : {
+              label: "传感器总览",
+              onClick: () => {
+                setView("overview");
+                setSelectedId(null);
+                setTrendWindow(null);
+              },
+            }
+      }
+      shellState={shellState}
+      title="传感器"
+      viewTitle={
+        view === "settings" ? "传感器设置" : view === "detail" ? (activeInfo?.name ?? "详情") : undefined
+      }
+    >
       <section className="page active">
         {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
@@ -338,18 +339,8 @@ export default function SensorsPage() {
           /* ===== 传感器设置：选择显示/隐藏 ===== */
           <>
             <div className="sensor-detail-head">
-              <button
-                className="sensor-back-btn"
-                onClick={() => setView("overview")}
-                type="button"
-              >
-                ‹ 返回总览
-              </button>
-              <div>
-                <h1 className="sensor-detail-title">传感器设置</h1>
-                <div className="sensor-detail-sub">
-                  未配备的传感器可在此隐藏，隐藏后不在总览中显示（本机记忆）。
-                </div>
+              <div className="sensor-detail-sub">
+                未配备的传感器可在此隐藏，隐藏后不在总览中显示（本机记忆）。
               </div>
             </div>
             {settingsGroups.map(([type, list]) => (
@@ -380,18 +371,6 @@ export default function SensorsPage() {
           /* ===== 全屏详情 ===== */
           <>
             <div className="sensor-detail-head">
-              <button
-                className="sensor-back-btn"
-                onClick={() => {
-                  setView("overview");
-                  setSelectedId(null);
-                  setTrendWindow(null);
-                }}
-                type="button"
-              >
-                ‹ 返回总览
-              </button>
-              <h1 className="sensor-detail-title">{activeInfo?.name ?? "传感器"}</h1>
               <div style={{ marginLeft: "auto", display: "flex", gap: 14, alignItems: "center" }}>
                 {trendWindow ? (
                   <button

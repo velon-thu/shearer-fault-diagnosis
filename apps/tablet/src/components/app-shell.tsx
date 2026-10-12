@@ -18,6 +18,7 @@ import {
   getStoredAccessToken,
   logoutCurrentSession,
 } from "@/lib/auth";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const BootstrapApiResponseSchema = createApiSuccessResponseSchema(BootstrapResponseSchema);
 
@@ -32,24 +33,6 @@ const fallbackConnection: ConnectionStatus = {
   bp1: "offline",
   bp2: "offline",
   syncAt: "",
-};
-
-const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-
-  const { protocol, hostname, port } = window.location;
-
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-
-  return `${protocol}//${window.location.host}`;
 };
 
 const resolveWsUrl = () => {
@@ -208,25 +191,32 @@ export const useAppShellState = (): AppShellState => {
   };
 };
 
+export type NavBack = {
+  /** 返回键上直接写目的地名称，让人点之前就知道会退到哪 */
+  label: string;
+  onClick: () => void;
+};
+
 type AppShellProps = {
+  /** 页面名，导航栏面包屑第一段 */
   title: string;
-  subtitle?: string;
   children: ReactNode;
   shellState: AppShellState;
-  disableHomeButton?: boolean;
-  tagText?: string;
-  tagTone?: "blue" | "green" | "orange" | "red";
-  /** 精简顶栏（主页面用）：只保留退出登录 + HPC/MOC/BOC 状态灯 */
+  /** 当前页内子视图名，导航栏面包屑第二段；不传表示在页面第一层 */
+  viewTitle?: string;
+  /** 页内子视图的返回目标；不传表示返回键直接回主页面 */
+  back?: NavBack;
+  /** 精简顶栏（主页面用）：只保留退出登录 + 模块状态灯 */
   minimalHeader?: boolean;
-  /** 子页面进入全屏子视图时隐藏悬浮"主页面"按钮 */
-  hideFloatingHome?: boolean;
 };
 
 export function AppShell({
+  back,
   children,
   shellState,
   minimalHeader = false,
-  hideFloatingHome = false,
+  title,
+  viewTitle,
 }: AppShellProps) {
   const { connection } = shellState;
   const pathname = usePathname();
@@ -383,9 +373,42 @@ export function AppShell({
               </div>
             </div>
           </header>
-        ) : hideFloatingHome ? null : (
-          // 子页面：顶栏不放任何东西，只有一个自动隐身的悬浮返回按钮
-          <FloatingHomeLink />
+        ) : (
+          // 子页面：固定导航栏，占位不覆盖内容
+          // 左=退一层（标签写目的地）· 中=面包屑 · 右=子视图里才出现的主页面直达
+          <header className="navbar">
+            <div className="navbar-inner">
+              {back ? (
+                <button className="nav-back" onClick={back.onClick} type="button">
+                  <span className="nav-chev">‹</span>
+                  {back.label}
+                </button>
+              ) : (
+                <Link className="nav-back" href="/">
+                  <span className="nav-chev">‹</span>
+                  主页面
+                </Link>
+              )}
+
+              <div className="nav-crumb">
+                <span className={viewTitle ? "nav-crumb-parent" : "nav-crumb-current"}>
+                  {title}
+                </span>
+                {viewTitle ? (
+                  <>
+                    <span className="nav-crumb-sep">›</span>
+                    <span className="nav-crumb-current">{viewTitle}</span>
+                  </>
+                ) : null}
+              </div>
+
+              {back ? (
+                <Link className="nav-home" href="/">
+                  主页面
+                </Link>
+              ) : null}
+            </div>
+          </header>
         )}
 
         <div className="content">
@@ -393,42 +416,5 @@ export function AppShell({
         </div>
       </section>
     </main>
-  );
-}
-
-/**
- * 悬浮「返回主页面」按钮：3 秒无操作自动淡出成幽灵态（仍可点击），
- * 任何触摸/滚动/按键立即恢复完全可见。
- */
-function FloatingHomeLink() {
-  const [dimmed, setDimmed] = useState(false);
-
-  useEffect(() => {
-    let timer = 0;
-
-    const wake = () => {
-      setDimmed(false);
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => setDimmed(true), 3000);
-    };
-
-    wake();
-    const events = ["pointerdown", "touchstart", "scroll", "keydown", "wheel"] as const;
-    events.forEach((name) =>
-      window.addEventListener(name, wake, { passive: true, capture: true }),
-    );
-
-    return () => {
-      window.clearTimeout(timer);
-      events.forEach((name) =>
-        window.removeEventListener(name, wake, { capture: true }),
-      );
-    };
-  }, []);
-
-  return (
-    <Link className={`float-home${dimmed ? " dimmed" : ""}`} href="/">
-      ‹ 主页面
-    </Link>
   );
 }

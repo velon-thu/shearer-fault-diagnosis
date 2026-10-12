@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { readChartTheme } from "@/lib/chart-theme";
+import { THEME_CHANGE_EVENT } from "@/lib/theme";
 
 type ChartSeriesLike = {
   name: string;
@@ -37,6 +39,7 @@ export function AnalysisTrendChart({
     } | null = null;
 
     const renderChart = async () => {
+      const theme = readChartTheme();
       const echarts = await import("echarts");
 
       if (disposed || !containerRef.current) {
@@ -59,10 +62,10 @@ export function AnalysisTrendChart({
         },
         tooltip: {
           trigger: "axis",
-          backgroundColor: "rgba(18,24,33,.96)",
+          backgroundColor: theme.tooltipBg,
           borderColor: "rgba(79,140,255,.22)",
           textStyle: {
-            color: "#f5f7fb",
+            color: theme.tooltipFg,
           },
         },
         xAxis: {
@@ -71,7 +74,7 @@ export function AnalysisTrendChart({
           data: labels,
           axisLine: {
             lineStyle: {
-              color: "rgba(255,255,255,.12)",
+              color: theme.line,
             },
           },
           axisLabel: {
@@ -96,7 +99,7 @@ export function AnalysisTrendChart({
           },
           splitLine: {
             lineStyle: {
-              color: "rgba(255,255,255,.06)",
+              color: theme.split,
             },
           },
         },
@@ -149,9 +152,13 @@ export function AnalysisTrendChart({
     };
 
     void renderChart();
+    // 切主题时坐标轴/网格线颜色要跟着翻，重画一次
+    const onTheme = () => void renderChart();
+    window.addEventListener(THEME_CHANGE_EVENT, onTheme);
 
     return () => {
       disposed = true;
+      window.removeEventListener(THEME_CHANGE_EVENT, onTheme);
       cleanupResize();
       chart?.dispose();
     };

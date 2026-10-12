@@ -8,6 +8,7 @@ import {
   type AuthLoginResponse,
   type AuthMeResponse,
 } from "@shearer/contracts";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const AuthLoginApiResponseSchema = createApiSuccessResponseSchema(AuthLoginResponseSchema);
 const AuthMeApiResponseSchema = createApiSuccessResponseSchema(AuthMeResponseSchema);
@@ -20,25 +21,7 @@ type StoredAuthSession = {
   expiresAt: string;
 };
 
-export const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-
-  const { protocol, hostname, port } = window.location;
-
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-
-  return `${protocol}//${window.location.host}`;
-};
-
-const isBrowser = () => typeof window !== "undefined";
+export const isBrowser = () => typeof window !== "undefined";
 
 export const getStoredAuthSession = (): StoredAuthSession | null => {
   if (!isBrowser()) {

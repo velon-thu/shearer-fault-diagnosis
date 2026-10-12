@@ -1,4 +1,5 @@
 import type {
+  ArmEvidence,
   DataWindow,
   DowntimeResponse,
   FaultRuleItem,
@@ -13,8 +14,10 @@ import type {
   ConnectionStatus,
   CuttingAnalysisRange,
   FaultCategory,
+  MotorEvidence,
   PumpAnalysisRange,
   TractionAnalysisRange,
+  TractionEvidence,
 } from "@shearer/contracts";
 import {
   buildSensorTrend,
@@ -124,7 +127,22 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
   }
 
   async getFreezeFrame(tsMs: number): Promise<FreezeFrame> {
-    return { ts: tsMs, signals: [] };
+    return {
+      ts: tsMs,
+      fromMs: tsMs - 5 * 60_000,
+      toMs: tsMs + 5 * 60_000,
+      faultName: null,
+      concurrentFaults: [],
+      signals: [],
+      operations: [],
+      events: [],
+      summary: {
+        headline: "读不到现场数据，请确认数据面已启动。",
+        findings: [],
+        context: [],
+        caveats: [],
+      },
+    };
   }
 
   async getHealthReport(): Promise<HealthReport> {
@@ -132,15 +150,85 @@ export class MockDataSourceAdapter implements DataSourceAdapter {
       scannedAt: Date.now(),
       score: 0,
       grade: "异常",
+      items: [],
       modules: [],
       sensors: { total: 0, valid: 0, notInstalled: 0, invalid: [] },
       activeFaults: [],
+      suspectFaults: [],
       symmetry: [],
+      dataLagMs: null,
     };
   }
 
   async getEventTimeline(fromMs: number, toMs: number): Promise<TimelineResponse> {
     return { fromMs, toMs, events: [] };
+  }
+
+  /** 无真实数据时不编证据：全部按"读不到数据"返回，前端照旧走人工排查。 */
+  async getArmEvidence(windowMs: number): Promise<ArmEvidence> {
+    const now = Date.now();
+    return {
+      fromMs: now - windowMs,
+      toMs: now,
+      windowLabel: "无数据",
+      pump: { running: false, contactorOn: false, lastChangeTs: null, text: "读不到泵电机状态" },
+      sides: [],
+      sideVerdict: "unknown",
+      sideVerdictText: "读不到调高数据，请按现场实测结果作答。",
+      modules: [],
+      profile: { candidates: [], facts: [] },
+      unavailable: [],
+    };
+  }
+
+  async getTractionEvidence(windowMs: number): Promise<TractionEvidence> {
+    const now = Date.now();
+    return {
+      fromMs: now - windowMs,
+      toMs: now,
+      windowLabel: "无数据",
+      states: [],
+      chain: {
+        inputCount: 0,
+        outputCount: 0,
+        matchedCount: 0,
+        matchedRatePct: null,
+        movedCount: 0,
+        movedRatePct: null,
+        maxSpeedMmin: null,
+        speedValid: false,
+        verdict: "no-command",
+        verdictText: "读不到牵引数据，请按现场实测结果作答。",
+      },
+      commandSources: [],
+      inverters: [],
+      brake: {
+        cmd: null,
+        ack: null,
+        released: null,
+        trustworthy: false,
+        text: "读不到松闸状态。",
+      },
+      activeFaults: [],
+      loadBalance: [],
+      unavailable: [],
+    };
+  }
+
+  async getMotorEvidence(windowMs: number): Promise<MotorEvidence> {
+    const now = Date.now();
+    return {
+      fromMs: now - windowMs,
+      toMs: now,
+      windowLabel: "无数据",
+      motors: [],
+      stopSources: [],
+      startSources: [],
+      activeFaults: [],
+      moduleOk: [],
+      flags: [],
+      unavailable: [],
+    };
   }
 
   async getLiveFaults(): Promise<LiveFault[]> {

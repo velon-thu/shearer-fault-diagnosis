@@ -9,27 +9,10 @@ import {
 import { useEffect, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
 import { ACS880_FAULTS, type Acs880Fault } from "./acs880-faults";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const FaultCodeResultApiResponseSchema = createApiSuccessResponseSchema(FaultCodeResultSchema);
 const InternalFaultRulesApiResponseSchema = createApiSuccessResponseSchema(InternalFaultRulesSchema);
-
-const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-
-  const { protocol, hostname, port } = window.location;
-
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-
-  return `${protocol}//${window.location.host}`;
-};
 
 const TYPE_TEXT = ["提示", "警告", "停机"];
 
@@ -151,8 +134,21 @@ export default function FaultCodesPage() {
     }
   };
 
+  const gridTitle = category === "system" ? "系统故障代码" : "变频器故障代码（ACS880）";
+
   return (
-    <AppShell hideFloatingHome={view === "custom"} shellState={shellState} title="故障代码查询">
+    <AppShell
+      back={
+        view === "menu"
+          ? undefined
+          : view === "custom"
+            ? { label: gridTitle, onClick: () => setView("grid") }
+            : { label: "选择类别", onClick: () => setView("menu") }
+      }
+      shellState={shellState}
+      title="故障代码查询"
+      viewTitle={view === "menu" ? "选择类别" : view === "custom" ? "自定义查询" : gridTitle}
+    >
       <section className="page active">
         {view === "menu" ? (
           /* ===== 入口：二选一 ===== */
@@ -170,12 +166,6 @@ export default function FaultCodesPage() {
           category === "system" ? (
             /* ===== 系统故障：常用代码方块（十六进制显示） ===== */
             <>
-              <div className="sensor-detail-head">
-                <button className="sensor-back-btn" onClick={() => setView("menu")} type="button">
-                  ‹ 返回
-                </button>
-                <h1 className="sensor-detail-title">系统故障代码查询</h1>
-              </div>
               <div className="fc-grid">
                 {systemTiles.map((rule) => (
                   <button
@@ -204,12 +194,6 @@ export default function FaultCodesPage() {
           ) : (
             /* ===== 变频器故障：ACS880 全量目录 ===== */
             <>
-              <div className="sensor-detail-head">
-                <button className="sensor-back-btn" onClick={() => setView("menu")} type="button">
-                  ‹ 返回
-                </button>
-                <h1 className="sensor-detail-title">变频器故障代码查询（ACS880）</h1>
-              </div>
               <div className="fc-grid fc-grid-flow">
                 {ACS880_FAULTS.map((fault) => (
                   <button
@@ -227,12 +211,6 @@ export default function FaultCodesPage() {
         ) : (
           /* ===== 自定义查询（系统/内部故障）：大键盘 + 规则提示 ===== */
           <>
-            <div className="sensor-detail-head">
-              <button className="sensor-back-btn" onClick={() => setView("grid")} type="button">
-                ‹ 返回
-              </button>
-              <h1 className="sensor-detail-title">系统故障代码查询 · 自定义</h1>
-            </div>
             <div className="fc-custom">
               <div className="fc-rules">
                 <div className="fc-rules-item">

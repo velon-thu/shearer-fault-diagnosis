@@ -857,15 +857,11 @@ const cloneCheckinCalendarRecords = (): Record<string, CheckinCalendarRecord> =>
     Object.entries(checkinCalendarStore).map(([date, record]) => [date, { ...record }]),
   );
 
+// 兜底值：真实运行信息由 DataplaneDataSourceAdapter 现读后覆盖（runtimeInfo）
 export const networkInfoData: KeyValueField[] = toFields([
-  ["工控机主机名", "cm-ipc-3106"],
-  ["工控机 IP", "192.168.10.36"],
-  ["平板 IP", "192.168.10.102"],
-  ["局域网状态", "同一子网 / RTT 6ms"],
-  ["Ubuntu 版本", "22.04 LTS"],
-  ["数据服务", "gRPC + WebSocket"],
-  ["上次握手时间", "2026-03-16 13:10:23"],
-  ["系统运行时长", "12 天 06 小时"],
+  ["工控机主机名", "未读取"],
+  ["工控机地址", "未读取"],
+  ["数据服务", "HTTP + WebSocket"],
 ]);
 
 export const createHomeSummary = (): HomeSummary => {

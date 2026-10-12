@@ -1,0 +1,10 @@
+{
+  "source_videos": [
+    "调高泵启停故障.mp4",
+    "截割启动故障.mp4",
+    "破碎电机启动故障.mp4",
+    "自启动油泵故障.mp4"
+  ],
+  "frame_extraction": "0.5秒采样、页面相似度聚类、人工核对节点文字与跳转",
+  "unresolved_branches": 3
+}

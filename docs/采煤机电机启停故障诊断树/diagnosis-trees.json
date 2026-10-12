@@ -1,0 +1,1890 @@
+{
+  "schema_version": "1.0",
+  "title": "采煤机电机启停故障诊断树",
+  "description": "根据4段微信小程序操作录屏提取的电机启停故障诊断逻辑。",
+  "safety_notice": [
+    "本资料由既有小程序录屏整理，仅用于故障诊断逻辑复刻和培训，不替代设备厂家手册、矿方安全规程及现场技术负责人指令。",
+    "涉及带电测量、短接接触器控制回路、绝缘测试、拆线或更换模块的操作，仅限具备资质且获得授权的人员执行；必须落实停电、验电、放电、闭锁挂牌和防误送电措施。",
+    "录屏中的“短接”步骤属于高风险诊断手段。程序实现时必须先展示安全确认，不得将其设计为普通用户可直接执行的无条件操作。",
+    "严禁用铜丝替代保险或绕过空气开关、保护回路及联锁。"
+  ],
+  "navigation": {
+    "previous_button": "上一步",
+    "behavior": "history_stack",
+    "unresolved_behavior": "显示“该分支待补录”，不得猜测跳转"
+  },
+  "modules": [
+    {
+      "id": "height_pump_start_stop",
+      "name": "调高泵启停故障",
+      "display_title": "油泵启动故障",
+      "source_video": "调高泵启停故障.mp4",
+      "start_node": "hp_q001",
+      "nodes": [
+        {
+          "id": "hp_q001",
+          "type": "question",
+          "text": "注意：所有电机启动都有按钮防压死保护，按钮按下时间不足3秒或超过5秒都将无法启动，请规范操作。采煤机上电启动后，显示器进入正常监视画面，所有模块状态均显示为绿色。按下油泵启动按钮3～5秒，显示器是否有油泵电机启动提示（有语音配置的采煤机同时有语音提示）？",
+          "options": [
+            {
+              "label": "有",
+              "next": "hp_q002",
+              "status": "recorded"
+            },
+            {
+              "label": "无",
+              "next": "hp_q020",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_004_0002.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q002",
+          "type": "question",
+          "text": "显示器有油泵电机启动提示（有语音配置的采煤机同时有语音提示），说明采煤机已经开始执行启动命令。提示结束后，油泵电机是否正常启动？",
+          "options": [
+            {
+              "label": "已启动",
+              "next": "hp_q003",
+              "status": "recorded"
+            },
+            {
+              "label": "未启动",
+              "next": "hp_q008",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_005_0005.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q003",
+          "type": "question",
+          "text": "提示结束后油泵电机正常启动。启动以后，油泵电机是否可以持续平稳运转？",
+          "options": [
+            {
+              "label": "可以",
+              "next": "hp_q004",
+              "status": "recorded"
+            },
+            {
+              "label": "不能",
+              "next": "hp_q006",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_006_0018.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q004",
+          "type": "question",
+          "text": "油泵电机持续运转，说明泵电机启动回路工作正常。请观察显示器是否有牵引（或截割）被泵电机闭锁提示？",
+          "options": [
+            {
+              "label": "有",
+              "next": "hp_q005",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "hp_r003",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_007_0028.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q005",
+          "type": "question",
+          "text": "有牵引（或截割）被泵电机闭锁提示，说明泵电机接触器吸合后反馈没有进入系统。请检查MOC-JX4.7在泵接触器吸合后是否有F+24V。",
+          "options": [
+            {
+              "label": "有24V",
+              "next": "hp_r001",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "hp_r002",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_008_0036.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r001",
+          "type": "result",
+          "text": "在泵接触器吸合后，MOC-JX4.7上可以测量到F+24V，说明电源及泵接触器辅助触点正常。在确认MOC-JX4插头没有问题后，请直接更换MOC模块。",
+          "source_frame": "heightpump/page_009_0045.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r002",
+          "type": "result",
+          "text": "请依次检查F24V到泵接触器辅助触点、再由辅助触点到MOC-JX4.7之间的线路，找到断路点并处理。",
+          "source_frame": "heightpump/page_010_0052.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r003",
+          "type": "result",
+          "text": "没有显示牵引（或截割）被泵电机闭锁提示，系统允许进一步操作采煤机，说明泵电机启动电路正常。",
+          "source_frame": "heightpump/page_011_0065.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q006",
+          "type": "question",
+          "text": "油泵电机启动后立即停止运转。请观察显示器是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+          "options": [
+            {
+              "label": "有故障",
+              "next": "hp_r004",
+              "status": "recorded"
+            },
+            {
+              "label": "无故障",
+              "next": "hp_q007",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_012_0072.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r004",
+          "type": "result",
+          "text": "根据系统提示的故障信息进行针对性处理。在系统模块“最近停机原因”中查到的停机代码，可在本小程序的系统故障模块中查看。",
+          "source_frame": "heightpump/page_013_0085.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q007",
+          "type": "question",
+          "text": "没有故障提示，多数是控制线路有虚接，接触器吸合时因振动再次断开；也可能是接触器自身无法吸持或模块不能保持。可手持短线短接MOC-JX2.5和MOC-JX2.8，检查接触器是否能吸合并保持。",
+          "options": [
+            {
+              "label": "可以",
+              "next": "hp_r005",
+              "status": "recorded"
+            },
+            {
+              "label": "不能",
+              "next": "hp_r006",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_014_0089.5.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤。"
+        },
+        {
+          "id": "hp_r005",
+          "type": "result",
+          "text": "短接MOC-JX2.5和MOC-JX2.8后，接触器保持吸合状态，说明问题在MOC模块。请更换MOC模块后再次尝试启动油泵。",
+          "source_frame": "heightpump/page_015_0097.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r006",
+          "type": "result",
+          "text": "短接MOC-JX2.5和MOC-JX2.8后，接触器不能保持吸合状态，说明接触器吸持线圈存在问题，请直接更换接触器。",
+          "source_frame": "heightpump/page_016_0099.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q008",
+          "type": "question",
+          "text": "提示结束后油泵电机没有启动，请认真观察显示屏是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+          "options": [
+            {
+              "label": "有故障",
+              "next": "hp_q009",
+              "status": "recorded"
+            },
+            {
+              "label": "无故障",
+              "next": "hp_q012",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_017_0105.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q009",
+          "type": "question",
+          "text": "油泵电机没有启动，屏幕是否提示油泵电机漏电或者220V漏电？",
+          "options": [
+            {
+              "label": "泵电机漏电",
+              "next": "hp_q010",
+              "status": "recorded"
+            },
+            {
+              "label": "220V漏电",
+              "next": "hp_q011",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_018_0115.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q010",
+          "type": "question",
+          "text": "提示油泵电机漏电，请检查油泵电机和电缆的绝缘状况。",
+          "options": [
+            {
+              "label": "漏电",
+              "next": "hp_r007",
+              "status": "recorded"
+            },
+            {
+              "label": "正常",
+              "next": "hp_r008",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_019_0122.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r007",
+          "type": "result",
+          "text": "查找漏电原因，处理漏电。",
+          "source_frame": "heightpump/page_020_0133.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r008",
+          "type": "result",
+          "text": "检测绝缘状态良好，说明是漏电检测模块误动作。请更换高压漏电检测模块。没有配件时，可临时将接在油泵接触器上的粉红色检测线拆除并包扎，或将MOC-JX3.15上的线从端子排上拆除并包扎。请尽快更换模块。",
+          "source_frame": "heightpump/page_021_0137.0.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q011",
+          "type": "question",
+          "text": "屏幕提示220V漏电，请检查220V电源对地绝缘。使用万用表直接测量对地绝缘即可，严禁使用摇表测试。",
+          "options": [
+            {
+              "label": "漏电",
+              "next": "hp_r009",
+              "status": "recorded"
+            },
+            {
+              "label": "绝缘正常",
+              "next": "hp_r010",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_022_0142.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r009",
+          "type": "result",
+          "text": "查找漏电原因，处理漏电。这类故障多数由线路捆扎不合理、绝缘皮磨破造成。",
+          "source_frame": "heightpump/page_023_0152.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r010",
+          "type": "result",
+          "text": "经过测试绝缘良好，说明220V漏电模块误动作。临时措施：将MOC-JX4.9上的线从端子排上拆除并包扎。请尽快更换220V漏电模块。",
+          "source_frame": "heightpump/page_024_0157.0.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q012",
+          "type": "question",
+          "text": "油泵电机没有启动，屏幕也没有任何故障提示，可能原因：1.有停止信号进入控制系统；2.接触器、接触器电源或MOC模块故障。",
+          "options": [
+            {
+              "label": "1",
+              "next": "hp_q013",
+              "status": "recorded"
+            },
+            {
+              "label": "2",
+              "next": "hp_q019",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_025_0168.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q013",
+          "type": "question",
+          "text": "停止信号可能来自启动按钮、停止按钮、顺槽远程、端头站或遥控器。",
+          "options": [
+            {
+              "label": "按钮",
+              "next": "hp_q014",
+              "status": "recorded"
+            },
+            {
+              "label": "其他原因",
+              "next": null,
+              "status": "unresolved_not_recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_026_0172.5.png",
+          "confidence": "high",
+          "notes": "“其他原因”分支在录屏中未继续展示，已标记待补录。"
+        },
+        {
+          "id": "hp_q014",
+          "type": "question",
+          "text": "请检查油泵启动按钮、停止按钮、总停按钮是否卡死在接通状态。",
+          "options": [
+            {
+              "label": "接通",
+              "next": "hp_r011",
+              "status": "recorded"
+            },
+            {
+              "label": "不通",
+              "next": "hp_q015",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_027_0186.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r011",
+          "type": "result",
+          "text": "油泵启动按钮、停止按钮或总停按钮存在卡死情况，均会造成无法启动。请检查卡死原因并酌情处理。",
+          "source_frame": "heightpump/page_028_0194.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q015",
+          "type": "question",
+          "text": "油泵启动按钮、停止按钮和总停按钮均正常，请检查MOC-JX3.3（总停）、MOC-JX3.4（泵启）、MOC-JX3.5（泵停）上是否有DV24V。",
+          "options": [
+            {
+              "label": "有24V",
+              "next": "hp_r012",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "hp_q016",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_029_0196.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r012",
+          "type": "result",
+          "text": "有DV24V进入MOC模块，说明有停止信号进入系统，请检查相关线路，找到24V进入原因并处理。",
+          "source_frame": "heightpump/page_030_0202.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q016",
+          "type": "question",
+          "text": "MOC-JX3.3（总停）、MOC-JX3.4（泵启）、MOC-JX3.5（泵停）上没有F+24V电压，说明没有停止信号进入系统。请手持短接线短接MOC-JX2.5和MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+          "options": [
+            {
+              "label": "吸合",
+              "next": "hp_r013",
+              "status": "recorded"
+            },
+            {
+              "label": "不吸合",
+              "next": "hp_q017",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_031_0204.0.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤。"
+        },
+        {
+          "id": "hp_r013",
+          "type": "result",
+          "text": "短接后接触器吸合，说明MOC模块内部继电器没有吸合或触点已损坏。在确保MOC-JX2插头没有问题后，请直接更换MOC模块。",
+          "source_frame": "heightpump/page_032_0212.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q017",
+          "type": "question",
+          "text": "短接后接触器不吸合，可能原因：1.接触器已损坏；2.电源或供电线路故障。请检查控制变压器输出132V（220V）是否正常。",
+          "options": [
+            {
+              "label": "正常",
+              "next": "hp_r014",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "hp_q018",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_033_0213.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r014",
+          "type": "result",
+          "text": "控制变压器输出132V（220V）电压正常，请检查控制变压器到模块和接触器之间的线路，找到断点处理。若供电线路没有问题，请直接更换接触器。",
+          "source_frame": "heightpump/page_034_0222.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q018",
+          "type": "question",
+          "text": "控制变压器输出132V（220V）端口没有电压，请检查控制变压器输入电压是否正常。",
+          "options": [
+            {
+              "label": "正常",
+              "next": "hp_r015",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "hp_r016",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_035_0224.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r015",
+          "type": "result",
+          "text": "控制变压器输入侧电压正常、输出侧没有电压，基本确定控制变压器已损坏，请更换控制变压器。",
+          "source_frame": "heightpump/page_036_0232.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r016",
+          "type": "result",
+          "text": "控制变压器输入侧没有电压，请检查输入侧保险或空气开关是否跳闸断开。若空气开关合闸后立即跳闸或保险立即烧断，请勿使用铜丝短接，应先处理断路或短路故障。",
+          "source_frame": "heightpump/page_037_0234.0.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_q019",
+          "type": "question",
+          "text": "在排除有停止信号进入系统后，手持短接线短接MOC-JX2.5和MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+          "options": [
+            {
+              "label": "吸合",
+              "next": "hp_r013",
+              "status": "recorded"
+            },
+            {
+              "label": "不吸合",
+              "next": "hp_q017",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_038_0244.5.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤。"
+        },
+        {
+          "id": "hp_q020",
+          "type": "question",
+          "text": "按下油泵启动按钮3～5秒，采煤机没有反应且显示器上无泵电机启动提示，说明按钮指令没有进入MOC模块。请检查MOC-JX3.4在按下泵启动按钮时是否有F+24V电压。",
+          "options": [
+            {
+              "label": "有24V",
+              "next": "hp_r017",
+              "status": "recorded"
+            },
+            {
+              "label": "无",
+              "next": "hp_r018",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "heightpump/page_039_0289.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r017",
+          "type": "result",
+          "text": "按下泵启动按钮时，MOC-JX3.4上可以测量到F+24V，说明启动信号已经到达MOC模块。在确认MOC-JX3插头没有问题后，请直接更换MOC模块。",
+          "source_frame": "heightpump/page_040_0304.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "hp_r018",
+          "type": "result",
+          "text": "按下泵启动按钮时，MOC-JX3.4上没有F+24V电压，说明没有启动指令进入。请依次检查F+24V电源到泵启按钮、再由按钮到MOC-JX3.4之间的线路，找到断路点处理。",
+          "source_frame": "heightpump/page_041_0307.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "cutting_motor_start",
+      "name": "截割启动故障",
+      "display_title": "截割启动故障",
+      "source_video": "截割启动故障.mp4",
+      "start_node": "cut_q001",
+      "nodes": [
+        {
+          "id": "cut_q001",
+          "type": "question",
+          "text": "注意：所有电机启动都有按钮防压死保护，按钮按下时间不足3秒或超过5秒都将无法启动，请规范操作。采煤机上电启动后，显示器进入正常监视画面，所有模块状态均显示为绿色。按下截割启动按钮3～5秒，显示器是否有截割电机启动提示（有语音配置的采煤机同时有语音提示）？",
+          "options": [
+            {
+              "label": "有",
+              "next": "cut_q002",
+              "status": "recorded"
+            },
+            {
+              "label": "无",
+              "next": "cut_q018",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_001_0000.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q002",
+          "type": "question",
+          "text": "显示器有左（右）截割电机启动提示（有语音配置的采煤机同时有语音提示），说明采煤机已经开始执行启动命令。提示结束后，左（右）截割电机是否正常启动？",
+          "options": [
+            {
+              "label": "已启动",
+              "next": "cut_q003",
+              "status": "recorded"
+            },
+            {
+              "label": "未启动",
+              "next": "cut_q006",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_002_0010.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q003",
+          "type": "question",
+          "text": "提示结束后左（右）截割电机正常启动。启动以后，左（右）截割电机是否可以持续平稳运转？",
+          "options": [
+            {
+              "label": "可以",
+              "next": "cut_r001",
+              "status": "recorded"
+            },
+            {
+              "label": "不能",
+              "next": "cut_q004",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_003_0019.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r001",
+          "type": "result",
+          "text": "左（右）截割电机持续运转，说明左（右）截割电机启动回路工作正常。",
+          "source_frame": "cut/page_004_0028.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q004",
+          "type": "question",
+          "text": "左（右）截割电机启动后立即停止运转，请观察显示器是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+          "options": [
+            {
+              "label": "有故障",
+              "next": "cut_r002",
+              "status": "recorded"
+            },
+            {
+              "label": "无故障",
+              "next": "cut_q005",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_005_0032.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r002",
+          "type": "result",
+          "text": "根据系统提示的故障信息进行针对性处理。在系统模块“最近停机原因”中查到的停机代码，可在本小程序的系统故障模块中查看。",
+          "source_frame": "cut/page_006_0038.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q005",
+          "type": "question",
+          "text": "没有故障提示，多数是控制线路有虚接，接触器吸合时因振动再次断开。请仔细检查线路；也可能是接触器自身无法吸持或模块不能保持。可手持短线短接左侧MOC-JX2.3与MOC-JX2.8，或右侧MOC-JX2.4与MOC-JX2.8，检查接触器是否能吸合并保持。",
+          "options": [
+            {
+              "label": "可以",
+              "next": "cut_r003",
+              "status": "recorded"
+            },
+            {
+              "label": "不能",
+              "next": "cut_r004",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_007_0043.5.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤。"
+        },
+        {
+          "id": "cut_r003",
+          "type": "result",
+          "text": "短接后接触器保持吸合状态，说明问题在MOC模块，请更换MOC模块后再次尝试启动截割电机。",
+          "source_frame": "cut/page_008_0050.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r004",
+          "type": "result",
+          "text": "短接后接触器不能维持吸合状态，说明接触器吸持线圈存在问题，请直接更换接触器。",
+          "source_frame": "cut/page_009_0054.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q006",
+          "type": "question",
+          "text": "提示结束后左（右）截割电机没有启动，请认真观察显示屏是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+          "options": [
+            {
+              "label": "有故障",
+              "next": "cut_q007",
+              "status": "recorded"
+            },
+            {
+              "label": "无故障",
+              "next": "cut_q010",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_010_0061.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q007",
+          "type": "question",
+          "text": "左（右）截割电机没有启动，屏幕是否提示左（右）截割电机漏电，或220V（或132V）漏电？",
+          "options": [
+            {
+              "label": "截割漏电",
+              "next": "cut_q008",
+              "status": "recorded"
+            },
+            {
+              "label": "220V漏电",
+              "next": "cut_q009",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_011_0067.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q008",
+          "type": "question",
+          "text": "提示左（右）截割电机漏电，请检查左（右）截割电机和电缆的绝缘状况。",
+          "options": [
+            {
+              "label": "漏电",
+              "next": "cut_r005",
+              "status": "recorded"
+            },
+            {
+              "label": "绝缘正常",
+              "next": "cut_r006",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_012_0075.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r005",
+          "type": "result",
+          "text": "查找漏电原因，处理漏电。",
+          "source_frame": "cut/page_013_0086.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r006",
+          "type": "result",
+          "text": "检测绝缘状态良好，说明是漏电检测模块误动作。请更换高压漏电检测模块。没有配件时，可临时将接在左（右）截割接触器上的粉红色检测线拆除并包扎，或将左MOC-JX3.13（右MOC-JX3.14）上的线从端子排上拆除并包扎。请尽快更换模块。",
+          "source_frame": "cut/page_014_0090.5.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q009",
+          "type": "question",
+          "text": "对于油泵无控制或延时启动的煤机，220V（或132V）漏电同样会导致截割不能启动。屏幕提示220V漏电，请检查220V（或132V）控制电源对地绝缘。使用万用表直接测量对地绝缘即可，严禁使用摇表测试。",
+          "options": [
+            {
+              "label": "漏电",
+              "next": "cut_r007",
+              "status": "recorded"
+            },
+            {
+              "label": "绝缘正常",
+              "next": "cut_r008",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_015_0096.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r007",
+          "type": "result",
+          "text": "查找漏电原因，处理漏电。这类故障多数由线路捆扎不合理、绝缘皮磨破造成。",
+          "source_frame": "cut/page_016_0106.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r008",
+          "type": "result",
+          "text": "经过测试绝缘良好，说明220V漏电模块误动作。临时措施：将MOC-JX4.9上的线从端子排上拆除并包扎。请尽快更换220V漏电模块。",
+          "source_frame": "cut/page_017_0109.0.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q010",
+          "type": "question",
+          "text": "左（右）截割电机没有启动，屏幕也没有任何故障提示，可能原因：1.有停止信号进入控制系统；2.接触器、接触器电源或MOC模块故障。",
+          "options": [
+            {
+              "label": "1",
+              "next": "cut_q011",
+              "status": "recorded"
+            },
+            {
+              "label": "2",
+              "next": "cut_q017",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_018_0116.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q011",
+          "type": "question",
+          "text": "停止信号可能来自启动按钮、停止按钮、顺槽远程、端头站或遥控器。",
+          "options": [
+            {
+              "label": "按钮",
+              "next": "cut_q012",
+              "status": "recorded"
+            },
+            {
+              "label": "其他原因",
+              "next": "cut_r015",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_019_0120.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q012",
+          "type": "question",
+          "text": "请检查左（右）截割停止按钮、启动按钮和总停按钮是否卡死在接通状态。",
+          "options": [
+            {
+              "label": "接通",
+              "next": "cut_r009",
+              "status": "recorded"
+            },
+            {
+              "label": "不通",
+              "next": "cut_q013",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_020_0131.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r009",
+          "type": "result",
+          "text": "左（右）截割停止按钮、启动按钮或总停按钮存在卡死情况，请检查卡死原因并处理。",
+          "source_frame": "cut/page_021_0138.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q013",
+          "type": "question",
+          "text": "左（右）截割停止按钮、启动按钮和总停按钮没有卡死。请检查MOC-JX3.3（总停）、MOC-JX3.6（左截割启）、MOC-JX3.7（左截割停）、MOC-JX3.8（右截割启）、MOC-JX3.9（右截割停）上是否有DV24V。",
+          "options": [
+            {
+              "label": "有24V",
+              "next": "cut_r010",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "cut_q014",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_022_0139.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r010",
+          "type": "result",
+          "text": "有DV24V进入MOC模块，说明有停止信号进入系统，请检查相关线路，找到24V进入原因并处理。",
+          "source_frame": "cut/page_023_0145.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q014",
+          "type": "question",
+          "text": "MOC-JX3.3、MOC-JX3.6、MOC-JX3.7、MOC-JX3.8、MOC-JX3.9上没有F+24V电压，说明没有停止信号进入系统。请手持短接线短接左MOC-JX2.3与MOC-JX2.8，或右MOC-JX2.4与MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+          "options": [
+            {
+              "label": "吸合",
+              "next": "cut_r011",
+              "status": "recorded"
+            },
+            {
+              "label": "不吸合",
+              "next": "cut_q015",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_024_0146.5.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤。"
+        },
+        {
+          "id": "cut_r011",
+          "type": "result",
+          "text": "短接后接触器吸合，说明MOC模块内部继电器没有吸合或触点已损坏。在确保MOC-JX2插头没有问题后，请直接更换MOC模块。",
+          "source_frame": "cut/page_025_0152.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q015",
+          "type": "question",
+          "text": "短接后接触器不吸合，可能原因：1.接触器已损坏；2.电源或供电线路故障。请检查控制变压器输出132V（220V）是否正常。",
+          "options": [
+            {
+              "label": "正常",
+              "next": "cut_r012",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "cut_q016",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_026_0154.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r012",
+          "type": "result",
+          "text": "控制变压器输出132V（220V）电压正常，请检查控制变压器到模块和接触器之间的线路，找到断点处理。若供电线路没有问题，请直接更换接触器。",
+          "source_frame": "cut/page_027_0161.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q016",
+          "type": "question",
+          "text": "控制变压器输出132V（220V）端口没有电压，请检查控制变压器输入电压是否正常。",
+          "options": [
+            {
+              "label": "正常",
+              "next": "cut_r013",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "cut_r014",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_028_0162.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r013",
+          "type": "result",
+          "text": "控制变压器输入侧电压正常、输出侧没有电压，基本确定控制变压器已损坏，请更换控制变压器。",
+          "source_frame": "cut/page_029_0168.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r014",
+          "type": "result",
+          "text": "控制变压器输入侧没有电压，请检查输入侧保险或空气开关是否跳闸断开。若空气开关合闸后立即跳闸或保险立即烧断，请勿使用铜丝短接，应先处理断路或短路故障。",
+          "source_frame": "cut/page_030_0170.0.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r015",
+          "type": "result",
+          "text": "停止信号若来自顺槽远程，可按下模式按钮再次尝试启动；若可以启动，应到集控室查明信号来源并处理。若停止信号来自端头站，可临时拔掉端头站航空插头后再次尝试；若可启动，应检修或更换端头站。若怀疑遥控器，可关机后再次尝试或更换遥控器。遥控器引起此类故障较少见。",
+          "source_frame": "cut/page_031_0175.5.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_q017",
+          "type": "question",
+          "text": "在排除有停止信号进入系统后，手持短接线短接左MOC-JX2.3与MOC-JX2.8，或右MOC-JX2.4与MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+          "options": [
+            {
+              "label": "吸合",
+              "next": "cut_r011",
+              "status": "recorded"
+            },
+            {
+              "label": "不吸合",
+              "next": "cut_q015",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_032_0180.0.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤。"
+        },
+        {
+          "id": "cut_q018",
+          "type": "question",
+          "text": "按下左（右）截割启动按钮3～5秒，采煤机没有反应且显示器上无左（右）截割电机启动提示，说明按钮指令没有进入MOC模块。请检查左MOC-JX3.6（右MOC-JX3.8）在按下左（右）截割启动按钮时是否有F+24V电压。",
+          "options": [
+            {
+              "label": "有24V",
+              "next": "cut_r016",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "cut_r017",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "cut/page_034_0201.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r016",
+          "type": "result",
+          "text": "按下左（右）截割启动按钮时，左MOC-JX3.6（右MOC-JX3.8）上可以测量到F+24V，说明启动信号已经到达MOC模块。在确认MOC-JX3插头没有问题后，请直接更换MOC模块。",
+          "source_frame": "cut/page_035_0202.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cut_r017",
+          "type": "result",
+          "text": "按下左（右）截割启动按钮时，左MOC-JX3.6（右MOC-JX3.8）上没有F+24V电压，说明没有启动指令进入。请依次检查F+24V电源到左（右）截割启动按钮、再由按钮到左MOC-JX3.6（右MOC-JX3.8）之间的线路，找到断路点处理。",
+          "source_frame": "cut/page_036_0204.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "crusher_motor_start",
+      "name": "破碎电机启动故障",
+      "display_title": "破碎机启动故障",
+      "source_video": "破碎电机启动故障.mp4",
+      "start_node": "cr_q001",
+      "nodes": [
+        {
+          "id": "cr_q001",
+          "type": "question",
+          "text": "注意：所有电机启动都有按钮防压死保护，按钮按下时间不足3秒或超过5秒都将无法启动，请规范操作。油泵电机必须已启动，且屏幕无“截割电机（或牵引启动）被泵电机闭锁”提示；如存在闭锁，请先处理油泵启动故障。然后按下破碎启动按钮3～5秒，显示器是否有破碎电机启动提示（有语音配置的采煤机同时有语音提示）？",
+          "options": [
+            {
+              "label": "有",
+              "next": "cr_q003",
+              "status": "recorded"
+            },
+            {
+              "label": "无",
+              "next": "cr_q002",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_002_0002.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q002",
+          "type": "question",
+          "text": "按下破碎启动按钮3～5秒，采煤机没有反应且显示器上无破碎电机启动提示，说明按钮指令没有进入MOC模块。请检查MOC-JX3.10在按下破碎启动按钮时是否有F+24V电压。",
+          "options": [
+            {
+              "label": "有",
+              "next": "cr_r001",
+              "status": "recorded"
+            },
+            {
+              "label": "无",
+              "next": "cr_r002",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_003_0010.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r001",
+          "type": "result",
+          "text": "按下破碎启动按钮时，MOC-JX3.10上可以测量到F+24V，说明启动信号已到达MOC模块。在确认MOC-JX3插头没有问题后，请直接更换MOC模块。",
+          "source_frame": "crusher/page_004_0012.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r002",
+          "type": "result",
+          "text": "按下破碎启动按钮时，MOC-JX3.10上没有F+24V电压，说明没有启动指令进入。请依次检查F+24V电源到破碎启动按钮、再由按钮到MOC-JX3.10之间的线路，找到断路点处理。",
+          "source_frame": "crusher/page_005_0014.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q003",
+          "type": "question",
+          "text": "显示器有破碎电机启动提示（有语音配置的采煤机同时有语音提示），说明采煤机已经开始执行启动命令。提示结束后，破碎电机是否正常启动？",
+          "options": [
+            {
+              "label": "已启动",
+              "next": "cr_q004",
+              "status": "recorded"
+            },
+            {
+              "label": "未启动",
+              "next": "cr_q007",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_006_0016.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q004",
+          "type": "question",
+          "text": "提示结束后破碎电机正常启动。启动以后，破碎电机是否可以持续平稳运转？",
+          "options": [
+            {
+              "label": "可以",
+              "next": "cr_r003",
+              "status": "recorded"
+            },
+            {
+              "label": "不能",
+              "next": "cr_q005",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_007_0025.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r003",
+          "type": "result",
+          "text": "破碎电机持续运转，说明破碎电机启动回路工作正常。",
+          "source_frame": "crusher/page_008_0031.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q005",
+          "type": "question",
+          "text": "破碎电机启动后立即停止运转，请观察显示器是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+          "options": [
+            {
+              "label": "有故障",
+              "next": "cr_r004",
+              "status": "recorded"
+            },
+            {
+              "label": "无故障",
+              "next": "cr_q006",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_009_0032.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r004",
+          "type": "result",
+          "text": "根据系统提示的故障信息进行针对性处理。在系统模块“最近停机原因”中查到的停机代码，可在本小程序的系统故障模块中查看。",
+          "source_frame": "crusher/page_010_0038.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q006",
+          "type": "question",
+          "text": "没有故障提示，多数是控制线路有虚接，接触器吸合时因振动再次断开。请仔细检查线路；也可能是接触器自身无法吸持或模块不能保持。可手持短线短接MOC-JX2.6和MOC-JX2.8，检查接触器是否能吸合并保持。",
+          "options": [
+            {
+              "label": "可以",
+              "next": "cr_r005",
+              "status": "recorded"
+            },
+            {
+              "label": "不能",
+              "next": "cr_r006",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_011_0040.5.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤。"
+        },
+        {
+          "id": "cr_r005",
+          "type": "result",
+          "text": "短接MOC-JX2.6和MOC-JX2.8后，接触器保持吸合状态，说明问题在MOC模块，请更换MOC模块后再次尝试启动破碎机。",
+          "source_frame": "crusher/page_012_0047.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r006",
+          "type": "result",
+          "text": "短接MOC-JX2.6和MOC-JX2.8后，接触器不能保持吸合状态，说明接触器吸持线圈存在问题，请直接更换接触器。",
+          "source_frame": "crusher/page_013_0049.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q007",
+          "type": "question",
+          "text": "提示结束后破碎电机没有启动，请认真观察显示屏是否有故障提示。注意：不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到。",
+          "options": [
+            {
+              "label": "有故障",
+              "next": "cr_q008",
+              "status": "recorded"
+            },
+            {
+              "label": "无故障",
+              "next": "cr_q011",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_014_0059.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q008",
+          "type": "question",
+          "text": "破碎电机没有启动，屏幕是否提示破碎电机漏电，或者220V漏电？",
+          "options": [
+            {
+              "label": "破碎漏电",
+              "next": "cr_q009",
+              "status": "recorded"
+            },
+            {
+              "label": "220V漏电",
+              "next": "cr_q010",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_015_0066.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q009",
+          "type": "question",
+          "text": "提示破碎电机漏电，请检查破碎电机和电缆的绝缘状况。",
+          "options": [
+            {
+              "label": "漏电",
+              "next": "cr_r007",
+              "status": "recorded"
+            },
+            {
+              "label": "绝缘正常",
+              "next": "cr_r008",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_016_0076.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r007",
+          "type": "result",
+          "text": "查找漏电原因，处理漏电。",
+          "source_frame": "crusher/page_017_0087.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r008",
+          "type": "result",
+          "text": "检测绝缘状态良好，说明是漏电检测模块误动作。请更换高压漏电检测模块。没有配件时，可临时将接在破碎接触器上的粉红色检测线拆除并包扎，或将MOC-JX3.16上的线从端子排上拆除并包扎。请尽快更换模块。",
+          "source_frame": "crusher/page_018_0090.5.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q010",
+          "type": "question",
+          "text": "屏幕提示220V漏电，请检查220V（或132V）控制电源对地绝缘。使用万用表直接测量对地绝缘即可，严禁使用摇表测试。",
+          "options": [
+            {
+              "label": "漏电",
+              "next": "cr_r009",
+              "status": "recorded"
+            },
+            {
+              "label": "绝缘正常",
+              "next": "cr_r010",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_019_0095.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r009",
+          "type": "result",
+          "text": "查找漏电原因，处理漏电。这类故障多数由线路捆扎不合理、绝缘皮磨破造成。",
+          "source_frame": "crusher/page_020_0105.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r010",
+          "type": "result",
+          "text": "经过测试绝缘良好，说明220V漏电模块误动作。临时措施：将MOC-JX4.9上的线从端子排上拆除并包扎。请尽快更换220V漏电模块。",
+          "source_frame": "crusher/page_021_0106.5.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q011",
+          "type": "question",
+          "text": "破碎电机没有启动，屏幕也没有任何故障提示，可能原因：1.有停止信号进入控制系统；2.接触器、接触器电源或MOC模块故障。",
+          "options": [
+            {
+              "label": "1",
+              "next": "cr_q012",
+              "status": "recorded"
+            },
+            {
+              "label": "2",
+              "next": "cr_q018",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_022_0118.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q012",
+          "type": "question",
+          "text": "停止信号可能来自启动按钮、停止按钮、顺槽远程、端头站或遥控器。",
+          "options": [
+            {
+              "label": "按钮",
+              "next": "cr_q013",
+              "status": "recorded"
+            },
+            {
+              "label": "其他原因",
+              "next": null,
+              "status": "unresolved_not_recorded"
+            }
+          ],
+          "source_frame": "crusher/page_023_0123.0.png",
+          "confidence": "high",
+          "notes": "“其他原因”分支在录屏中未继续展示，已标记待补录。"
+        },
+        {
+          "id": "cr_q013",
+          "type": "question",
+          "text": "请检查破碎机启动按钮、停止按钮、总停按钮是否卡死在接通状态。",
+          "options": [
+            {
+              "label": "接通",
+              "next": "cr_r011",
+              "status": "recorded"
+            },
+            {
+              "label": "不通",
+              "next": "cr_q014",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_024_0131.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r011",
+          "type": "result",
+          "text": "破碎机启动按钮、停止按钮或总停按钮存在卡死情况，均会造成无法启动。请检查卡死原因并酌情处理。",
+          "source_frame": "crusher/page_025_0137.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q014",
+          "type": "question",
+          "text": "破碎机启动按钮、停止按钮和总停按钮均正常，请检查MOC-JX3.3（总停）、MOC-JX3.10（破碎启）、MOC-JX3.11（破碎停）上是否有DV24V。",
+          "options": [
+            {
+              "label": "有24V",
+              "next": "cr_r012",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "cr_q015",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_026_0139.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r012",
+          "type": "result",
+          "text": "有DV24V进入MOC模块，说明有停止信号进入系统，请检查相关线路，找到24V进入原因并处理。",
+          "source_frame": "crusher/page_027_0142.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q015",
+          "type": "question",
+          "text": "MOC-JX3.3（总停）、MOC-JX3.10（破碎启）、MOC-JX3.11（破碎停）上没有F+24V电压，说明没有停止信号进入系统。请手持短接线短接MOC-JX2.6和MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+          "options": [
+            {
+              "label": "吸合",
+              "next": "cr_r013",
+              "status": "recorded"
+            },
+            {
+              "label": "不吸合",
+              "next": "cr_q016",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_028_0143.5.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤。"
+        },
+        {
+          "id": "cr_r013",
+          "type": "result",
+          "text": "短接后接触器吸合，说明MOC模块内部继电器没有吸合或触点已损坏。在确保MOC-JX2插头没有问题后，请直接更换MOC模块。",
+          "source_frame": "crusher/page_029_0144.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q016",
+          "type": "question",
+          "text": "短接后接触器不吸合，可能原因：1.接触器已损坏；2.电源或供电线路故障。请检查控制变压器输出132V（220V）是否正常。",
+          "options": [
+            {
+              "label": "正常",
+              "next": "cr_r014",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "cr_q017",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_030_0146.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r014",
+          "type": "result",
+          "text": "控制变压器输出132V（220V）电压正常，请检查控制变压器到模块和接触器之间的线路，找到断点处理。若供电线路没有问题，请直接更换接触器。",
+          "source_frame": "crusher/page_031_0147.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q017",
+          "type": "question",
+          "text": "控制变压器输出132V（220V）端口没有电压，请检查控制变压器输入电压是否正常。",
+          "options": [
+            {
+              "label": "正常",
+              "next": "cr_r015",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "cr_r016",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_032_0149.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r015",
+          "type": "result",
+          "text": "控制变压器输入侧电压正常、输出侧没有电压，基本确定控制变压器已损坏，请更换控制变压器。",
+          "source_frame": "crusher/page_033_0150.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_r016",
+          "type": "result",
+          "text": "控制变压器输入侧没有电压，请检查输入侧保险或空气开关是否跳闸断开。若空气开关合闸后立即跳闸或保险立即烧断，请勿使用铜丝短接，应先处理断路或短路故障。",
+          "source_frame": "crusher/page_034_0151.5.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "cr_q018",
+          "type": "question",
+          "text": "在排除有停止信号进入系统后，手持短接线短接MOC-JX2.6和MOC-JX2.8，检查接触器是否吸合（非安全电压，注意安全）。",
+          "options": [
+            {
+              "label": "吸合",
+              "next": "cr_r013",
+              "status": "recorded"
+            },
+            {
+              "label": "不吸合",
+              "next": "cr_q016",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "crusher/page_035_0156.5.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤。"
+        }
+      ]
+    },
+    {
+      "id": "auto_oil_pump",
+      "name": "自启动油泵故障",
+      "display_title": "自启动油泵故障",
+      "source_video": "自启动油泵故障.mp4",
+      "start_node": "ap_q001",
+      "nodes": [
+        {
+          "id": "ap_q001",
+          "type": "question",
+          "text": "采煤机油泵接触器和牵引接触器线圈并联，由HPC-JX2.14和HPC-JX2.16内部的继电器触点控制。采煤机上电后检测电源电压以及牵引电机、电缆绝缘，全部符合要求时牵引和油泵接触器自动吸合，完成牵引上电和油泵启动。采煤机上电后经过一段时间，牵引和油泵接触器是否吸合？",
+          "options": [
+            {
+              "label": "吸合",
+              "next": "ap_r001",
+              "status": "recorded"
+            },
+            {
+              "label": "不吸合",
+              "next": "ap_q002",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_002_0001.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r001",
+          "type": "result",
+          "text": "牵引和油泵接触器可以正常吸合，说明系统检测正常，可以开始正常操作煤机。",
+          "source_frame": "autopump/page_003_0003.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q002",
+          "type": "question",
+          "text": "牵引和油泵接触器经过一段时间不吸合，请观察屏幕上HPC的状态是否为绿色？",
+          "options": [
+            {
+              "label": "绿色",
+              "next": "ap_q003",
+              "status": "recorded"
+            },
+            {
+              "label": "红或黄",
+              "next": null,
+              "status": "unresolved_not_recorded"
+            }
+          ],
+          "source_frame": "autopump/page_004_0005.0.png",
+          "confidence": "high",
+          "notes": "“红或黄”分支在录屏中未继续展示，已保留为待补录分支。"
+        },
+        {
+          "id": "ap_q003",
+          "type": "question",
+          "text": "HPC状态为绿色，说明HPC在工作并且通讯正常。请观察屏幕是否有故障提示？注意：1.不是所有故障信息都在监视画面中显示，需要进入故障查询才能看到；2.小屏幕显示牵引系统未上电、大屏幕的牵电状态为红色不算故障提示，只代表牵引接触器的状态。",
+          "options": [
+            {
+              "label": "有故障",
+              "next": "ap_q004",
+              "status": "recorded"
+            },
+            {
+              "label": "无故障",
+              "next": "ap_q011",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_005_0006.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q004",
+          "type": "question",
+          "text": "HPC工作正常。请观察屏幕是否有电压异常或漏电提示？",
+          "options": [
+            {
+              "label": "电压异常",
+              "next": "ap_q005",
+              "status": "recorded"
+            },
+            {
+              "label": "漏电故障",
+              "next": "ap_q006",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_006_0007.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q005",
+          "type": "question",
+          "text": "系统有电压异常提示，会有两种情况：1.供电电压过高或过低；2.供电电压正常，由于电压检测电路误动作引起。",
+          "options": [
+            {
+              "label": "1",
+              "next": "ap_r002",
+              "status": "recorded"
+            },
+            {
+              "label": "2",
+              "next": "ap_r003",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_007_0008.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r002",
+          "type": "result",
+          "text": "系统有电压异常提示，说明供电电压过高或过低。请检查牵引接触器电源侧电压。对于380V（660V）变频器，欠电压阈值约为320V（550V），过电压阈值约为450V（750V）。请调整移动变电站输出电压至合适范围。",
+          "source_frame": "autopump/page_008_0009.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r003",
+          "type": "result",
+          "text": "电网供电电压正常，这类故障一般由电压互感器故障造成，可更换电压互感器。若暂时没有电压互感器，可拆除电压互感器电源作为临时措施，但应尽快更换电压互感器。",
+          "source_frame": "autopump/page_009_0011.0.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q006",
+          "type": "question",
+          "text": "系统有漏电提示，请观察是左右牵引电机及电缆漏电（0或1通道漏电），还是油泵电机及电缆220V漏电？",
+          "options": [
+            {
+              "label": "牵引",
+              "next": "ap_q007",
+              "status": "recorded"
+            },
+            {
+              "label": "油泵",
+              "next": "ap_q008",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_010_0014.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q007",
+          "type": "question",
+          "text": "系统显示0或1通道漏电，是指左右牵引电机或电缆漏电。请检查牵引电机及电缆的绝缘状况。注意：摇测绝缘时必须断开与变频器的连接，否则会损坏变频器！",
+          "options": [
+            {
+              "label": "漏电",
+              "next": "ap_r004",
+              "status": "recorded"
+            },
+            {
+              "label": "绝缘正常",
+              "next": "ap_r005",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_011_0014.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r004",
+          "type": "result",
+          "text": "牵引电机及电缆绝缘低，请查找漏电原因并处理。",
+          "source_frame": "autopump/page_012_0015.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r005",
+          "type": "result",
+          "text": "采煤机系统检测到漏电，但摇表检测牵引电机及电缆绝缘良好。一般是漏电检测电路误动作，可能由牵引模块本身或漏电组件造成。可将HPC-JX5插头拔掉进行区分：若仍显示漏电，可能是牵引模块故障。该做法仅为临时诊断措施，请尽快更换牵引模块HPC或漏电组件。",
+          "source_frame": "autopump/page_013_0017.0.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q008",
+          "type": "question",
+          "text": "显示器显示的是油泵电机漏电，还是220V漏电？",
+          "options": [
+            {
+              "label": "油泵",
+              "next": "ap_q009",
+              "status": "recorded"
+            },
+            {
+              "label": "220V漏电",
+              "next": "ap_q010",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_014_0018.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q009",
+          "type": "question",
+          "text": "显示器显示油泵电机漏电，请检查油泵电机以及电缆的绝缘状况。",
+          "options": [
+            {
+              "label": "漏电",
+              "next": "ap_r006",
+              "status": "recorded"
+            },
+            {
+              "label": "正常",
+              "next": "ap_r007",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_015_0019.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r006",
+          "type": "result",
+          "text": "查找漏电原因，处理漏电。",
+          "source_frame": "autopump/page_016_0020.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r007",
+          "type": "result",
+          "text": "检测绝缘状态良好，说明是漏电检测模块误动作。请更换高压漏电检测模块。没有配件时，可临时将接在油泵接触器上的粉红色检测线拆除并包扎，或将MOC-JX3.15上的线从端子排上拆除并包扎。临时措施使用后应尽快更换模块。",
+          "source_frame": "autopump/page_017_0021.5.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q010",
+          "type": "question",
+          "text": "屏幕提示220V漏电，请检查220V电源对地绝缘。使用万用表直接测量对地绝缘即可，严禁使用摇表测试。",
+          "options": [
+            {
+              "label": "漏电",
+              "next": "ap_r008",
+              "status": "recorded"
+            },
+            {
+              "label": "绝缘正常",
+              "next": "ap_r009",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_018_0024.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r008",
+          "type": "result",
+          "text": "查找漏电原因，处理漏电。这类故障多数由线路捆扎不合理、绝缘皮磨破造成。",
+          "source_frame": "autopump/page_019_0025.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r009",
+          "type": "result",
+          "text": "经过测试绝缘良好，说明220V漏电模块误动作。临时措施：将MOC-JX4.9上的线从端子排上拆除并包扎。请尽快更换220V漏电模块。",
+          "source_frame": "autopump/page_020_0027.5.png",
+          "severity": "warning",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q011",
+          "type": "question",
+          "text": "系统检测正常，泵和牵引接触器并联同时损坏的概率极低，可能原因有：1.HPC-JX2.14和HPC-JX2.16内部触点损坏；2.电源及其线路故障。请短接HPC-JX2.14和HPC-JX2.16，观察接触器是否吸合（危险电压，注意安全）。",
+          "options": [
+            {
+              "label": "吸合",
+              "next": "ap_r010",
+              "status": "recorded"
+            },
+            {
+              "label": "不吸合",
+              "next": "ap_q012",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_021_0062.5.png",
+          "confidence": "high",
+          "notes": "高风险带电短接步骤，程序中必须增加权限和安全确认。"
+        },
+        {
+          "id": "ap_r010",
+          "type": "result",
+          "text": "短接HPC-JX2.14和HPC-JX2.16后，泵和牵引接触器可以吸合，说明电源及其线路没有问题，可能是HPC内部继电器或触点损坏。在排除JX2插头本身问题后，请更换HPC模块。",
+          "source_frame": "autopump/page_022_0063.5.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q012",
+          "type": "question",
+          "text": "短接HPC-JX2.14和HPC-JX2.16后，泵和牵引接触器仍然不吸合，请检查控制变压器是否有220V输出。",
+          "options": [
+            {
+              "label": "正常",
+              "next": "ap_r011",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "ap_q013",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_023_0065.0.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r011",
+          "type": "result",
+          "text": "控制变压器输出220V电压正常，请检查控制变压器到模块和接触器之间的线路，找到断点处理。泵和牵引接触器并联同时损坏的概率极低；若其中一个接触器能够吸合，另一个不吸合，则重点检查对应线路或接触器。",
+          "source_frame": "autopump/page_024_0066.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_q013",
+          "type": "question",
+          "text": "控制变压器输出220V端口没有电压，请检查控制变压器输入电压是否正常。",
+          "options": [
+            {
+              "label": "正常",
+              "next": "ap_r012",
+              "status": "recorded"
+            },
+            {
+              "label": "没有",
+              "next": "ap_r013",
+              "status": "recorded"
+            }
+          ],
+          "source_frame": "autopump/page_025_0067.5.png",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r012",
+          "type": "result",
+          "text": "控制变压器输入侧电压正常、输出侧没有电压，基本确定控制变压器已损坏，请更换控制变压器。",
+          "source_frame": "autopump/page_026_0068.0.png",
+          "severity": "diagnosis",
+          "confidence": "high"
+        },
+        {
+          "id": "ap_r013",
+          "type": "result",
+          "text": "控制变压器输入侧没有电压，请检查输入侧保险或空气开关是否跳闸断开。若空气开关合闸后立即跳闸或保险立即烧断，请勿使用铜丝短接，应先处理断路或短路故障。",
+          "source_frame": "autopump/page_027_0069.5.png",
+          "severity": "warning",
+          "confidence": "high"
+        }
+      ]
+    }
+  ]
+}

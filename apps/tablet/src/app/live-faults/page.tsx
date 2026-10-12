@@ -5,33 +5,18 @@ import {
   LiveFaultsResponseSchema,
   createApiSuccessResponseSchema,
   type FreezeFrame,
+  type FreezeFrameSignal,
   type LiveFault,
 } from "@shearer/contracts";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
-import { MiniChart } from "@/components/mini-chart";
+import { splitHandle } from "@/lib/fault-text";
+import { FreezeFrameBody, FreezeFrameSignalView } from "@/components/freeze-frame";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const FreezeFrameApiResponseSchema = createApiSuccessResponseSchema(FreezeFrameSchema);
 
 const LiveFaultsApiResponseSchema = createApiSuccessResponseSchema(LiveFaultsResponseSchema);
-
-const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-
-  const { protocol, hostname, port } = window.location;
-
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-
-  return `${protocol}//${window.location.host}`;
-};
 
 const TYPE_TEXT = ["提示", "警告", "停机"];
 const KIND_TEXT: Record<number, string> = {
@@ -62,13 +47,6 @@ const fmtDuration = (ms: number) => {
   return `${Math.floor(sec / 3600)} 小时 ${Math.floor((sec % 3600) / 60)} 分`;
 };
 
-// handle 形如 "1.xxx。2.xxx。" → 拆条；无编号的整段返回
-const splitHandle = (handle: string): string[] =>
-  handle
-    .split(/\d+[.、](?=[^\d])/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-
 // 严重度样式：内部紫 / 停机红 / 警告黄
 const severityOf = (item: LiveFault) =>
   item.source === "internal" ? "internal" : item.type === 2 ? "stop" : "warn";
@@ -88,15 +66,23 @@ export default function LiveFaultsPage() {
   const [frame, setFrame] = useState<FreezeFrame | null>(null);
   const [frameLoading, setFrameLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // 故障现场与单图放大都做成页内子视图，配合导航栏逐级退回，不再叠弹窗
+  const [view, setView] = useState<"list" | "frame" | "signal">("list");
+  const [signal, setSignal] = useState<FreezeFrameSignal | null>(null);
 
-  const openFreezeFrame = async (ts: number) => {
+  // 同一秒常有多条故障并发，必须把点中的那条名字带上，否则后端只能靠时间猜
+  const openFreezeFrame = async (ts: number, name: string) => {
     try {
       setFrameLoading(true);
-      const response = await fetch(`${resolveHttpBase()}/api/freeze-frame?ts=${ts}`, {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        `${resolveHttpBase()}/api/freeze-frame?ts=${ts}&name=${encodeURIComponent(name)}`,
+        { cache: "no-store" },
+      );
       const parsed = FreezeFrameApiResponseSchema.parse(await response.json());
       setFrame(parsed.data);
+      setDetail(null);
+      setView("frame");
+      setErrorMessage(null);
     } catch {
       setErrorMessage("故障现场加载失败。");
     } finally {
@@ -151,10 +137,55 @@ export default function LiveFaultsPage() {
   }, [items]);
 
   return (
-    <AppShell shellState={shellState} title="实时故障">
+    <AppShell
+      back={
+        view === "signal"
+          ? { label: "故障现场", onClick: () => setView("frame") }
+          : view === "frame"
+            ? { label: "实时故障", onClick: () => setView("list") }
+            : undefined
+      }
+      shellState={shellState}
+      title="实时故障"
+      viewTitle={
+        view === "signal"
+          ? (signal?.name ?? "信号")
+          : view === "frame"
+            ? "故障现场"
+            : undefined
+      }
+    >
       <section className="page active">
         {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
+        {/* ===== 故障现场：结论 + 曲线 + 操作与异常记录 ===== */}
+        {view === "frame" && frame ? (
+          <>
+            <div className="ff-head">
+              <span className="ff-head-name">{frame.faultName ?? "故障现场"}</span>
+              <span className="ff-head-window">
+                {fmtClock(frame.ts)} · 前后 5 分钟
+                {frame.concurrentFaults.length > 0
+                  ? ` · 同秒并发 ${frame.concurrentFaults.length} 条`
+                  : ""}
+              </span>
+            </div>
+            <FreezeFrameBody
+              frame={frame}
+              onPickSignal={(picked) => {
+                setSignal(picked);
+                setView("signal");
+              }}
+            />
+          </>
+        ) : null}
+
+        {view === "signal" && frame && signal ? (
+          <FreezeFrameSignalView markTs={frame.ts} signal={signal} />
+        ) : null}
+
+        {view !== "list" ? null : (
+        <>
         {/* ===== 状态条：LIVE + 计数 ===== */}
         <div className="lf-statusbar">
           <span className="lf-live">
@@ -229,6 +260,9 @@ export default function LiveFaultsPage() {
           )}
         </div>
 
+        </>
+        )}
+
         {/* ===== 详情弹窗：处理建议 ===== */}
         {detail ? (
           <div className="fc-modal-backdrop" onClick={() => setDetail(null)}>
@@ -275,7 +309,7 @@ export default function LiveFaultsPage() {
               <button
                 className="fc-modal-close"
                 disabled={frameLoading}
-                onClick={() => void openFreezeFrame(detail.occurTs)}
+                onClick={() => void openFreezeFrame(detail.occurTs, detail.name)}
                 style={{ marginBottom: 12, background: "rgba(79,140,255,0.16)", borderColor: "rgba(79,140,255,0.4)" }}
                 type="button"
               >
@@ -288,31 +322,6 @@ export default function LiveFaultsPage() {
           </div>
         ) : null}
 
-        {/* ===== 故障冻结帧：故障时刻 ±60s 关键信号 ===== */}
-        {frame ? (
-          <div className="fc-modal-backdrop" onClick={() => setFrame(null)}>
-            <div className="fc-modal ff-modal" onClick={(event) => event.stopPropagation()}>
-              <div className="fc-modal-head">
-                <span className="fc-modal-code">{fmtClock(frame.ts)}</span>
-                <h2 className="fc-modal-title">故障现场 · 前后 60 秒</h2>
-              </div>
-              <div className="ff-grid">
-                {frame.signals.map((sig) => (
-                  <MiniChart
-                    key={sig.name}
-                    markTs={frame.ts}
-                    name={sig.name}
-                    points={sig.points}
-                    unit={sig.unit}
-                  />
-                ))}
-              </div>
-              <button className="fc-modal-close" onClick={() => setFrame(null)} type="button">
-                关 闭
-              </button>
-            </div>
-          </div>
-        ) : null}
       </section>
     </AppShell>
   );

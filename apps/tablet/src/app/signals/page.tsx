@@ -9,23 +9,10 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, useAppShellState } from "@/components/app-shell";
 import { MultiTrendChart, type OverlaySeries } from "@/components/multi-trend-chart";
+import { resolveHttpBase } from "@/lib/api-base";
 
 const SensorSummariesApiResponseSchema = createApiSuccessResponseSchema(SensorSummarySchema.array());
 const SensorTrendApiResponseSchema = createApiSuccessResponseSchema(SensorTrendPointSchema.array());
-
-const resolveHttpBase = () => {
-  if (typeof window === "undefined") {
-    return "";
-  }
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-  const { protocol, hostname, port } = window.location;
-  if ((hostname === "localhost" || hostname === "127.0.0.1") && port === "3000") {
-    return `${protocol}//${hostname}:18080`;
-  }
-  return `${protocol}//${window.location.host}`;
-};
 
 const COLORS = ["#48c7ff", "#38d889", "#ffb03a", "#ff6b9d"];
 const MAX_PICK = 4;
@@ -155,7 +142,22 @@ export default function SignalsPage() {
   };
 
   return (
-    <AppShell shellState={shellState} title="信号对比">
+    <AppShell
+      back={
+        view === "chart"
+          ? {
+              label: "选择信号",
+              onClick: () => {
+                setView("pick");
+                setSeries([]);
+              },
+            }
+          : undefined
+      }
+      shellState={shellState}
+      title="信号对比"
+      viewTitle={view === "chart" ? "趋势对比" : "选择信号"}
+    >
       <section className="page active">
         {errorMessage ? <div className="system-note">{errorMessage}</div> : null}
 
@@ -214,18 +216,9 @@ export default function SignalsPage() {
           </>
         ) : (
           <>
-            <div className="sensor-topbar">
-              <button
-                className="sensor-back-btn"
-                onClick={() => {
-                  setView("pick");
-                  setSeries([]);
-                }}
-                type="button"
-              >
-                ‹ 重新选择信号
-              </button>
-              {trendWindow ? (
+            {/* 返回由导航栏统一承担，这里只留页面自己的动作 */}
+            {trendWindow ? (
+              <div className="sensor-topbar">
                 <button
                   className="sensor-back-btn"
                   onClick={() => setTrendWindow(null)}
@@ -233,9 +226,9 @@ export default function SignalsPage() {
                 >
                   恢复全览
                 </button>
-              ) : null}
-            </div>
-            <div className="sensor-detail-chart">
+              </div>
+            ) : null}
+            <div className={`sensor-detail-chart${trendWindow ? "" : " chart-flush"}`}>
               <MultiTrendChart
                 loading={loading}
                 onWindowSelect={(fromMs, toMs) => setTrendWindow({ from: fromMs, to: toMs })}

@@ -2,6 +2,8 @@
 
 import type { SensorTrendPoint } from "@shearer/contracts";
 import { useEffect, useRef } from "react";
+import { readChartTheme } from "@/lib/chart-theme";
+import { THEME_CHANGE_EVENT } from "@/lib/theme";
 
 type SensorTrendChartProps = {
   sensorName: string;
@@ -43,6 +45,7 @@ export function SensorTrendChart({
     const maxTs = hasTs ? (points[points.length - 1].ts as number) : 0;
 
     const renderChart = async () => {
+      const theme = readChartTheme();
       const echarts = await import("echarts");
 
       if (disposed || !containerRef.current) {
@@ -65,7 +68,7 @@ export function SensorTrendChart({
                 right: 12,
                 top: 2,
                 itemSize: 22,
-                iconStyle: { borderColor: "rgba(245,247,251,.55)" },
+                iconStyle: { borderColor: theme.axis },
                 emphasis: { iconStyle: { borderColor: "#48c7ff" } },
                 feature: {
                   dataZoom: {
@@ -83,16 +86,16 @@ export function SensorTrendChart({
           },
           tooltip: {
             trigger: "axis",
-            backgroundColor: "rgba(18,24,33,.96)",
+            backgroundColor: theme.tooltipBg,
             borderColor: "rgba(79,140,255,.22)",
             textStyle: {
-              color: "#f5f7fb",
+              color: theme.tooltipFg,
             },
           },
           xAxis: hasTs
             ? {
                 type: "time",
-                axisLine: { lineStyle: { color: "rgba(255,255,255,.12)" } },
+                axisLine: { lineStyle: { color: theme.line } },
                 axisLabel: {
                   color: "rgba(245,247,251,.52)",
                   fontSize: 12,
@@ -104,7 +107,7 @@ export function SensorTrendChart({
                 type: "category",
                 boundaryGap: false,
                 data: points.map((point) => point.time),
-                axisLine: { lineStyle: { color: "rgba(255,255,255,.12)" } },
+                axisLine: { lineStyle: { color: theme.line } },
                 axisLabel: { color: "rgba(245,247,251,.52)", fontSize: 11 },
                 splitLine: { show: false },
               },
@@ -119,7 +122,7 @@ export function SensorTrendChart({
             axisLine: { show: false },
             axisTick: { show: false },
             axisLabel: { color: "rgba(245,247,251,.52)", fontSize: 12 },
-            splitLine: { lineStyle: { color: "rgba(255,255,255,.06)" } },
+            splitLine: { lineStyle: { color: theme.split } },
           },
           dataZoom: hasTs
             ? [
@@ -131,11 +134,11 @@ export function SensorTrendChart({
                   type: "slider",
                   height: 44,
                   bottom: 10,
-                  borderColor: "rgba(255,255,255,.1)",
-                  backgroundColor: "rgba(255,255,255,.03)",
+                  borderColor: theme.line,
+                  backgroundColor: theme.split,
                   fillerColor: "rgba(79,140,255,.14)",
                   handleSize: "120%",
-                  textStyle: { color: "rgba(245,247,251,.5)" },
+                  textStyle: { color: theme.axis },
                 },
               ]
             : [],
@@ -224,9 +227,13 @@ export function SensorTrendChart({
     };
 
     void renderChart();
+    // 切主题时坐标轴/网格线颜色要跟着翻，重画一次
+    const onTheme = () => void renderChart();
+    window.addEventListener(THEME_CHANGE_EVENT, onTheme);
 
     return () => {
       disposed = true;
+      window.removeEventListener(THEME_CHANGE_EVENT, onTheme);
       window.clearTimeout(zoomTimer);
       cleanupResize();
       chart?.dispose();
